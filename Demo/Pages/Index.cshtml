@@ -10,10 +10,10 @@
 </div>
 
 <!-- 時鐘元件區塊 -->
-<div class="flex flex-col items-center justify-center mt-10">
+<div class="clock-container">
     <!-- 切換按鈕已移除，兩種時鐘同時顯示 -->
     <!-- 電子時鐘樣式 -->
-    <div id="digitalClock" class="flex items-center justify-center text-5xl md:text-7xl font-mono bg-gray-900 text-green-400 rounded-lg px-8 py-4 shadow-lg select-none" style="letter-spacing:0.1em; margin-bottom:2rem;">
+    <div id="digitalClock" class="digital-clock">
         <span id="digitalHour">00</span><span id="digitalColon1" class="mx-1">:</span><span id="digitalMinute">00</span><span id="digitalColon2" class="mx-1">:</span><span id="digitalSecond">00</span>
     </div>
     <!-- 指針時鐘樣式 -->
@@ -32,9 +32,34 @@
 </div>
 
 <style>
+.clock-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2.5rem;
+}
+.digital-clock {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    font-family: 'Fira Mono', 'Consolas', 'Menlo', monospace;
+    background: #18181b;
+    color: #22d3ee;
+    border-radius: 0.75rem;
+    padding: 1.5rem 3rem;
+    box-shadow: 0 4px 24px 0 #0001;
+    user-select: none;
+    letter-spacing: 0.1em;
+    margin-bottom: 2rem;
+}
+.digital-clock span {
+    margin: 0 0.2em;
+}
 .analog-clock-face {
     position: relative;
-    width: 16rem; /* 256px */
+    width: 16rem;
     height: 16rem;
     background: #fff;
     border-radius: 50%;
