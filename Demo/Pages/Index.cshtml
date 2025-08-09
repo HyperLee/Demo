@@ -8,3 +8,102 @@
     <h1 class="display-4">Welcome</h1>
     <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
 </div>
+
+<!-- 時鐘元件區塊 -->
+<div class="flex flex-col items-center justify-center mt-10">
+    <div class="mb-4">
+        <button id="toggleClockBtn" class="px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition">切換時鐘樣式</button>
+    </div>
+    <!-- 電子時鐘樣式 -->
+    <div id="digitalClock" class="flex items-center justify-center text-5xl md:text-7xl font-mono bg-gray-900 text-green-400 rounded-lg px-8 py-4 shadow-lg select-none" style="letter-spacing:0.1em;">
+        <span id="digitalHour">00</span><span id="digitalColon1" class="mx-1">:</span><span id="digitalMinute">00</span><span id="digitalColon2" class="mx-1">:</span><span id="digitalSecond">00</span>
+    </div>
+    <!-- 指針時鐘樣式 -->
+    <div id="analogClock" style="display:none;margin-top:2rem;">
+        <div class="relative w-48 h-48 md:w-64 md:h-64 bg-white rounded-full shadow-lg border-4 border-gray-300 flex items-center justify-center">
+            <!-- 刻度 -->
+            <div id="clockTicks"></div>
+            <!-- 指針 -->
+            <div id="hourHand" class="absolute left-1/2 top-1/2 origin-bottom bg-gray-800" style="width:8px;height:56px;margin-left:-4px;margin-top:-56px;border-radius:4px 4px 0 0;"></div>
+            <div id="minuteHand" class="absolute left-1/2 top-1/2 origin-bottom bg-blue-600" style="width:5px;height:80px;margin-left:-2.5px;margin-top:-80px;border-radius:3px 3px 0 0;"></div>
+            <div id="secondHand" class="absolute left-1/2 top-1/2 origin-bottom bg-red-500" style="width:2px;height:96px;margin-left:-1px;margin-top:-96px;border-radius:2px 2px 0 0;"></div>
+            <!-- 中心圓點 -->
+            <div class="absolute left-1/2 top-1/2 bg-gray-700" style="width:16px;height:16px;margin-left:-8px;margin-top:-8px;border-radius:50%;z-index:10;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- 時鐘元件腳本 -->
+<script>
+// 取得 UTC+8 時間
+function getTaipeiTime() {
+    const now = new Date();
+    // 取得 UTC 時間 (毫秒)
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    // 加上 8 小時 (28800000 毫秒)
+    return new Date(utc + 8 * 60 * 60 * 1000);
+}
+
+// 電子時鐘更新
+function updateDigitalClock() {
+    const t = getTaipeiTime();
+    document.getElementById('digitalHour').textContent = t.getHours().toString().padStart(2, '0');
+    document.getElementById('digitalMinute').textContent = t.getMinutes().toString().padStart(2, '0');
+    document.getElementById('digitalSecond').textContent = t.getSeconds().toString().padStart(2, '0');
+    // 閃爍效果
+    const showColon = t.getSeconds() % 2 === 0;
+    document.getElementById('digitalColon1').style.opacity = showColon ? 1 : 0.3;
+    document.getElementById('digitalColon2').style.opacity = showColon ? 1 : 0.3;
+}
+
+// 指針時鐘更新
+function updateAnalogClock() {
+    const t = getTaipeiTime();
+    const hour = t.getHours() % 12;
+    const minute = t.getMinutes();
+    const second = t.getSeconds();
+    // 角度計算
+    const hourDeg = (hour + minute / 60) * 30;
+    const minuteDeg = (minute + second / 60) * 6;
+    const secondDeg = second * 6;
+    document.getElementById('hourHand').style.transform = `rotate(${hourDeg}deg)`;
+    document.getElementById('minuteHand').style.transform = `rotate(${minuteDeg}deg)`;
+    document.getElementById('secondHand').style.transform = `rotate(${secondDeg}deg)`;
+}
+
+// 指針時鐘刻度產生
+function renderClockTicks() {
+    const ticks = [];
+    for (let i = 0; i < 60; i++) {
+        const isHour = i % 5 === 0;
+        const length = isHour ? 16 : 8;
+        const color = isHour ? '#1e293b' : '#94a3b8';
+        const width = isHour ? 3 : 1.5;
+        const deg = i * 6;
+        ticks.push(`<div style="position:absolute;left:50%;top:50%;width:${width}px;height:${length}px;background:${color};transform:rotate(${deg}deg) translate(-50%,-100%);border-radius:2px;"></div>`);
+    }
+    document.getElementById('clockTicks').innerHTML = ticks.join('');
+}
+
+// 切換時鐘樣式
+document.addEventListener('DOMContentLoaded', function() {
+    let isDigital = true;
+    const digital = document.getElementById('digitalClock');
+    const analog = document.getElementById('analogClock');
+    document.getElementById('toggleClockBtn').onclick = function() {
+        isDigital = !isDigital;
+        digital.style.display = isDigital ? '' : 'none';
+        analog.style.display = isDigital ? 'none' : '';
+    };
+    renderClockTicks();
+    // 初始顯示
+    digital.style.display = '';
+    analog.style.display = 'none';
+    updateDigitalClock();
+    updateAnalogClock();
+    setInterval(() => {
+        updateDigitalClock();
+        updateAnalogClock();
+    }, 1000);
+});
+</script>
