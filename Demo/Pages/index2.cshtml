@@ -6,7 +6,7 @@
 
 
 
-<div class="clock-container flex-center">
+<div class="clock-container flex-center" style="min-height: 80vh; justify-content: center;">
     <div class="local-clock large-clock">
         <div class="clock-label">本地時間</div>
         <div id="local-time" class="clock-time">00:00:00</div>
@@ -49,6 +49,7 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        min-height: 80vh;
     }
     .timezone-row {
         display: flex;
@@ -98,7 +99,9 @@
         box-shadow: 0 0 16px #ffe06699;
         font-size: 2.5rem;
         text-align: center;
-        margin: 0 2rem;
+        margin: 0 auto 2rem auto;
+        /* 置中 */
+        align-self: center;
     }
     .large-clock .clock-label {
         font-size: 2rem;
