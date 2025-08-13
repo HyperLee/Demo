@@ -1,11 +1,49 @@
 @page
-@model Demo.Pages.index2
+@model Demo.Pages.index2Model
 @{
-    ViewData["Title"] = "index2";
+    ViewData["Title"] = "多時區電子時鐘";
 }
 
-<h1>@ViewData["Title"]</h1>
-
-<div>
-    
+<div class="clock-container">
+    <div class="local-clock">
+        <div class="clock-label">本地時間</div>
+        <div id="local-time" class="clock-time">00:00:00</div>
+        <div id="local-date" class="clock-date">0000:00:00</div>
+    </div>
+    <footer class="timezone-footer">
+        <div class="timezone-clocks">
+            <div class="timezone-clock" data-tz="America/New_York">
+                <div class="tz-city">紐約</div>
+                <div class="clock-time" id="ny-time">00:00:00</div>
+                <div class="clock-date" id="ny-date">0000:00:00</div>
+            </div>
+            <div class="timezone-clock" data-tz="Europe/London">
+                <div class="tz-city">倫敦</div>
+                <div class="clock-time" id="ldn-time">00:00:00</div>
+                <div class="clock-date" id="ldn-date">0000:00:00</div>
+            </div>
+            <div class="timezone-clock" data-tz="Asia/Tokyo">
+                <div class="tz-city">東京</div>
+                <div class="clock-time" id="tokyo-time">00:00:00</div>
+                <div class="clock-date" id="tokyo-date">0000:00:00</div>
+            </div>
+            <div class="timezone-clock" data-tz="Asia/Riyadh">
+                <div class="tz-city">沙烏地阿拉伯</div>
+                <div class="clock-time" id="riyadh-time">00:00:00</div>
+                <div class="clock-date" id="riyadh-date">0000:00:00</div>
+            </div>
+            <!-- 可擴充更多時區 -->
+        </div>
+        <div id="clock-error" class="clock-error" style="display:none;"></div>
+    </footer>
 </div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/clock.css" />
+}
+<style>
+    <!-- 樣式已全部移至 wwwroot/css/clock.css -->
+</style>
+@section Scripts {
+    <script src="~/js/clock.js"></script>
+}

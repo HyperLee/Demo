@@ -1,0 +1,98 @@
+/* 多時區電子時鐘主要樣式 */
+.clock-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 80vh;
+}
+.local-clock {
+    background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+    border-radius: 24px;
+    padding: 32px 48px;
+    margin-bottom: 32px;
+    text-align: center;
+    min-width: 320px;
+}
+.clock-label {
+    font-size: 1.2rem;
+    color: #3a3a3a;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+.clock-time {
+    font-size: 3.2rem;
+    font-family: 'Roboto Mono', 'Consolas', monospace;
+    font-weight: bold;
+    color: #222;
+    letter-spacing: 0.1em;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    transition: color 0.2s;
+}
+.clock-date {
+    font-size: 1.3rem;
+    color: #555;
+    margin-top: 8px;
+    letter-spacing: 0.08em;
+}
+.timezone-footer {
+    width: 100%;
+    background: linear-gradient(90deg, #f8fafc 0%, #e0eafc 100%);
+    box-shadow: 0 -2px 16px 0 rgba(31, 38, 135, 0.08);
+    padding: 24px 0 16px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.timezone-clocks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    justify-content: center;
+}
+.timezone-clock {
+    background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+    box-shadow: 0 4px 16px 0 rgba(31, 38, 135, 0.10);
+    border-radius: 18px;
+    padding: 18px 28px;
+    min-width: 180px;
+    text-align: center;
+    margin-bottom: 8px;
+    transition: box-shadow 0.2s;
+}
+.timezone-clock:hover {
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
+}
+.tz-city {
+    font-size: 1.1rem;
+    color: #2d2d2d;
+    font-weight: 500;
+    margin-bottom: 6px;
+}
+.clock-error {
+    color: #d32f2f;
+    font-size: 1rem;
+    margin-top: 12px;
+    display: none;
+}
+/* 響應式設計區塊 */
+@media (max-width: 600px) {
+    .local-clock {
+        padding: 18px 8px;
+        min-width: 180px;
+    }
+    .clock-time {
+        font-size: 2.1rem;
+    }
+    .clock-date {
+        font-size: 1rem;
+    }
+    .timezone-clocks {
+        gap: 12px;
+    }
+    .timezone-clock {
+        padding: 10px 8px;
+        min-width: 120px;
+    }
+}
