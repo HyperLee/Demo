@@ -4,30 +4,32 @@
     ViewData["Title"] = "多時區電子時鐘";
 }
 
-<div class="clock-container">
-    <div class="local-clock">
+
+
+<div class="clock-container flex-center">
+    <div class="local-clock large-clock">
         <div class="clock-label">本地時間</div>
         <div id="local-time" class="clock-time">00:00:00</div>
         <div id="local-date" class="clock-date">0000:00:00</div>
     </div>
-    <footer class="timezone-footer">
-        <div class="timezone-clocks">
-            <div class="timezone-clock" data-tz="America/New_York">
+    <div class="timezone-footer">
+        <div class="timezone-row small-row">
+            <div class="timezone-clock small-clock" data-tz="America/New_York">
                 <div class="tz-city">紐約</div>
                 <div class="clock-time" id="ny-time">00:00:00</div>
                 <div class="clock-date" id="ny-date">0000:00:00</div>
             </div>
-            <div class="timezone-clock" data-tz="Europe/London">
+            <div class="timezone-clock small-clock" data-tz="Europe/London">
                 <div class="tz-city">倫敦</div>
                 <div class="clock-time" id="ldn-time">00:00:00</div>
                 <div class="clock-date" id="ldn-date">0000:00:00</div>
             </div>
-            <div class="timezone-clock" data-tz="Asia/Tokyo">
+            <div class="timezone-clock small-clock" data-tz="Asia/Tokyo">
                 <div class="tz-city">東京</div>
                 <div class="clock-time" id="tokyo-time">00:00:00</div>
                 <div class="clock-date" id="tokyo-date">0000:00:00</div>
             </div>
-            <div class="timezone-clock" data-tz="Asia/Riyadh">
+            <div class="timezone-clock small-clock" data-tz="Asia/Riyadh">
                 <div class="tz-city">沙烏地阿拉伯</div>
                 <div class="clock-time" id="riyadh-time">00:00:00</div>
                 <div class="clock-date" id="riyadh-date">0000:00:00</div>
@@ -35,14 +37,83 @@
             <!-- 可擴充更多時區 -->
         </div>
         <div id="clock-error" class="clock-error" style="display:none;"></div>
-    </footer>
+    </div>
 </div>
 
 @section Styles {
     <link rel="stylesheet" href="~/css/clock.css" />
 }
 <style>
-    <!-- 樣式已全部移至 wwwroot/css/clock.css -->
+    .flex-center {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .timezone-row {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-end;
+        justify-content: center;
+        gap: 2rem;
+        width: 100%;
+        margin-top: 2rem;
+    }
+    .small-row {
+        gap: 1.2rem;
+    }
+    .small-clock {
+        flex: 0 0 120px;
+        max-width: 140px;
+        min-width: 90px;
+        padding: 0.7rem 0.5rem;
+        background: #f8f9fa;
+        border-radius: 0.7rem;
+        box-shadow: 0 0 6px #ccc;
+        font-size: 1rem;
+        text-align: center;
+        margin: 0 0.5rem;
+    }
+    .small-clock .clock-label {
+        font-size: 1rem;
+        font-weight: bold;
+        margin-bottom: 0.3rem;
+    }
+    .small-clock .clock-time {
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 0.2rem;
+    }
+    .small-clock .clock-date {
+        font-size: 0.9rem;
+        color: #888;
+    }
+    .large-clock {
+        flex: 0 0 350px;
+        max-width: 400px;
+        min-width: 300px;
+        padding: 2rem 1.5rem;
+        background: #fffbe6;
+        border-radius: 1.5rem;
+        box-shadow: 0 0 16px #ffe06699;
+        font-size: 2.5rem;
+        text-align: center;
+        margin: 0 2rem;
+    }
+    .large-clock .clock-label {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+    .large-clock .clock-time {
+        font-size: 3.5rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    .large-clock .clock-date {
+        font-size: 1.5rem;
+        color: #888;
+    }
 </style>
 @section Scripts {
     <script src="~/js/clock.js"></script>
