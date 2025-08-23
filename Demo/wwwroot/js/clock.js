@@ -6,6 +6,15 @@ const timezones = [
     { city: '沙烏地阿拉伯', tz: 'Asia/Riyadh', timeId: 'riyadh-time', dateId: 'riyadh-date', displayName: '亞洲/利雅德' }
 ];
 
+// 本地時區資料
+const localTimezone = {
+    city: '本地時間',
+    tz: 'local',
+    timeId: 'local-time',
+    dateId: 'local-date',
+    displayName: '本地時區'
+};
+
 // 燈箱相關變數
 let modalUpdateInterval = null;
 let currentModalTimezone = null;
@@ -29,6 +38,10 @@ function formatModalTime(date) {
 
 // 計算時差
 function calculateTimeOffset(timezoneStr) {
+    if (timezoneStr === 'local') {
+        return '+0 (本地時間)';
+    }
+    
     const now = new Date();
     const localTime = now.getTime();
     const localOffset = now.getTimezoneOffset() * 60000;
@@ -150,7 +163,14 @@ function updateModalTime() {
     
     try {
         const now = new Date();
-        const tzDate = new Date(now.toLocaleString('en-US', { timeZone: currentModalTimezone.tz }));
+        let tzDate;
+        
+        if (currentModalTimezone.tz === 'local') {
+            tzDate = now; // 使用本地時間
+        } else {
+            tzDate = new Date(now.toLocaleString('en-US', { timeZone: currentModalTimezone.tz }));
+        }
+        
         document.getElementById('modal-time').textContent = formatModalTime(tzDate);
     } catch (e) {
         document.getElementById('modal-time').textContent = '時間取得失敗';
@@ -159,6 +179,9 @@ function updateModalTime() {
 
 // 尋找時區資料
 function findTimezoneData(tzString) {
+    if (tzString === 'local') {
+        return localTimezone;
+    }
     return timezones.find(tz => tz.tz === tzString);
 }
 
