@@ -94,8 +94,6 @@ function hideError() {
 
 // 燈箱功能
 function openModal(timezone) {
-    console.log('openModal 被呼叫，時區資料:', timezone);
-    
     currentModalTimezone = timezone;
     const modal = document.getElementById('timezone-modal');
     
@@ -103,8 +101,6 @@ function openModal(timezone) {
         console.error('找不到燈箱元素 #timezone-modal');
         return;
     }
-    
-    console.log('燈箱元素找到:', modal);
     
     // 設定燈箱內容
     const modalTimezone = document.getElementById('modal-timezone');
@@ -115,16 +111,12 @@ function openModal(timezone) {
     if (modalCity) modalCity.textContent = timezone.city;
     if (modalOffset) modalOffset.textContent = calculateTimeOffset(timezone.tz);
     
-    console.log('燈箱內容設定完成');
-    
     // 顯示燈箱
     modal.style.display = 'flex';
     modal.setAttribute('aria-hidden', 'false');
-    console.log('燈箱 display 設為 flex');
     
     setTimeout(() => {
         modal.classList.add('show');
-        console.log('燈箱 show 類別已加入');
     }, 10);
     
     // 開始更新燈箱時間
@@ -133,8 +125,6 @@ function openModal(timezone) {
     
     // 防止背景滾動
     document.body.style.overflow = 'hidden';
-    
-    console.log('燈箱開啟完成');
 }
 
 function closeModal() {
@@ -186,10 +176,6 @@ function findTimezoneData(tzString) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 DOM 載入完成，開始初始化 - 版本 2023.08.23');
-    console.log('🔍 當前 URL:', window.location.href);
-    console.log('🔍 User Agent:', navigator.userAgent);
-    
     updateClocks();
     setInterval(updateClocks, 1000);
     
@@ -197,54 +183,39 @@ window.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('timezone-modal');
     const clickableClocks = document.querySelectorAll('.clickable-clock');
     
-    console.log('🎯 燈箱元素:', modal);
-    console.log('🎯 可點擊時鐘元素數量:', clickableClocks.length);
-    
     if (!modal) {
-        console.error('❌ 找不到燈箱元素！');
+        console.error('找不到燈箱元素！');
     }
     
     if (clickableClocks.length === 0) {
-        console.error('❌ 找不到任何可點擊的時鐘元素！');
-        console.log('🔍 所有時鐘元素:', document.querySelectorAll('.small-clock'));
+        console.error('找不到任何可點擊的時鐘元素！');
     }
     
     clickableClocks.forEach((clock, index) => {
-        console.log(`🕐 時鐘 ${index}:`, clock, '時區:', clock.getAttribute('data-tz'));
-        
         // 直接綁定每個時鐘的點擊事件作為備份
         clock.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            console.log('🖱️ 直接點擊事件觸發:', this);
             
             const timezone = this.getAttribute('data-tz');
             const timezoneData = findTimezoneData(timezone);
             if (timezoneData) {
-                console.log('✅ 準備開啟燈箱:', timezoneData);
                 openModal(timezoneData);
             } else {
-                console.error('❌ 找不到時區資料:', timezone);
+                console.error('找不到時區資料:', timezone);
             }
         });
     });
     
     // 綁定時區時鐘點擊事件（委派方式）
     document.addEventListener('click', (e) => {
-        console.log('全域點擊事件觸發:', e.target);
-        
         const clockElement = e.target.closest('.clickable-clock');
-        console.log('找到的時鐘元素:', clockElement);
         
         if (clockElement) {
             const timezone = clockElement.getAttribute('data-tz');
-            console.log('時區:', timezone);
-            
             const timezoneData = findTimezoneData(timezone);
-            console.log('時區資料:', timezoneData);
             
             if (timezoneData) {
-                console.log('開啟燈箱:', timezoneData);
                 openModal(timezoneData);
             } else {
                 console.error('找不到時區資料:', timezone);
@@ -253,13 +224,11 @@ window.addEventListener('DOMContentLoaded', () => {
         
         // 燈箱關閉按鈕
         if (e.target.classList.contains('modal-close')) {
-            console.log('關閉按鈕被點擊');
             closeModal();
         }
         
         // 點擊燈箱外部關閉
         if (e.target.classList.contains('modal-overlay')) {
-            console.log('燈箱外部被點擊');
             closeModal();
         }
     });
@@ -267,12 +236,9 @@ window.addEventListener('DOMContentLoaded', () => {
     // ESC 鍵關閉燈箱
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && currentModalTimezone) {
-            console.log('ESC 鍵關閉燈箱');
             closeModal();
         }
     });
-    
-    console.log('事件綁定完成');
 });
 
 // 預留：可擴充更多時區，只需在 timezones 陣列中新增即可。
