@@ -14,22 +14,22 @@
     </div>
     <div class="timezone-footer">
         <div class="timezone-row small-row">
-            <div class="timezone-clock small-clock" data-tz="America/New_York">
+            <div class="timezone-clock small-clock clickable-clock" data-tz="America/New_York">
                 <div class="tz-city">紐約</div>
                 <div class="clock-time" id="ny-time">00:00:00</div>
                 <div class="clock-date" id="ny-date">0000:00:00</div>
             </div>
-            <div class="timezone-clock small-clock" data-tz="Europe/London">
+            <div class="timezone-clock small-clock clickable-clock" data-tz="Europe/London">
                 <div class="tz-city">倫敦</div>
                 <div class="clock-time" id="ldn-time">00:00:00</div>
                 <div class="clock-date" id="ldn-date">0000:00:00</div>
             </div>
-            <div class="timezone-clock small-clock" data-tz="Asia/Tokyo">
+            <div class="timezone-clock small-clock clickable-clock" data-tz="Asia/Tokyo">
                 <div class="tz-city">東京</div>
                 <div class="clock-time" id="tokyo-time">00:00:00</div>
                 <div class="clock-date" id="tokyo-date">0000:00:00</div>
             </div>
-            <div class="timezone-clock small-clock" data-tz="Asia/Riyadh">
+            <div class="timezone-clock small-clock clickable-clock" data-tz="Asia/Riyadh">
                 <div class="tz-city">沙烏地阿拉伯</div>
                 <div class="clock-time" id="riyadh-time">00:00:00</div>
                 <div class="clock-date" id="riyadh-date">0000:00:00</div>
@@ -37,6 +37,36 @@
             <!-- 可擴充更多時區 -->
         </div>
         <div id="clock-error" class="clock-error" style="display:none;"></div>
+    </div>
+</div>
+
+<!-- 燈箱結構 -->
+<div id="timezone-modal" class="modal-overlay" style="display: none;" aria-hidden="true">
+    <div class="modal-content" role="dialog" aria-labelledby="modal-title" aria-describedby="modal-description">
+        <div class="modal-header">
+            <h3 id="modal-title" class="modal-title">時區詳細資訊</h3>
+            <button class="modal-close" type="button" aria-label="關閉燈箱">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="timezone-info">
+                <div class="timezone-name">
+                    <span class="label">時區名稱：</span>
+                    <span id="modal-timezone" class="value">-</span>
+                </div>
+                <div class="city-name">
+                    <span class="label">城市：</span>
+                    <span id="modal-city" class="value">-</span>
+                </div>
+                <div class="current-time">
+                    <span class="label">當前時間：</span>
+                    <span id="modal-time" class="value time-display">0000/00/00 00:00:00</span>
+                </div>
+                <div class="time-offset">
+                    <span class="label">與本地時差：</span>
+                    <span id="modal-offset" class="value offset-display">+0</span>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
