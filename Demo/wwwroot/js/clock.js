@@ -163,7 +163,9 @@ function findTimezoneData(tzString) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM 載入完成，開始初始化');
+    console.log('🚀 DOM 載入完成，開始初始化 - 版本 2023.08.23');
+    console.log('🔍 當前 URL:', window.location.href);
+    console.log('🔍 User Agent:', navigator.userAgent);
     
     updateClocks();
     setInterval(updateClocks, 1000);
@@ -172,22 +174,34 @@ window.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('timezone-modal');
     const clickableClocks = document.querySelectorAll('.clickable-clock');
     
-    console.log('燈箱元素:', modal);
-    console.log('可點擊時鐘元素數量:', clickableClocks.length);
+    console.log('🎯 燈箱元素:', modal);
+    console.log('🎯 可點擊時鐘元素數量:', clickableClocks.length);
+    
+    if (!modal) {
+        console.error('❌ 找不到燈箱元素！');
+    }
+    
+    if (clickableClocks.length === 0) {
+        console.error('❌ 找不到任何可點擊的時鐘元素！');
+        console.log('🔍 所有時鐘元素:', document.querySelectorAll('.small-clock'));
+    }
     
     clickableClocks.forEach((clock, index) => {
-        console.log(`時鐘 ${index}:`, clock, '時區:', clock.getAttribute('data-tz'));
+        console.log(`🕐 時鐘 ${index}:`, clock, '時區:', clock.getAttribute('data-tz'));
         
         // 直接綁定每個時鐘的點擊事件作為備份
         clock.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            console.log('直接點擊事件觸發:', this);
+            console.log('🖱️ 直接點擊事件觸發:', this);
             
             const timezone = this.getAttribute('data-tz');
             const timezoneData = findTimezoneData(timezone);
             if (timezoneData) {
+                console.log('✅ 準備開啟燈箱:', timezoneData);
                 openModal(timezoneData);
+            } else {
+                console.error('❌ 找不到時區資料:', timezone);
             }
         });
     });
