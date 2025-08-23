@@ -1,10 +1,169 @@
 @page
 @model Demo.Pages.index2Model
 @{
-    ViewData["Title"] = "多時區電子時鐘";
+    ViewData["Title"] = "多時區電子時鐘 - P2增強版";
 }
 
+<!-- 頂部工具列 -->
+<div class="top-toolbar">
+    <div class="toolbar-left">
+        <h1 class="app-title" data-i18n="common.appTitle">華麗時鐘</h1>
+    </div>
+    <div class="toolbar-right">
+        <!-- 時區選擇器 -->
+        <div class="timezone-selector">
+            <label for="timezone-select" data-i18n="timezone.label">時區設定</label>
+            <select id="timezone-select" class="timezone-dropdown" data-i18n-placeholder="timezone.placeholder">
+                <option value="">選擇時區...</option>
+            </select>
+        </div>
+        
+        <!-- 控制按鈕群組 -->
+        <div class="control-buttons">
+            <!-- 語言切換 -->
+            <button id="language-toggle" class="control-btn" title="語言切換" aria-label="切換語言">
+                <span class="icon">🌐</span>
+            </button>
+            
+            <!-- 主題切換 -->
+            <button id="theme-toggle" class="control-btn" title="主題切換" aria-label="切換深色/淺色模式">
+                <span class="icon theme-icon">🌙</span>
+            </button>
+            
+            <!-- 設定面板 -->
+            <button id="settings-toggle" class="control-btn" title="設定" aria-label="開啟設定面板">
+                <span class="icon">⚙️</span>
+            </button>
+        </div>
+    </div>
+</div>
 
+
+
+<!-- 設定面板 -->
+<div id="settings-panel" class="settings-panel" style="display: none;" aria-hidden="true">
+    <div class="settings-content">
+        <div class="settings-header">
+            <h3 data-i18n="common.settings">設定</h3>
+            <button class="settings-close" aria-label="關閉設定面板">&times;</button>
+        </div>
+        <div class="settings-body">
+            <!-- 時間格式設定 -->
+            <div class="setting-section">
+                <h4 data-i18n="format.timeFormat">時間格式</h4>
+                
+                <div class="setting-group">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="use24hour" checked>
+                        <span class="slider"></span>
+                        <span class="label" data-i18n="format.use24Hour">24小時制</span>
+                    </label>
+                </div>
+                
+                <div class="setting-group">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="showSeconds" checked>
+                        <span class="slider"></span>
+                        <span class="label" data-i18n="format.showSeconds">顯示秒數</span>
+                    </label>
+                </div>
+                
+                <div class="setting-group">
+                    <label for="timeFormatSelect" data-i18n="format.timeFormat">時間格式：</label>
+                    <select id="timeFormatSelect" class="format-select">
+                        <option value="HH:MM:SS">HH:MM:SS</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 日期格式設定 -->
+            <div class="setting-section">
+                <h4 data-i18n="format.dateFormat">日期格式</h4>
+                
+                <div class="setting-group">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="showDate" checked>
+                        <span class="slider"></span>
+                        <span class="label" data-i18n="format.showDate">顯示日期</span>
+                    </label>
+                </div>
+                
+                <div class="setting-group">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="showWeekday">
+                        <span class="slider"></span>
+                        <span class="label" data-i18n="format.showWeekday">顯示星期</span>
+                    </label>
+                </div>
+                
+                <div class="setting-group">
+                    <label for="dateFormatSelect" data-i18n="format.dateFormat">日期格式：</label>
+                    <select id="dateFormatSelect" class="format-select">
+                        <option value="YYYY/MM/DD">YYYY/MM/DD</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 主題設定 -->
+            <div class="setting-section">
+                <h4 data-i18n="theme.title">主題設定</h4>
+                
+                <div class="setting-group radio-group">
+                    <label class="radio-option">
+                        <input type="radio" name="themeMode" value="light">
+                        <span class="radio-mark"></span>
+                        <span class="label" data-i18n="theme.lightMode">淺色模式</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="themeMode" value="dark">
+                        <span class="radio-mark"></span>
+                        <span class="label" data-i18n="theme.darkMode">深色模式</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="themeMode" value="auto" checked>
+                        <span class="radio-mark"></span>
+                        <span class="label" data-i18n="theme.auto">跟隨系統</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 預覽區域 -->
+            <div class="setting-section">
+                <h4 data-i18n="common.preview">即時預覽</h4>
+                <div class="preview-container">
+                    <div id="preview-time" class="preview-time">00:00:00</div>
+                    <div id="preview-date" class="preview-date">0000/00/00</div>
+                </div>
+            </div>
+        </div>
+        <div class="settings-footer">
+            <button id="resetSettings" class="btn-secondary" data-i18n="common.reset">重設</button>
+            <button id="saveSettings" class="btn-primary" data-i18n="common.save">儲存</button>
+        </div>
+    </div>
+</div>
+
+<!-- 語言選擇面板 -->
+<div id="language-panel" class="language-panel" style="display: none;" aria-hidden="true">
+    <div class="language-options">
+        <div class="language-option" data-lang="zh-TW">
+            <span class="flag">🇹🇼</span>
+            <span class="name">繁體中文</span>
+        </div>
+        <div class="language-option" data-lang="zh-CN">
+            <span class="flag">🇨🇳</span>
+            <span class="name">简体中文</span>
+        </div>
+        <div class="language-option" data-lang="en-US">
+            <span class="flag">🇺🇸</span>
+            <span class="name">English</span>
+        </div>
+        <div class="language-option" data-lang="ja-JP">
+            <span class="flag">🇯🇵</span>
+            <span class="name">日本語</span>
+        </div>
+    </div>
+</div>
 
 <div class="clock-container flex-center" style="min-height: 80vh; justify-content: center; position: relative;">
     <!-- 載入覆蓋層 -->
@@ -121,6 +280,456 @@
     <link rel="stylesheet" href="~/css/clock.css" />
 }
 <style>
+    /* CSS 變數系統 - 淺色模式（預設） */
+    :root {
+        /* 背景顏色 */
+        --bg-primary: #ffffff;
+        --bg-secondary: #f8fafc;
+        --bg-card: #ffffff;
+        --bg-overlay: rgba(0, 0, 0, 0.5);
+        
+        /* 文字顏色 */
+        --text-primary: #0f172a;
+        --text-secondary: #64748b;
+        --text-accent: #22d3ee;
+        --text-light: #94a3b8;
+        
+        /* 時鐘顏色 */
+        --clock-bg: #f8fafc;
+        --clock-border: #e2e8f0;
+        --clock-numbers: #374151;
+        --clock-hands: #1f2937;
+        --clock-highlight: #fffbe6;
+        --clock-shadow: #ffe06699;
+        
+        /* 數位時鐘 */
+        --digital-bg: #18181b;
+        --digital-text: #22d3ee;
+        
+        /* 按鈕與控制項 */
+        --btn-bg: #f1f5f9;
+        --btn-hover: #e2e8f0;
+        --btn-active: #cbd5e1;
+        --btn-primary: #3b82f6;
+        --btn-primary-hover: #2563eb;
+        
+        /* 邊框與陰影 */
+        --border-color: #e2e8f0;
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+        
+        /* 動畫過渡 */
+        --transition-fast: 0.15s ease;
+        --transition-normal: 0.3s ease;
+        --transition-slow: 0.5s ease;
+    }
+    
+    /* 深色模式 */
+    :root[data-theme="dark"] {
+        /* 背景顏色 */
+        --bg-primary: #0f172a;
+        --bg-secondary: #1e293b;
+        --bg-card: #334155;
+        --bg-overlay: rgba(0, 0, 0, 0.7);
+        
+        /* 文字顏色 */
+        --text-primary: #f1f5f9;
+        --text-secondary: #94a3b8;
+        --text-accent: #22d3ee;
+        --text-light: #64748b;
+        
+        /* 時鐘顏色 */
+        --clock-bg: #1e293b;
+        --clock-border: #475569;
+        --clock-numbers: #e2e8f0;
+        --clock-hands: #f1f5f9;
+        --clock-highlight: #334155;
+        --clock-shadow: rgba(34, 211, 238, 0.3);
+        
+        /* 數位時鐘 */
+        --digital-bg: #000000;
+        --digital-text: #22d3ee;
+        
+        /* 按鈕與控制項 */
+        --btn-bg: #475569;
+        --btn-hover: #64748b;
+        --btn-active: #94a3b8;
+        --btn-primary: #3b82f6;
+        --btn-primary-hover: #2563eb;
+        
+        /* 邊框與陰影 */
+        --border-color: #475569;
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+        --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
+        --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4);
+    }
+
+    /* 全域基礎樣式 */
+    * {
+        transition: background-color var(--transition-normal), 
+                    color var(--transition-normal), 
+                    border-color var(--transition-normal);
+    }
+
+    body {
+        background: var(--bg-primary);
+        color: var(--text-primary);
+    }
+
+    /* 頂部工具列 */
+    .top-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 2rem;
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .app-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .toolbar-right {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .timezone-selector {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .timezone-selector label {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    .timezone-dropdown {
+        padding: 0.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 0.375rem;
+        background: var(--bg-card);
+        color: var(--text-primary);
+        min-width: 200px;
+    }
+
+    .control-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .control-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        background: var(--btn-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+    }
+
+    .control-btn:hover {
+        background: var(--btn-hover);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .control-btn .icon {
+        font-size: 1.25rem;
+    }
+
+    /* 設定面板 */
+    .settings-panel {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--bg-overlay);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(4px);
+    }
+
+    .settings-content {
+        background: var(--bg-card);
+        border-radius: 1rem;
+        box-shadow: var(--shadow-lg);
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    .settings-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .settings-header h3 {
+        margin: 0;
+        color: var(--text-primary);
+    }
+
+    .settings-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: var(--text-secondary);
+        padding: 0.25rem;
+        border-radius: 0.25rem;
+        transition: all var(--transition-fast);
+    }
+
+    .settings-close:hover {
+        background: var(--btn-hover);
+        color: var(--text-primary);
+    }
+
+    .settings-body {
+        padding: 1.5rem;
+    }
+
+    .setting-section {
+        margin-bottom: 2rem;
+    }
+
+    .setting-section h4 {
+        margin: 0 0 1rem 0;
+        color: var(--text-primary);
+        font-weight: 600;
+    }
+
+    .setting-group {
+        margin-bottom: 1rem;
+    }
+
+    /* Toggle 開關 */
+    .toggle-switch {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        cursor: pointer;
+    }
+
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: relative;
+        display: inline-block;
+        width: 3rem;
+        height: 1.5rem;
+        background-color: var(--btn-bg);
+        border-radius: 1.5rem;
+        transition: var(--transition-fast);
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 1.25rem;
+        width: 1.25rem;
+        left: 0.125rem;
+        bottom: 0.125rem;
+        background-color: white;
+        border-radius: 50%;
+        transition: var(--transition-fast);
+    }
+
+    input:checked + .slider {
+        background-color: var(--btn-primary);
+    }
+
+    input:checked + .slider:before {
+        transform: translateX(1.5rem);
+    }
+
+    /* 單選按鈕群組 */
+    .radio-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .radio-option {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 0.375rem;
+        transition: var(--transition-fast);
+    }
+
+    .radio-option:hover {
+        background: var(--btn-bg);
+    }
+
+    .radio-option input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .radio-mark {
+        width: 1.25rem;
+        height: 1.25rem;
+        border: 2px solid var(--border-color);
+        border-radius: 50%;
+        position: relative;
+        transition: var(--transition-fast);
+    }
+
+    .radio-mark:after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 50%;
+        background: var(--btn-primary);
+        transform: translate(-50%, -50%) scale(0);
+        transition: var(--transition-fast);
+    }
+
+    input:checked + .radio-mark {
+        border-color: var(--btn-primary);
+    }
+
+    input:checked + .radio-mark:after {
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    /* 選擇框 */
+    .format-select {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 0.375rem;
+        background: var(--bg-card);
+        color: var(--text-primary);
+    }
+
+    /* 預覽區域 */
+    .preview-container {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        text-align: center;
+    }
+
+    .preview-time {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: var(--text-accent);
+        margin-bottom: 0.5rem;
+    }
+
+    .preview-date {
+        font-size: 1rem;
+        color: var(--text-secondary);
+    }
+
+    /* 設定面板底部 */
+    .settings-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        padding: 1.5rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .btn-secondary, .btn-primary {
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        border: none;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all var(--transition-fast);
+    }
+
+    .btn-secondary {
+        background: var(--btn-bg);
+        color: var(--text-secondary);
+    }
+
+    .btn-secondary:hover {
+        background: var(--btn-hover);
+        color: var(--text-primary);
+    }
+
+    .btn-primary {
+        background: var(--btn-primary);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: var(--btn-primary-hover);
+    }
+
+    /* 語言選擇面板 */
+    .language-panel {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 0.5rem;
+        box-shadow: var(--shadow-lg);
+        z-index: 100;
+        min-width: 150px;
+    }
+
+    .language-options {
+        padding: 0.5rem 0;
+    }
+
+    .language-option {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        transition: var(--transition-fast);
+    }
+
+    .language-option:hover {
+        background: var(--btn-bg);
+    }
+
+    .language-option.active {
+        background: var(--btn-primary);
+        color: white;
+    }
+
+    .language-option .flag {
+        font-size: 1.25rem;
+    }
+
+    /* 時鐘容器適配 */
     .flex-center {
         display: flex;
         flex-direction: column;
@@ -145,45 +754,48 @@
         max-width: 140px;
         min-width: 90px;
         padding: 0.7rem 0.5rem;
-        background: #f8f9fa;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
         border-radius: 0.7rem;
-        box-shadow: 0 0 6px #ccc;
+        box-shadow: var(--shadow-md);
         font-size: 1rem;
         text-align: center;
         margin: 0 0.5rem;
-        cursor: pointer; /* 加入游標樣式 */
-        transition: transform 0.2s, box-shadow 0.2s; /* 加入過渡效果 */
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
     }
     .small-clock:hover {
-        transform: scale(1.05); /* 懸停效果 */
-        box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+        transform: scale(1.05);
+        box-shadow: var(--shadow-lg);
     }
     .small-clock .clock-label {
         font-size: 1rem;
         font-weight: bold;
         margin-bottom: 0.3rem;
+        color: var(--text-primary);
     }
     .small-clock .clock-time {
         font-size: 1.2rem;
         font-weight: bold;
         margin-bottom: 0.2rem;
+        color: var(--text-accent);
     }
     .small-clock .clock-date {
         font-size: 0.9rem;
-        color: #888;
+        color: var(--text-secondary);
     }
     .large-clock {
         flex: 0 0 350px;
         max-width: 400px;
         min-width: 300px;
         padding: 2rem 1.5rem;
-        background: #fffbe6;
+        background: var(--clock-highlight);
+        border: 1px solid var(--border-color);
         border-radius: 1.5rem;
-        box-shadow: 0 0 16px #ffe06699;
+        box-shadow: 0 0 16px var(--clock-shadow);
         font-size: 2.5rem;
         text-align: center;
         margin: 0 auto 2rem auto;
-        /* 置中 */
         align-self: center;
     }
     .large-clock.clickable-clock {
@@ -192,23 +804,87 @@
     }
     .large-clock.clickable-clock:hover {
         transform: scale(1.02);
-        box-shadow: 0 0 24px #ffe06699;
+        box-shadow: 0 0 24px var(--clock-shadow);
     }
     .large-clock .clock-label {
         font-size: 2rem;
         font-weight: bold;
         margin-bottom: 1rem;
+        color: var(--text-primary);
     }
     .large-clock .clock-time {
         font-size: 3.5rem;
         font-weight: bold;
         margin-bottom: 0.5rem;
+        color: var(--text-accent);
     }
     .large-clock .clock-date {
         font-size: 1.5rem;
-        color: #888;
+        color: var(--text-secondary);
+    }
+    
+    /* 錯誤訊息 */
+    .clock-error {
+        background: #fee2e2;
+        color: #dc2626;
+        padding: 0.75rem;
+        border-radius: 0.375rem;
+        margin-top: 1rem;
+        text-align: center;
+    }
+    
+    :root[data-theme="dark"] .clock-error {
+        background: #7f1d1d;
+        color: #fca5a5;
+    }
+
+    /* 響應式設計 */
+    @@media (max-width: 768px) {
+        .top-toolbar {
+            flex-direction: column;
+            gap: 1rem;
+            padding: 1rem;
+        }
+        
+        .toolbar-right {
+            width: 100%;
+            justify-content: space-between;
+        }
+        
+        .timezone-selector {
+            flex: 1;
+        }
+        
+        .timezone-dropdown {
+            min-width: 150px;
+        }
+        
+        .settings-content {
+            margin: 1rem;
+            width: calc(100% - 2rem);
+        }
+        
+        .timezone-row {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .small-clock {
+            max-width: 200px;
+            flex: none;
+        }
     }
 </style>
 @section Scripts {
+    <!-- 翻譯資源 -->
+    <script src="~/js/i18n-zh-TW.js"></script>
+    <script src="~/js/i18n-zh-CN.js"></script>
+    <script src="~/js/i18n-en-US.js"></script>
+    <script src="~/js/i18n-ja-JP.js"></script>
+    
+    <!-- 增強型時鐘系統 -->
+    <script src="~/js/enhanced-clock.js"></script>
+    
+    <!-- 原有的時鐘 JS (向後相容) -->
     <script src="~/js/clock.js"></script>
 }
