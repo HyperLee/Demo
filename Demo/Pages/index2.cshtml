@@ -45,7 +45,12 @@
     <div class="modal-content" role="dialog" aria-labelledby="modal-title" aria-describedby="modal-description">
         <div class="modal-header">
             <h3 id="modal-title" class="modal-title">時區詳細資訊</h3>
-            <button class="modal-close" type="button" aria-label="關閉燈箱">&times;</button>
+            <div class="modal-controls">
+                <button id="sound-toggle" class="sound-toggle-btn" type="button" aria-label="切換音效" title="切換音效開關">
+                    <span class="sound-icon">🔊</span>
+                </button>
+                <button class="modal-close" type="button" aria-label="關閉燈箱">&times;</button>
+            </div>
         </div>
         <div class="modal-body">
             <div class="timezone-info">
@@ -69,6 +74,16 @@
         </div>
     </div>
 </div>
+
+<!-- 音效檔案預載 -->
+<audio id="modal-open-sound" preload="auto" style="display: none;">
+    <source src="~/sounds/modal-open.mp3" type="audio/mpeg">
+    <source src="~/sounds/modal-open.ogg" type="audio/ogg">
+</audio>
+<audio id="modal-close-sound" preload="auto" style="display: none;">
+    <source src="~/sounds/modal-close.mp3" type="audio/mpeg">
+    <source src="~/sounds/modal-close.ogg" type="audio/ogg">
+</audio>
 
 @section Styles {
     <link rel="stylesheet" href="~/css/clock.css" />

@@ -19,6 +19,75 @@ const localTimezone = {
 let modalUpdateInterval = null;
 let currentModalTimezone = null;
 
+// 音效相關變數和設定
+const SoundManager = {
+    enabled: localStorage.getItem('modalSoundEnabled') !== 'false', // 預設啟用
+    volume: 0.4, // 適中音量
+    
+    // 初始化音效元素
+    init() {
+        this.openSound = document.getElementById('modal-open-sound');
+        this.closeSound = document.getElementById('modal-close-sound');
+        
+        // 設定音量
+        if (this.openSound) {
+            this.openSound.volume = this.volume;
+        }
+        if (this.closeSound) {
+            this.closeSound.volume = this.volume;
+        }
+    },
+    
+    // 播放開啟音效
+    playOpen() {
+        if (this.enabled && this.openSound) {
+            try {
+                this.openSound.currentTime = 0; // 重置到開始位置
+                const playPromise = this.openSound.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        // 靜默處理音效播放失敗，不影響功能
+                        console.warn('開啟音效播放失敗:', error);
+                    });
+                }
+            } catch (error) {
+                console.warn('開啟音效播放錯誤:', error);
+            }
+        }
+    },
+    
+    // 播放關閉音效
+    playClose() {
+        if (this.enabled && this.closeSound) {
+            try {
+                this.closeSound.currentTime = 0; // 重置到開始位置
+                const playPromise = this.closeSound.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        // 靜默處理音效播放失敗，不影響功能
+                        console.warn('關閉音效播放失敗:', error);
+                    });
+                }
+            } catch (error) {
+                console.warn('關閉音效播放錯誤:', error);
+            }
+        }
+    },
+    
+    // 切換音效開關
+    toggle() {
+        this.enabled = !this.enabled;
+        localStorage.setItem('modalSoundEnabled', this.enabled.toString());
+        return this.enabled;
+    },
+    
+    // 設定音效狀態
+    setEnabled(enabled) {
+        this.enabled = enabled;
+        localStorage.setItem('modalSoundEnabled', enabled.toString());
+    }
+};
+
 function pad(num) {
     return num.toString().padStart(2, '0');
 }
@@ -115,6 +184,9 @@ function openModal(timezone) {
     modal.style.display = 'flex';
     modal.setAttribute('aria-hidden', 'false');
     
+    // 播放開啟音效
+    SoundManager.playOpen();
+    
     setTimeout(() => {
         modal.classList.add('show');
     }, 10);
@@ -131,6 +203,9 @@ function closeModal() {
     const modal = document.getElementById('timezone-modal');
     modal.classList.remove('show');
     modal.setAttribute('aria-hidden', 'true');
+    
+    // 播放關閉音效
+    SoundManager.playClose();
     
     setTimeout(() => {
         modal.style.display = 'none';
@@ -176,8 +251,12 @@ function findTimezoneData(tzString) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+    // 初始化時鐘功能
     updateClocks();
     setInterval(updateClocks, 1000);
+    
+    // 初始化音效管理器
+    SoundManager.init();
     
     // 確認所有必要元素都存在
     const modal = document.getElementById('timezone-modal');
@@ -227,6 +306,11 @@ window.addEventListener('DOMContentLoaded', () => {
             closeModal();
         }
         
+        // 音效控制按鈕
+        if (e.target.classList.contains('sound-toggle-btn') || e.target.closest('.sound-toggle-btn')) {
+            toggleSoundControl();
+        }
+        
         // 點擊燈箱外部關閉
         if (e.target.classList.contains('modal-overlay')) {
             closeModal();
@@ -239,6 +323,38 @@ window.addEventListener('DOMContentLoaded', () => {
             closeModal();
         }
     });
+    
+    // 更新音效按鈕的UI狀態
+    updateSoundButtonUI();
 });
+
+// 音效控制函數
+function toggleSoundControl() {
+    const enabled = SoundManager.toggle();
+    updateSoundButtonUI();
+    
+    // 播放測試音效以提供即時回饋
+    if (enabled) {
+        SoundManager.playOpen();
+    }
+}
+
+// 更新音效按鈕UI
+function updateSoundButtonUI() {
+    const soundButton = document.getElementById('sound-toggle');
+    const soundIcon = soundButton?.querySelector('.sound-icon');
+    
+    if (soundButton && soundIcon) {
+        if (SoundManager.enabled) {
+            soundButton.classList.remove('disabled');
+            soundButton.setAttribute('title', '關閉音效');
+            soundIcon.textContent = '🔊';
+        } else {
+            soundButton.classList.add('disabled');
+            soundButton.setAttribute('title', '開啟音效');
+            soundIcon.textContent = '🔇';
+        }
+    }
+}
 
 // 預留：可擴充更多時區，只需在 timezones 陣列中新增即可。

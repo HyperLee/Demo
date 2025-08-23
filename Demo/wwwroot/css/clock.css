@@ -273,3 +273,57 @@ body {
         font-size: 1rem !important;
     }
 }
+
+/* 音效控制按鈕樣式 */
+.modal-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sound-toggle-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 5px;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.sound-toggle-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.sound-toggle-btn.disabled {
+    opacity: 0.5;
+}
+
+.sound-toggle-btn.disabled .sound-icon::after {
+    content: '🔇';
+}
+
+.sound-icon {
+    display: inline-block;
+    transition: transform 0.2s;
+}
+
+/* 響應式音效按鈕 */
+@media (max-width: 480px) {
+    .sound-toggle-btn {
+        font-size: 1rem;
+        width: 26px;
+        height: 26px;
+    }
+    
+    .modal-controls {
+        gap: 8px;
+    }
+}
