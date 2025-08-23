@@ -72,6 +72,7 @@
 
 @section Styles {
     <link rel="stylesheet" href="~/css/clock.css" />
+    <link rel="stylesheet" href="~/css/test.css" />
 }
 <style>
     .flex-center {
@@ -104,6 +105,12 @@
         font-size: 1rem;
         text-align: center;
         margin: 0 0.5rem;
+        cursor: pointer; /* 加入游標樣式 */
+        transition: transform 0.2s, box-shadow 0.2s; /* 加入過渡效果 */
+    }
+    .small-clock:hover {
+        transform: scale(1.05); /* 懸停效果 */
+        box-shadow: 0 4px 16px rgba(0,0,0,0.25);
     }
     .small-clock .clock-label {
         font-size: 1rem;
