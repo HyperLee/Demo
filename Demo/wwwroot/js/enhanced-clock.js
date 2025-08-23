@@ -774,6 +774,12 @@ class EnhancedClock {
                 dateString = `${year}/${month}/${day}`;
         }
         
+        // 根據 showWeekday 設定動態添加星期
+        if (format.showWeekday && format.dateFormat !== 'dddd, YYYY年MM月DD日') {
+            const weekday = this.getWeekday(date.getDay());
+            dateString = `${weekday} ${dateString}`;
+        }
+        
         return dateString;
     }
 
