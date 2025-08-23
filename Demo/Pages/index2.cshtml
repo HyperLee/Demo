@@ -6,30 +6,60 @@
 
 
 
-<div class="clock-container flex-center" style="min-height: 80vh; justify-content: center;">
-    <div class="local-clock large-clock clickable-clock" data-tz="local">
+<div class="clock-container flex-center" style="min-height: 80vh; justify-content: center; position: relative;">
+    <!-- 載入覆蓋層 -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">載入時區資料...</div>
+        <div class="progress-bar">
+            <div id="progress-bar-fill" class="progress-bar-fill"></div>
+        </div>
+    </div>
+    
+    <!-- 主要內容 -->
+    <div class="local-clock large-clock clickable-clock" 
+         data-tz="local" 
+         tabindex="0" 
+         role="button" 
+         aria-label="點擊查看本地時間詳細資訊，當前時間會即時更新">
         <div class="clock-label">本地時間</div>
         <div id="local-time" class="clock-time">00:00:00</div>
         <div id="local-date" class="clock-date">0000:00:00</div>
     </div>
     <div class="timezone-footer">
         <div class="timezone-row small-row">
-            <div class="timezone-clock small-clock clickable-clock" data-tz="America/New_York">
+            <div class="timezone-clock small-clock clickable-clock" 
+                 data-tz="America/New_York"
+                 tabindex="0" 
+                 role="button" 
+                 aria-label="點擊查看紐約時區詳細資訊，美東時間即時更新">
                 <div class="tz-city">紐約</div>
                 <div class="clock-time" id="ny-time">00:00:00</div>
                 <div class="clock-date" id="ny-date">0000:00:00</div>
             </div>
-            <div class="timezone-clock small-clock clickable-clock" data-tz="Europe/London">
+            <div class="timezone-clock small-clock clickable-clock" 
+                 data-tz="Europe/London"
+                 tabindex="0" 
+                 role="button" 
+                 aria-label="點擊查看倫敦時區詳細資訊，格林威治時間即時更新">
                 <div class="tz-city">倫敦</div>
                 <div class="clock-time" id="ldn-time">00:00:00</div>
                 <div class="clock-date" id="ldn-date">0000:00:00</div>
             </div>
-            <div class="timezone-clock small-clock clickable-clock" data-tz="Asia/Tokyo">
+            <div class="timezone-clock small-clock clickable-clock" 
+                 data-tz="Asia/Tokyo"
+                 tabindex="0" 
+                 role="button" 
+                 aria-label="點擊查看東京時區詳細資訊，日本標準時間即時更新">
                 <div class="tz-city">東京</div>
                 <div class="clock-time" id="tokyo-time">00:00:00</div>
                 <div class="clock-date" id="tokyo-date">0000:00:00</div>
             </div>
-            <div class="timezone-clock small-clock clickable-clock" data-tz="Asia/Riyadh">
+            <div class="timezone-clock small-clock clickable-clock" 
+                 data-tz="Asia/Riyadh"
+                 tabindex="0" 
+                 role="button" 
+                 aria-label="點擊查看沙烏地阿拉伯時區詳細資訊，阿拉伯標準時間即時更新">
                 <div class="tz-city">沙烏地阿拉伯</div>
                 <div class="clock-time" id="riyadh-time">00:00:00</div>
                 <div class="clock-date" id="riyadh-date">0000:00:00</div>
@@ -46,10 +76,12 @@
         <div class="modal-header">
             <h3 id="modal-title" class="modal-title">時區詳細資訊</h3>
             <div class="modal-controls">
-                <button id="sound-toggle" class="sound-toggle-btn" type="button" aria-label="切換音效" title="切換音效開關">
+                <button id="sound-toggle" class="sound-toggle-btn" type="button" 
+                        tabindex="0" aria-label="切換音效" title="切換音效開關">
                     <span class="sound-icon">🔊</span>
                 </button>
-                <button class="modal-close" type="button" aria-label="關閉燈箱">&times;</button>
+                <button class="modal-close" type="button" 
+                        tabindex="0" aria-label="關閉燈箱">&times;</button>
             </div>
         </div>
         <div class="modal-body">
