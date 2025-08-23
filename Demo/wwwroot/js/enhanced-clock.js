@@ -634,8 +634,8 @@ class EnhancedClock {
         
         try {
             if (selectedTimezone && selectedTimezone !== 'local' && selectedTimezone !== 'Asia/Taipei') {
-                // 使用選擇的時區
-                const tzTime = new Date(now.toLocaleString("en-US", { timeZone: selectedTimezone }));
+                // 使用選擇的時區 - 改用更穩定的時區轉換方式
+                const tzTime = this.convertToTimezone(now, selectedTimezone);
                 displayTime = this.formatTime(tzTime);
                 displayDate = this.formatDate(tzTime);
                 
@@ -686,7 +686,7 @@ class EnhancedClock {
             
             if (timeElement && dateElement) {
                 try {
-                    const tzTime = new Date(now.toLocaleString("en-US", { timeZone: clock.timezone }));
+                    const tzTime = this.convertToTimezone(now, clock.timezone);
                     timeElement.textContent = this.formatTime(tzTime);
                     dateElement.textContent = this.formatDate(tzTime);
                 } catch (error) {
@@ -695,6 +695,46 @@ class EnhancedClock {
                 }
             }
         });
+    }
+
+    /**
+     * 穩定的時區轉換函式
+     */
+    convertToTimezone(date, timezone) {
+        try {
+            // 使用 Intl.DateTimeFormat 進行更精確的時區轉換
+            const formatter = new Intl.DateTimeFormat('en-CA', {
+                timeZone: timezone,
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            
+            const parts = formatter.formatToParts(date);
+            const partsObj = {};
+            parts.forEach(part => {
+                partsObj[part.type] = part.value;
+            });
+            
+            // 建立新的 Date 物件，避免時區轉換的精度問題
+            const convertedDate = new Date(
+                parseInt(partsObj.year),
+                parseInt(partsObj.month) - 1, // 月份從0開始
+                parseInt(partsObj.day),
+                parseInt(partsObj.hour),
+                parseInt(partsObj.minute),
+                parseInt(partsObj.second)
+            );
+            
+            return convertedDate;
+        } catch (error) {
+            console.error('Timezone conversion error:', error);
+            return date; // 返回原始時間作為降級
+        }
     }
 
     /**
@@ -815,7 +855,7 @@ class EnhancedClock {
         
         try {
             if (selectedTimezone && selectedTimezone !== 'local' && selectedTimezone !== 'Asia/Taipei') {
-                previewDisplayTime = new Date(date.toLocaleString("en-US", { timeZone: selectedTimezone }));
+                previewDisplayTime = this.convertToTimezone(date, selectedTimezone);
             }
         } catch (error) {
             console.error('Error in preview timezone conversion:', error);
