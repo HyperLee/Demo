@@ -1,6 +1,5 @@
 ---
 description: index3 月曆頁面技術總結
-mode: technical_summary
 created: 2025年8月26日
 version: 2.0
 ---
