@@ -1,4 +1,3 @@
-using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -63,7 +62,7 @@ public sealed class Index3Model : PageModel
     /// <summary>
     /// 是否需要顯示自動更正提示。
     /// </summary>
-    public bool HasCorrection => CorrectionMessage is not null && CorrectionMessage.Length > 0;
+    public bool HasCorrection => !string.IsNullOrEmpty(CorrectionMessage);
 
     /// <summary>
     /// 年份下拉選項（1900–2100）。
@@ -78,7 +77,7 @@ public sealed class Index3Model : PageModel
     /// <summary>
     /// 週標題（週日為起始）。
     /// </summary>
-    public IReadOnlyList<string> WeekdayNames { get; } = new[] { "日", "一", "二", "三", "四", "五", "六" };
+    public IReadOnlyList<string> WeekdayNames { get; } = ["日", "一", "二", "三", "四", "五", "六"];
 
     /// <summary>
     /// 前一個月份的年份。
@@ -88,17 +87,17 @@ public sealed class Index3Model : PageModel
     /// <summary>
     /// 前一個月份。
     /// </summary>
-    public int PrevMonthValue => DisplayMonth == 1 ? 12 : DisplayMonth - 1;
+    public int PrevMonth => DisplayMonth == 1 ? 12 : DisplayMonth - 1;
 
     /// <summary>
     /// 下一個月份的年份。
     /// </summary>
-    public int NextYear => DisplayMonth == 12 ? DisplayYear - 0 + 1 : DisplayYear;
+    public int NextYear => DisplayMonth == 12 ? DisplayYear + 1 : DisplayYear;
 
     /// <summary>
     /// 下一個月份。
     /// </summary>
-    public int NextMonthValue => DisplayMonth == 12 ? 1 : DisplayMonth + 1;
+    public int NextMonth => DisplayMonth == 12 ? 1 : DisplayMonth + 1;
 
     /// <summary>
     /// 建構函式。
@@ -113,71 +112,72 @@ public sealed class Index3Model : PageModel
     /// </summary>
     public IActionResult OnGet()
     {
-        // 初始化輸入（缺省以今天為準）。
+        // 初始化輸入（缺省以今天為準）
         var inputYear = Year ?? Today.Year;
         var inputMonth = Month ?? Today.Month;
-        int? inputDay = Day;
+        var inputDay = Day;
 
-        // 驗證與裁切範圍。
-        var normYear = Math.Clamp(inputYear, 1900, 2100);
-        var normMonth = Math.Clamp(inputMonth, 1, 12);
+        // 驗證與裁切範圍
+        var correctedYear = Math.Clamp(inputYear, 1900, 2100);
+        var correctedMonth = Math.Clamp(inputMonth, 1, 12);
+        var hasCorrection = correctedYear != inputYear || correctedMonth != inputMonth;
 
-        var corrected = normYear != inputYear || normMonth != inputMonth;
+        var daysInMonth = DateTime.DaysInMonth(correctedYear, correctedMonth);
+        int? correctedDay = null;
 
-        var daysInMonth = DateTime.DaysInMonth(normYear, normMonth);
-
-        int? normDay = null;
         if (inputDay is not null)
         {
-            normDay = Math.Clamp(inputDay.Value, 1, daysInMonth);
-            corrected = corrected || normDay != inputDay;
+            correctedDay = Math.Clamp(inputDay.Value, 1, daysInMonth);
+            hasCorrection = hasCorrection || correctedDay != inputDay;
         }
 
-        DisplayYear = normYear;
-        DisplayMonth = normMonth;
+        DisplayYear = correctedYear;
+        DisplayMonth = correctedMonth;
 
-        if (normDay is not null)
+        if (correctedDay is not null)
         {
-            SelectedDate = new DateOnly(DisplayYear, DisplayMonth, normDay.Value);
+            SelectedDate = new DateOnly(DisplayYear, DisplayMonth, correctedDay.Value);
         }
 
-        if (corrected)
+        if (hasCorrection)
         {
-            CorrectionMessage = normDay is not null
-                ? $"參數已自動更正為 {DisplayYear}/{DisplayMonth:00}/{normDay:00}。"
+            CorrectionMessage = correctedDay is not null
+                ? $"參數已自動更正為 {DisplayYear}/{DisplayMonth:00}/{correctedDay:00}。"
                 : $"參數已自動更正為 {DisplayYear}/{DisplayMonth:00}。";
-            logger.LogDebug("{Message}", CorrectionMessage);
+            
+            logger.LogInformation("Parameters auto-corrected: {Message}", CorrectionMessage);
         }
 
-        CalendarCells = BuildCalendar(DisplayYear, DisplayMonth, SelectedDate);
+        CalendarCells = GenerateCalendarGrid(DisplayYear, DisplayMonth, SelectedDate);
         return Page();
     }
 
     /// <summary>
     /// 產生 42 格（6 週 × 7 天）的月曆資料。
     /// </summary>
-    private IReadOnlyList<CalendarCellView> BuildCalendar(int year, int month, DateOnly? selected)
+    private IReadOnlyList<CalendarCellView> GenerateCalendarGrid(int year, int month, DateOnly? selectedDate)
     {
         var firstOfMonth = new DateOnly(year, month, 1);
-        // 以星期日為一週起始：DayOfWeek Sunday=0。
-        var startOffset = (int)firstOfMonth.DayOfWeek; // 0..6
-        var gridStart = firstOfMonth.AddDays(-startOffset);
+        // 以星期日為一週起始：DayOfWeek.Sunday = 0
+        var startOffset = (int)firstOfMonth.DayOfWeek;
+        var gridStartDate = firstOfMonth.AddDays(-startOffset);
 
-        var cells = new List<CalendarCellView>(capacity: 42);
+        var cells = new List<CalendarCellView>(42);
+        
         for (var i = 0; i < 42; i++)
         {
-            var d = gridStart.AddDays(i);
-            var inCurrent = d.Month == month && d.Year == year;
-            var isToday = d == Today;
-            var isSelected = selected is not null && d == selected.Value;
-            var dowIndex = (int)d.DayOfWeek; // 0..6
+            var currentDate = gridStartDate.AddDays(i);
+            var isInCurrentMonth = currentDate.Month == month && currentDate.Year == year;
+            var isToday = currentDate == Today;
+            var isSelected = selectedDate.HasValue && currentDate == selectedDate.Value;
+            var dayOfWeekIndex = (int)currentDate.DayOfWeek;
 
             cells.Add(new CalendarCellView(
-                Date: d,
-                InCurrentMonth: inCurrent,
+                Date: currentDate,
+                InCurrentMonth: isInCurrentMonth,
                 IsToday: isToday,
                 IsSelected: isSelected,
-                DayOfWeekIndex: dowIndex
+                DayOfWeekIndex: dayOfWeekIndex
             ));
         }
 

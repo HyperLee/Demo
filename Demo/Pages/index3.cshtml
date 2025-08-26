@@ -4,91 +4,245 @@
     ViewData["Title"] = "月曆（index3）";
 }
 
-<div class="container py-3 calendar">
-    <div class="d-flex align-items-center justify-content-between mb-3 calendar-header">
-        <h2 class="h4 m-0">@ViewData["Title"]</h2>
-        <div class="d-flex gap-2">
-            <a class="btn btn-outline-secondary" asp-page="/index3" asp-route-year="@Model.PrevYear" asp-route-month="@Model.PrevMonthValue" title="上一月" aria-label="上一月">
-                &laquo;
-            </a>
-            <a class="btn btn-outline-secondary" asp-page="/index3" asp-route-year="@Model.NextYear" asp-route-month="@Model.NextMonthValue" title="下一月" aria-label="下一月">
-                &raquo;
-            </a>
+<div class="container py-3">
+    <!-- 標題與導航控制 -->
+    <div class="card shadow-lg border-0 mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="card-body text-white">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h2 class="h3 m-0 fw-bold">
+                        <i class="bi bi-calendar3"></i> @ViewData["Title"]
+                    </h2>
+                    <p class="mb-0 opacity-75">
+                        <i class="bi bi-geo-alt"></i> 台灣時區 • @DateTime.Now.ToString("yyyy年M月d日 dddd HH:mm")
+                    </p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a class="btn btn-outline-light btn-lg shadow" 
+                       asp-page="/index3" 
+                       asp-route-year="@Model.PrevYear" 
+                       asp-route-month="@Model.PrevMonth" 
+                       title="上一月" 
+                       aria-label="切換至上個月">
+                        <i class="bi bi-chevron-left"></i> 上月
+                    </a>
+                    <a class="btn btn-outline-light btn-lg shadow" 
+                       asp-page="/index3" 
+                       asp-route-year="@Model.NextYear" 
+                       asp-route-month="@Model.NextMonth" 
+                       title="下一月" 
+                       aria-label="切換至下個月">
+                        下月 <i class="bi bi-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 
-    <form method="get" class="row g-2 mb-3" role="search" aria-label="年月選擇">
-        <div class="col-auto">
-            <label for="year" class="form-label">年</label>
-            <select class="form-select" id="year" name="year" aria-label="年份選擇">
-                @foreach (var y in Model.YearOptions)
-                {
-                    <option value="@y" selected="@(y == Model.DisplayYear ? "selected" : null)">@y</option>
-                }
-            </select>
+    <!-- 年月選擇器 -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title text-primary mb-3">
+                <i class="bi bi-calendar-date"></i> 快速導航
+            </h5>
+            <form method="get" class="row g-3" role="search" aria-label="年月選擇">
+                <div class="col-md-4">
+                    <label for="year" class="form-label fw-semibold text-secondary">
+                        <i class="bi bi-calendar-range"></i> 年份
+                    </label>
+                    <select class="form-select form-select-lg shadow-sm" id="year" name="year" aria-label="年份選擇">
+                        @foreach (var yearOption in Model.YearOptions)
+                        {
+                            <option value="@yearOption" selected="@(yearOption == Model.DisplayYear)">@yearOption</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="month" class="form-label fw-semibold text-secondary">
+                        <i class="bi bi-calendar-month"></i> 月份
+                    </label>
+                    <select class="form-select form-select-lg shadow-sm" id="month" name="month" aria-label="月份選擇">
+                        @foreach (var monthOption in Model.MonthOptions)
+                        {
+                            <option value="@monthOption" selected="@(monthOption == Model.DisplayMonth)">@monthOption 月</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex flex-column justify-content-end">
+                    <div class="d-grid gap-2 d-md-flex">
+                        <button type="submit" class="btn btn-primary btn-lg shadow-sm flex-fill">
+                            <i class="bi bi-arrow-right-circle"></i> 前往
+                        </button>
+                        <a class="btn btn-success btn-lg shadow-sm flex-fill" 
+                           asp-page="/index3" 
+                           asp-route-year="@Model.Today.Year" 
+                           asp-route-month="@Model.Today.Month" 
+                           asp-route-day="@Model.Today.Day"
+                           title="跳至今日：@Model.Today.ToString("yyyy年M月d日")" 
+                           aria-label="跳至今日日期">
+                            <i class="bi bi-calendar-check"></i> 今日
+                        </a>
+                    </div>
+                    <small class="text-muted mt-1 text-center">
+                        今日：@Model.Today.ToString("yyyy/MM/dd")
+                    </small>
+                </div>
+            </form>
         </div>
-        <div class="col-auto">
-            <label for="month" class="form-label">月</label>
-            <select class="form-select" id="month" name="month" aria-label="月份選擇">
-                @foreach (var m in Model.MonthOptions)
-                {
-                    <option value="@m" selected="@(m == Model.DisplayMonth ? "selected" : null)">@m</option>
-                }
-            </select>
-        </div>
-        <div class="col-auto align-self-end">
-            <button type="submit" class="btn btn-primary">前往</button>
-        </div>
-    </form>
+    </div>
 
+    <!-- 自動更正提示訊息 -->
     @if (Model.HasCorrection)
     {
         <div class="alert alert-info alert-dismissible fade show" role="alert">
-            @Model.CorrectionMessage
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <i class="bi bi-info-circle"></i> @Model.CorrectionMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="關閉"></button>
         </div>
     }
 
-    <div class="mb-2 fw-semibold">
-        @Model.DisplayYear 年 @Model.DisplayMonth 月
+    <!-- 目前顯示月份 -->
+    <div class="text-center mb-4">
+        <div class="d-inline-block">
+            <h3 class="h2 fw-bold text-primary mb-0" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.1);">
+                <i class="bi bi-calendar-event text-warning"></i>
+                @Model.DisplayYear 年 @Model.DisplayMonth 月
+            </h3>
+            <div class="bg-primary" style="height: 4px; border-radius: 2px; margin-top: 8px;"></div>
+        </div>
     </div>
 
-    <div class="calendar-weekdays row row-cols-7 g-1 text-center small text-muted">
-        @foreach (var name in Model.WeekdayNames)
+    <!-- 週標題列 -->
+    <div class="row row-cols-7 g-2 text-center mb-3">
+        @foreach (var weekdayName in Model.WeekdayNames)
         {
-            <div class="col py-2">@name</div>
-        }
-    </div>
-
-    <div class="calendar-grid row row-cols-7 g-1 mt-0">
-        @foreach (var cell in Model.CalendarCells)
-        {
-            var classes = string.Join(' ', new[]{
-                "col",
-                "border",
-                "rounded-2",
-                "p-2",
-                cell.InCurrentMonth ? "bg-white" : "bg-light text-muted",
-                cell.IsToday ? "border-primary border-2" : null,
-                cell.IsSelected ? "bg-primary text-white" : null
-            }.Where(c => c is not null));
-
-            <div class="@classes" style="min-height: 96px;" aria-current="@(cell.IsToday ? "date" : null)">
-                @if (cell.InCurrentMonth)
-                {
-                    var dateStr = $"{cell.Date:yyyy-MM-dd}";
-                    var label = $"{cell.Date:yyyy-MM-dd}，星期{Model.WeekdayNames[cell.DayOfWeekIndex]}";
-                    <a class="stretched-link text-decoration-none" asp-page="/index3" asp-route-year="@cell.Date.Year" asp-route-month="@cell.Date.Month" asp-route-day="@cell.Date.Day" role="button" aria-label="@label"></a>
-                }
-                <div class="fw-semibold">@cell.Date.Day</div>
+            <div class="col">
+                <div class="bg-gradient p-3 fw-bold text-white rounded-3 shadow-sm" 
+                     style="background: linear-gradient(45deg, #6c757d, #495057);">
+                    <i class="bi bi-circle-fill" style="font-size: 0.5rem; opacity: 0.7;"></i>
+                    <div>@weekdayName</div>
+                </div>
             </div>
         }
     </div>
 
+    <!-- 月曆格線 -->
+    <div class="row row-cols-7 g-2">
+        @foreach (var cell in Model.CalendarCells)
+        {
+            var cssClasses = new List<string> { "col" };
+            var cellStyle = "min-height: 90px;";
+            
+            if (cell.InCurrentMonth)
+            {
+                cssClasses.Add("position-relative");
+                
+                if (cell.IsToday)
+                {
+                    cssClasses.Add("bg-primary");
+                    cssClasses.Add("text-white");
+                    cssClasses.Add("border-0");
+                    cssClasses.Add("rounded-3");
+                    cssClasses.Add("shadow");
+                    cellStyle += " transform: scale(1.02); box-shadow: 0 8px 25px rgba(0,123,255,0.3) !important;";
+                }
+                else if (cell.IsSelected)
+                {
+                    cssClasses.Add("bg-success");
+                    cssClasses.Add("text-white");
+                    cssClasses.Add("border-0");
+                    cssClasses.Add("rounded-3");
+                    cssClasses.Add("shadow");
+                    cellStyle += " transform: scale(1.02); box-shadow: 0 8px 25px rgba(40,167,69,0.3) !important;";
+                }
+                else
+                {
+                    cssClasses.Add("bg-white");
+                    cssClasses.Add("border");
+                    cssClasses.Add("border-light");
+                    cssClasses.Add("rounded-3");
+                    cssClasses.Add("shadow-sm");
+                    cellStyle += " transition: all 0.2s ease-in-out;";
+                }
+            }
+            else
+            {
+                cssClasses.Add("bg-light");
+                cssClasses.Add("text-muted");
+                cssClasses.Add("opacity-50");
+                cssClasses.Add("border");
+                cssClasses.Add("border-light");
+                cssClasses.Add("rounded-3");
+            }
+
+            <div class="@string.Join(" ", cssClasses)" 
+                 style="@cellStyle" 
+                 aria-current="@(cell.IsToday ? "date" : null)"
+                 onmouseover="@(cell.InCurrentMonth && !cell.IsToday && !cell.IsSelected ? "this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.15)';" : "")"
+                 onmouseout="@(cell.InCurrentMonth && !cell.IsToday && !cell.IsSelected ? "this.style.transform='scale(1)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.12)';" : "")">
+                
+                @if (cell.InCurrentMonth)
+                {
+                    var ariaLabel = $"{cell.Date:yyyy年M月d日}，星期{Model.WeekdayNames[cell.DayOfWeekIndex]}";
+                    <a class="stretched-link text-decoration-none d-flex flex-column align-items-center justify-content-center h-100" 
+                       asp-page="/index3" 
+                       asp-route-year="@cell.Date.Year" 
+                       asp-route-month="@cell.Date.Month" 
+                       asp-route-day="@cell.Date.Day" 
+                       role="button" 
+                       aria-label="@ariaLabel"
+                       style="color: inherit;">
+                        @if (cell.IsToday)
+                        {
+                            <i class="bi bi-star-fill mb-1" style="font-size: 0.8rem; opacity: 0.8;"></i>
+                        }
+                        <span class="fw-bold" style="font-size: 1.25rem;">@cell.Date.Day</span>
+                        @if (cell.IsToday)
+                        {
+                            <small class="opacity-75" style="font-size: 0.7rem;">今日</small>
+                        }
+                    </a>
+                }
+                else
+                {
+                    <div class="d-flex align-items-center justify-content-center h-100">
+                        <span class="fw-normal">@cell.Date.Day</span>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- 選取日期顯示 -->
     @if (Model.SelectedDate is not null)
     {
-        <div class="alert alert-secondary mt-3" role="status">
-            已選取：@Model.SelectedDate:yyyy-MM-dd
+        <div class="alert alert-success border-0 shadow mt-4" role="status" 
+             style="background: linear-gradient(45deg, #d4edda, #c3e6cb); border-left: 5px solid #28a745 !important;">
+            <div class="d-flex align-items-center">
+                <div class="me-3">
+                    <i class="bi bi-calendar-check-fill text-success" style="font-size: 2rem;"></i>
+                </div>
+                <div>
+                    <h6 class="alert-heading mb-1 text-success fw-bold">
+                        <i class="bi bi-check-circle-fill"></i> 已選取日期
+                    </h6>
+                    <p class="mb-0">
+                        <strong class="text-dark" style="font-size: 1.1rem;">
+                            @Model.SelectedDate.Value.ToString("yyyy年M月d日") 
+                            (@Model.WeekdayNames[(int)Model.SelectedDate.Value.DayOfWeek])
+                        </strong>
+                    </p>
+                    <small class="text-muted">
+                        距離今日：@((Model.SelectedDate.Value.DayNumber - Model.Today.DayNumber) switch
+                        {
+                            0 => "就是今天！",
+                            1 => "明天",
+                            -1 => "昨天",
+                            > 0 => $"{Model.SelectedDate.Value.DayNumber - Model.Today.DayNumber} 天後",
+                            < 0 => $"{Model.Today.DayNumber - Model.SelectedDate.Value.DayNumber} 天前"
+                        })
+                    </small>
+                </div>
+            </div>
         </div>
     }
 </div>
