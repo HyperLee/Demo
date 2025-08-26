@@ -1,11 +1,94 @@
 @page
-@model Demo.Pages.index3
+@model Demo.Pages.Index3Model
 @{
-    ViewData["Title"] = "index3";
+    ViewData["Title"] = "月曆（index3）";
 }
 
-<h1>@ViewData["Title"]</h1>
+<div class="container py-3 calendar">
+    <div class="d-flex align-items-center justify-content-between mb-3 calendar-header">
+        <h2 class="h4 m-0">@ViewData["Title"]</h2>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-secondary" asp-page="/index3" asp-route-year="@Model.PrevYear" asp-route-month="@Model.PrevMonthValue" title="上一月" aria-label="上一月">
+                &laquo;
+            </a>
+            <a class="btn btn-outline-secondary" asp-page="/index3" asp-route-year="@Model.NextYear" asp-route-month="@Model.NextMonthValue" title="下一月" aria-label="下一月">
+                &raquo;
+            </a>
+        </div>
+    </div>
 
-<div>
-    
+    <form method="get" class="row g-2 mb-3" role="search" aria-label="年月選擇">
+        <div class="col-auto">
+            <label for="year" class="form-label">年</label>
+            <select class="form-select" id="year" name="year" aria-label="年份選擇">
+                @foreach (var y in Model.YearOptions)
+                {
+                    <option value="@y" selected="@(y == Model.DisplayYear ? "selected" : null)">@y</option>
+                }
+            </select>
+        </div>
+        <div class="col-auto">
+            <label for="month" class="form-label">月</label>
+            <select class="form-select" id="month" name="month" aria-label="月份選擇">
+                @foreach (var m in Model.MonthOptions)
+                {
+                    <option value="@m" selected="@(m == Model.DisplayMonth ? "selected" : null)">@m</option>
+                }
+            </select>
+        </div>
+        <div class="col-auto align-self-end">
+            <button type="submit" class="btn btn-primary">前往</button>
+        </div>
+    </form>
+
+    @if (Model.HasCorrection)
+    {
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            @Model.CorrectionMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="mb-2 fw-semibold">
+        @Model.DisplayYear 年 @Model.DisplayMonth 月
+    </div>
+
+    <div class="calendar-weekdays row row-cols-7 g-1 text-center small text-muted">
+        @foreach (var name in Model.WeekdayNames)
+        {
+            <div class="col py-2">@name</div>
+        }
+    </div>
+
+    <div class="calendar-grid row row-cols-7 g-1 mt-0">
+        @foreach (var cell in Model.CalendarCells)
+        {
+            var classes = string.Join(' ', new[]{
+                "col",
+                "border",
+                "rounded-2",
+                "p-2",
+                cell.InCurrentMonth ? "bg-white" : "bg-light text-muted",
+                cell.IsToday ? "border-primary border-2" : null,
+                cell.IsSelected ? "bg-primary text-white" : null
+            }.Where(c => c is not null));
+
+            <div class="@classes" style="min-height: 96px;" aria-current="@(cell.IsToday ? "date" : null)">
+                @if (cell.InCurrentMonth)
+                {
+                    var dateStr = $"{cell.Date:yyyy-MM-dd}";
+                    var label = $"{cell.Date:yyyy-MM-dd}，星期{Model.WeekdayNames[cell.DayOfWeekIndex]}";
+                    <a class="stretched-link text-decoration-none" asp-page="/index3" asp-route-year="@cell.Date.Year" asp-route-month="@cell.Date.Month" asp-route-day="@cell.Date.Day" role="button" aria-label="@label"></a>
+                }
+                <div class="fw-semibold">@cell.Date.Day</div>
+            </div>
+        }
+    </div>
+
+    @if (Model.SelectedDate is not null)
+    {
+        <div class="alert alert-secondary mt-3" role="status">
+            已選取：@Model.SelectedDate:yyyy-MM-dd
+        </div>
+    }
 </div>
