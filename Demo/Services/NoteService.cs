@@ -21,6 +21,11 @@ public interface INoteService
     /// 刪除指定日期的註記。
     /// </summary>
     Task DeleteNoteAsync(DateOnly date);
+    
+    /// <summary>
+    /// 取得指定月份內有註記的所有日期。
+    /// </summary>
+    Task<HashSet<DateOnly>> GetNoteDatesInMonthAsync(int year, int month);
 }
 
 /// <summary>
@@ -102,6 +107,35 @@ public sealed class JsonNoteService : INoteService
                 await SaveNotesToFileAsync(notes);
                 logger.LogInformation("註記已刪除：{Date}", key);
             }
+        }
+        finally
+        {
+            fileLock.Release();
+        }
+    }
+
+    /// <summary>
+    /// 取得指定月份內有註記的所有日期。
+    /// </summary>
+    public async Task<HashSet<DateOnly>> GetNoteDatesInMonthAsync(int year, int month)
+    {
+        await fileLock.WaitAsync();
+        try
+        {
+            var notes = await LoadNotesAsync();
+            var noteDates = new HashSet<DateOnly>();
+            
+            foreach (var key in notes.Keys)
+            {
+                if (DateOnly.TryParse(key, out var date) && 
+                    date.Year == year && 
+                    date.Month == month)
+                {
+                    noteDates.Add(date);
+                }
+            }
+            
+            return noteDates;
         }
         finally
         {

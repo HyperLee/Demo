@@ -68,6 +68,11 @@ public sealed class Index3Model : PageModel
     public IReadOnlyList<CalendarCellView> CalendarCells { get; private set; } = Array.Empty<CalendarCellView>();
 
     /// <summary>
+    /// 目前顯示月份中有備註的日期集合。
+    /// </summary>
+    public HashSet<DateOnly> NoteDatesInMonth { get; private set; } = new();
+
+    /// <summary>
     /// 若輸入參數被自動更正，顯示的提示訊息。
     /// </summary>
     public string? CorrectionMessage { get; private set; }
@@ -148,6 +153,9 @@ public sealed class Index3Model : PageModel
         DisplayYear = correctedYear;
         DisplayMonth = correctedMonth;
 
+        // 載入目前顯示月份的所有備註日期
+        NoteDatesInMonth = await noteService.GetNoteDatesInMonthAsync(DisplayYear, DisplayMonth);
+
         if (correctedDay is not null)
         {
             SelectedDate = new DateOnly(DisplayYear, DisplayMonth, correctedDay.Value);
@@ -165,7 +173,7 @@ public sealed class Index3Model : PageModel
             logger.LogInformation("Parameters auto-corrected: {Message}", CorrectionMessage);
         }
 
-        CalendarCells = GenerateCalendarGrid(DisplayYear, DisplayMonth, SelectedDate);
+        CalendarCells = await GenerateCalendarGridAsync(DisplayYear, DisplayMonth, SelectedDate);
         return Page();
     }
 
@@ -238,12 +246,34 @@ public sealed class Index3Model : PageModel
     /// <summary>
     /// 產生 42 格（6 週 × 7 天）的月曆資料。
     /// </summary>
-    private IReadOnlyList<CalendarCellView> GenerateCalendarGrid(int year, int month, DateOnly? selectedDate)
+    private async Task<IReadOnlyList<CalendarCellView>> GenerateCalendarGridAsync(int year, int month, DateOnly? selectedDate)
     {
         var firstOfMonth = new DateOnly(year, month, 1);
         // 以星期日為一週起始：DayOfWeek.Sunday = 0
         var startOffset = (int)firstOfMonth.DayOfWeek;
         var gridStartDate = firstOfMonth.AddDays(-startOffset);
+
+        // 取得月曆範圍內所有有備註的日期
+        var gridEndDate = gridStartDate.AddDays(41);
+        var allNoteDates = new HashSet<DateOnly>();
+        
+        // 搜尋月曆範圍內可能跨越的月份
+        for (var date = gridStartDate; date <= gridEndDate; date = date.AddMonths(1))
+        {
+            var monthNoteDates = await noteService.GetNoteDatesInMonthAsync(date.Year, date.Month);
+            foreach (var noteDate in monthNoteDates)
+            {
+                if (noteDate >= gridStartDate && noteDate <= gridEndDate)
+                {
+                    allNoteDates.Add(noteDate);
+                }
+            }
+            
+            // 移動到下個月的第一天
+            var nextMonth = date.Month == 12 ? 1 : date.Month + 1;
+            var nextYear = date.Month == 12 ? date.Year + 1 : date.Year;
+            date = new DateOnly(nextYear, nextMonth, 1).AddDays(-1);
+        }
 
         var cells = new List<CalendarCellView>(42);
         
@@ -253,6 +283,7 @@ public sealed class Index3Model : PageModel
             var isInCurrentMonth = currentDate.Month == month && currentDate.Year == year;
             var isToday = currentDate == Today;
             var isSelected = selectedDate.HasValue && currentDate == selectedDate.Value;
+            var hasNote = allNoteDates.Contains(currentDate);
             var dayOfWeekIndex = (int)currentDate.DayOfWeek;
 
             cells.Add(new CalendarCellView(
@@ -260,6 +291,7 @@ public sealed class Index3Model : PageModel
                 InCurrentMonth: isInCurrentMonth,
                 IsToday: isToday,
                 IsSelected: isSelected,
+                HasNote: hasNote,
                 DayOfWeekIndex: dayOfWeekIndex
             ));
         }
@@ -275,6 +307,7 @@ public sealed class Index3Model : PageModel
         bool InCurrentMonth,
         bool IsToday,
         bool IsSelected,
+        bool HasNote,
         int DayOfWeekIndex
     );
 }

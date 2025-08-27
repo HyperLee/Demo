@@ -4,6 +4,52 @@
     ViewData["Title"] = "月曆（index3）";
 }
 
+<style>
+    /* 脈衝動畫效果 */
+    @@keyframes pulse {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        50% {
+            transform: scale(1.1);
+            opacity: 0.8;
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    /* 金色漸層備註日期動畫 */
+    @@keyframes noteGlow {
+        0% {
+            box-shadow: 0 6px 20px rgba(255,215,0,0.4);
+        }
+        50% {
+            box-shadow: 0 8px 25px rgba(255,215,0,0.6);
+        }
+        100% {
+            box-shadow: 0 6px 20px rgba(255,215,0,0.4);
+        }
+    }
+
+    /* 有備註的日期添加特殊動畫 */
+    .note-date {
+        animation: noteGlow 3s ease-in-out infinite;
+    }
+
+    /* 備註標記的閃爍效果 */
+    .note-badge {
+        animation: pulse 2s infinite;
+    }
+
+    /* hover 效果增強 */
+    .calendar-cell:hover {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+</style>
+
 <div class="container py-3">
     <!-- 標題與導航控制 -->
     <div class="card shadow-lg border-0 mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
@@ -111,6 +157,53 @@
         </div>
     </div>
 
+    <!-- 圖例說明 -->
+    <div class="card shadow-sm mb-4" style="border: 2px solid #f8f9fa; border-radius: 15px;">
+        <div class="card-body py-3">
+            <h6 class="card-title text-muted mb-3 text-center">
+                <i class="bi bi-info-circle"></i> 圖例說明
+            </h6>
+            <div class="row text-center g-3">
+                <div class="col-6 col-md-3">
+                    <div class="d-flex flex-column align-items-center">
+                        <div class="bg-primary text-white rounded-3 p-2 mb-2 shadow" style="min-width: 50px; min-height: 50px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <small class="fw-semibold text-primary">今日</small>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="d-flex flex-column align-items-center">
+                        <div class="bg-success text-white rounded-3 p-2 mb-2 shadow" style="min-width: 50px; min-height: 50px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-check-circle-fill"></i>
+                        </div>
+                        <small class="fw-semibold text-success">已選取</small>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="d-flex flex-column align-items-center">
+                        <div class="bg-gradient text-white rounded-3 p-2 mb-2 shadow position-relative" 
+                             style="min-width: 50px; min-height: 50px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #ffd700, #ffa500) !important;">
+                            <i class="bi bi-journal-bookmark-fill"></i>
+                            <span class="position-absolute top-0 end-0 badge bg-danger rounded-circle" style="font-size: 0.5rem; margin-top: -2px; margin-right: -2px;">
+                                <i class="bi bi-sticky-fill"></i>
+                            </span>
+                        </div>
+                        <small class="fw-semibold" style="color: #ffa500;">有備註</small>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="d-flex flex-column align-items-center">
+                        <div class="bg-white border border-light rounded-3 p-2 mb-2 shadow-sm text-dark" style="min-width: 50px; min-height: 50px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-calendar3"></i>
+                        </div>
+                        <small class="fw-semibold text-muted">一般日期</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 週標題列 -->
     <div class="row row-cols-7 g-2 text-center mb-3">
         @foreach (var weekdayName in Model.WeekdayNames)
@@ -154,6 +247,16 @@
                     cssClasses.Add("shadow");
                     cellStyle += " transform: scale(1.02); box-shadow: 0 8px 25px rgba(40,167,69,0.3) !important;";
                 }
+                else if (cell.HasNote)
+                {
+                    cssClasses.Add("bg-gradient");
+                    cssClasses.Add("border-0");
+                    cssClasses.Add("rounded-3");
+                    cssClasses.Add("shadow");
+                    cssClasses.Add("text-white");
+                    cssClasses.Add("note-date");
+                    cellStyle += " background: linear-gradient(135deg, #ffd700, #ffa500) !important; transform: scale(1.02);";
+                }
                 else
                 {
                     cssClasses.Add("bg-white");
@@ -174,15 +277,17 @@
                 cssClasses.Add("rounded-3");
             }
 
+            cssClasses.Add("calendar-cell");
+
             <div class="@string.Join(" ", cssClasses)" 
                  style="@cellStyle" 
                  aria-current="@(cell.IsToday ? "date" : null)"
                  onmouseover="@(cell.InCurrentMonth && !cell.IsToday && !cell.IsSelected ? "this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.15)';" : "")"
-                 onmouseout="@(cell.InCurrentMonth && !cell.IsToday && !cell.IsSelected ? "this.style.transform='scale(1)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.12)';" : "")">
+                 onmouseout="@(cell.InCurrentMonth && !cell.IsToday && !cell.IsSelected ? "this.style.transform='scale(1)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.12)';" : "")">>
                 
                 @if (cell.InCurrentMonth)
                 {
-                    var ariaLabel = $"{cell.Date:yyyy年M月d日}，星期{Model.WeekdayNames[cell.DayOfWeekIndex]}";
+                    var ariaLabel = $"{cell.Date:yyyy年M月d日}，星期{Model.WeekdayNames[cell.DayOfWeekIndex]}" + (cell.HasNote ? "，有備註" : "");
                     <a class="stretched-link text-decoration-none d-flex flex-column align-items-center justify-content-center h-100" 
                        asp-page="/index3" 
                        asp-route-year="@cell.Date.Year" 
@@ -191,14 +296,37 @@
                        role="button" 
                        aria-label="@ariaLabel"
                        style="color: inherit;">
+                        
+                        <!-- 備註標記圖示 -->
+                        @if (cell.HasNote && !cell.IsToday && !cell.IsSelected)
+                        {
+                            <div class="position-absolute top-0 end-0 m-1" style="z-index: 10;">
+                                <span class="badge bg-danger rounded-circle p-1 note-badge" style="font-size: 0.6rem;">
+                                    <i class="bi bi-sticky-fill"></i>
+                                </span>
+                            </div>
+                        }
+                        
                         @if (cell.IsToday)
                         {
                             <i class="bi bi-star-fill mb-1" style="font-size: 0.8rem; opacity: 0.8;"></i>
                         }
-                        <span class="fw-bold" style="font-size: 1.25rem;">@cell.Date.Day</span>
+                        else if (cell.HasNote && !cell.IsSelected)
+                        {
+                            <i class="bi bi-journal-bookmark-fill mb-1" style="font-size: 0.9rem; opacity: 0.9; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));"></i>
+                        }
+                        
+                        <span class="fw-bold" style="font-size: 1.25rem; text-shadow: @(cell.HasNote && !cell.IsToday && !cell.IsSelected ? "1px 1px 2px rgba(0,0,0,0.3)" : "none");">@cell.Date.Day</span>
+                        
                         @if (cell.IsToday)
                         {
                             <small class="opacity-75" style="font-size: 0.7rem;">今日</small>
+                        }
+                        else if (cell.HasNote && !cell.IsSelected)
+                        {
+                            <small class="opacity-90" style="font-size: 0.65rem; font-weight: 600; text-shadow: 1px 1px 1px rgba(0,0,0,0.2);">
+                                <i class="bi bi-pencil-fill me-1" style="font-size: 0.5rem;"></i>備註
+                            </small>
                         }
                     </a>
                 }
@@ -331,6 +459,68 @@
                         </small>
                     </div>
                 }
+            </div>
+        </div>
+    }
+
+    <!-- 本月備註統計 -->
+    @{
+        var currentMonthNotesCount = Model.NoteDatesInMonth.Count;
+    }
+    @if (currentMonthNotesCount > 0)
+    {
+        <div class="alert alert-info border-0 shadow-sm mt-4" style="background: linear-gradient(45deg, #d1ecf1, #bee5eb); border-left: 4px solid #17a2b8 !important;">
+            <div class="d-flex align-items-center">
+                <div class="me-3">
+                    <i class="bi bi-graph-up text-info" style="font-size: 2rem;"></i>
+                </div>
+                <div>
+                    <h6 class="alert-heading mb-1 text-info fw-bold">
+                        <i class="bi bi-calendar2-check"></i> 本月備註統計
+                    </h6>
+                    <p class="mb-0 text-dark">
+                        <strong style="font-size: 1.1rem;">
+                            @Model.DisplayYear 年 @Model.DisplayMonth 月共有 
+                            <span class="text-primary fw-bold">@currentMonthNotesCount</span> 天有備註資訊
+                        </strong>
+                    </p>
+                    <small class="text-muted">
+                        <i class="bi bi-lightbulb"></i> 
+                        @if (currentMonthNotesCount >= 10)
+                        {
+                            <span>您非常勤於記錄！繼續保持這個好習慣。</span>
+                        }
+                        else if (currentMonthNotesCount >= 5)
+                        {
+                            <span>記錄得不錯！可以考慮記錄更多重要日子。</span>
+                        }
+                        else
+                        {
+                            <span>開始記錄重要日子，讓您的行程管理更有效率。</span>
+                        }
+                    </small>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-light border-0 shadow-sm mt-4" style="background: linear-gradient(45deg, #f8f9fa, #e9ecef); border-left: 4px solid #6c757d !important;">
+            <div class="d-flex align-items-center">
+                <div class="me-3">
+                    <i class="bi bi-calendar-plus text-secondary" style="font-size: 2rem;"></i>
+                </div>
+                <div>
+                    <h6 class="alert-heading mb-1 text-secondary fw-bold">
+                        <i class="bi bi-journal-plus"></i> 開始記錄備註
+                    </h6>
+                    <p class="mb-0 text-dark">
+                        <strong>@Model.DisplayYear 年 @Model.DisplayMonth 月目前還沒有任何備註</strong>
+                    </p>
+                    <small class="text-muted">
+                        <i class="bi bi-lightbulb"></i> 點選任一日期開始新增備註，記錄您的重要行程或想法。
+                    </small>
+                </div>
             </div>
         </div>
     }
