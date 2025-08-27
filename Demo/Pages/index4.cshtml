@@ -239,13 +239,23 @@
                                         @(note.Content.Length > 100 ? note.Content.Substring(0, 100) + "..." : note.Content)
                                     </p>
                                     
+                                    <!-- 分類顯示 -->
+                                    @if (note.Category != null)
+                                    {
+                                        <div class="mb-2">
+                                            <span class="badge category-badge me-2">
+                                                <i class="fas fa-folder"></i> @note.Category.Name
+                                            </span>
+                                        </div>
+                                    }
+                                    
                                     <!-- 標籤顯示 -->
                                     @if (note.Tags.Any())
                                     {
                                         <div class="mb-2">
                                             @foreach (var tag in note.Tags.Take(5))
                                             {
-                                                <span class="badge me-1" style="background-color: @tag.Color; color: white;">
+                                                <span class="badge tag-badge me-1" style="background-color: @tag.Color; color: white;">
                                                     <i class="fas fa-tag"></i> @tag.Name
                                                 </span>
                                             }
@@ -253,6 +263,14 @@
                                             {
                                                 <span class="text-muted small">+@(note.Tags.Count - 5) 個標籤</span>
                                             }
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="mb-2">
+                                            <small class="no-tags-indicator">
+                                                <i class="fas fa-tags"></i> 尚無標籤
+                                            </small>
                                         </div>
                                     }
                                     
@@ -466,11 +484,37 @@
                     <div class="form-text">為選中的 <strong id="batchCategoryCount">0</strong> 則備忘錄更改分類</div>
                 </div>
                 
+                <!-- 快速建立分類 -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="form-label mb-0">快速建立新分類</label>
+                        <button type="button" class="btn btn-link btn-sm p-0 category-toggle-btn" onclick="toggleNewCategoryForm()">
+                            <i class="fas fa-plus" id="newCategoryToggleIcon"></i> <span id="newCategoryToggleText">展開</span>
+                        </button>
+                    </div>
+                    <div class="collapse" id="newCategoryForm">
+                        <div class="card card-body new-category-form">
+                            <div class="row">
+                                <div class="col-8">
+                                    <input type="text" class="form-control form-control-sm" 
+                                           id="newCategoryName" placeholder="輸入分類名稱" maxlength="50" />
+                                </div>
+                                <div class="col-4">
+                                    <button type="button" class="btn btn-success btn-sm w-100" onclick="createNewCategory()">
+                                        <i class="fas fa-check"></i> 建立
+                                    </button>
+                                </div>
+                            </div>
+                            <small class="text-muted mt-1">建立後將自動選擇此分類</small>
+                        </div>
+                    </div>
+                </div>
+                
                 @if (!Model.AllCategories.Any())
                 {
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <strong>提示：</strong>尚未建立任何分類，請先到設定頁面建立分類。
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>提示：</strong>尚未建立任何分類，請使用上方「快速建立新分類」功能建立第一個分類。
                     </div>
                 }
             </div>
@@ -693,6 +737,92 @@
             modal.show();
         }
 
+        // 切換新分類表單
+        function toggleNewCategoryForm() {
+            const form = document.getElementById('newCategoryForm');
+            const icon = document.getElementById('newCategoryToggleIcon');
+            const text = document.getElementById('newCategoryToggleText');
+            
+            if (form.classList.contains('show')) {
+                form.classList.remove('show');
+                icon.className = 'fas fa-plus';
+                text.textContent = '展開';
+            } else {
+                form.classList.add('show');
+                icon.className = 'fas fa-minus';
+                text.textContent = '收合';
+                // 聚焦到輸入框
+                setTimeout(() => {
+                    document.getElementById('newCategoryName').focus();
+                }, 300);
+            }
+        }
+
+        // 建立新分類
+        function createNewCategory() {
+            const categoryName = document.getElementById('newCategoryName').value.trim();
+            
+            if (!categoryName) {
+                alert('請輸入分類名稱');
+                return;
+            }
+            
+            // 檢查名稱是否已存在
+            const existingOptions = Array.from(document.getElementById('batchCategorySelect').options);
+            const exists = existingOptions.some(option => option.text === categoryName);
+            
+            if (exists) {
+                alert('此分類名稱已存在，請使用其他名稱');
+                return;
+            }
+            
+            // 顯示載入狀態
+            const createBtn = document.querySelector('[onclick="createNewCategory()"]');
+            const originalText = createBtn.innerHTML;
+            createBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 建立中...';
+            createBtn.disabled = true;
+            
+            // 提交建立分類請求
+            fetch('/index4?handler=CreateCategory', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: `categoryName=${encodeURIComponent(categoryName)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 新增選項到下拉選單
+                    const select = document.getElementById('batchCategorySelect');
+                    const option = document.createElement('option');
+                    option.value = data.categoryId;
+                    option.text = categoryName;
+                    option.selected = true;
+                    select.add(option);
+                    
+                    // 清空輸入框並收合表單
+                    document.getElementById('newCategoryName').value = '';
+                    toggleNewCategoryForm();
+                    
+                    // 顯示成功訊息
+                    alert(`分類「${categoryName}」建立成功！`);
+                } else {
+                    alert(`建立分類失敗：${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error('建立分類時發生錯誤:', error);
+                alert('建立分類時發生錯誤，請稍後再試');
+            })
+            .finally(() => {
+                // 恢復按鈕狀態
+                createBtn.innerHTML = originalText;
+                createBtn.disabled = false;
+            });
+        }
+
         // 執行批次更改分類
         function executeBatchCategory() {
             const categoryId = document.getElementById('batchCategorySelect').value;
@@ -878,6 +1008,47 @@
         
         #masterCheckbox {
             transform: scale(1.2);
+        }
+        
+        /* 分類和標籤顯示樣式 */
+        .category-badge {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+            border: none;
+            font-weight: 500;
+        }
+        
+        .no-tags-indicator {
+            color: #6c757d;
+            font-style: italic;
+            font-size: 0.85rem;
+        }
+        
+        .tag-badge {
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            font-weight: 500;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .tag-badge:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+        
+        /* 新分類表單樣式 */
+        .new-category-form .card-body {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 1px solid #dee2e6;
+        }
+        
+        .category-toggle-btn {
+            color: #0d6efd;
+            text-decoration: none;
+        }
+        
+        .category-toggle-btn:hover {
+            color: #0a58ca;
+            text-decoration: underline;
         }
         
         @@media (max-width: 768px) {

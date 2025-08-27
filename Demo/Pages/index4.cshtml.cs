@@ -98,7 +98,14 @@ namespace Demo.Pages
                 _logger.LogError(ex, "載入備忘錄列表時發生錯誤");
                 
                 // 設定預設值避免頁面錯誤
-                ViewModel = new NoteListViewModel();
+                ViewModel = new NoteListViewModel 
+                { 
+                    Notes = new List<Note>(), 
+                    CurrentPage = 1, 
+                    TotalPages = 1, 
+                    PageSize = 20, 
+                    TotalCount = 0 
+                };
                 AllTags = new List<Tag>();
                 AllCategories = new List<Category>();
                 
@@ -122,7 +129,7 @@ namespace Demo.Pages
         /// <summary>
         /// POST 刪除備忘錄
         /// </summary>
-        /// <param name="id">要刪除的備忘錄 ID</param>
+        /// <param name="id">要刪除的備忘錄ID</param>
         /// <param name="page">當前頁碼</param>
         public async Task<IActionResult> OnPostDeleteAsync(int id, int page = 1)
         {
@@ -132,13 +139,13 @@ namespace Demo.Pages
                 
                 if (success)
                 {
-                    TempData["SuccessMessage"] = "備忘錄已成功刪除。";
+                    TempData["SuccessMessage"] = "備忘錄刪除成功！";
                     _logger.LogInformation("成功刪除備忘錄，ID: {Id}", id);
                 }
                 else
                 {
-                    TempData["ErrorMessage"] = "找不到指定的備忘錄。";
-                    _logger.LogWarning("嘗試刪除不存在的備忘錄，ID: {Id}", id);
+                    TempData["ErrorMessage"] = "備忘錄刪除失敗，可能已不存在。";
+                    _logger.LogWarning("刪除備忘錄失敗，ID: {Id}", id);
                 }
             }
             catch (Exception ex)
@@ -147,55 +154,30 @@ namespace Demo.Pages
                 TempData["ErrorMessage"] = "刪除備忘錄時發生錯誤，請稍後再試。";
             }
 
-            // 重新導向到列表頁面，保持當前頁碼
-            return RedirectToPage("index4", new { page = page });
+            return RedirectToPage("index4", new { page });
         }
 
         /// <summary>
-        /// POST 搜尋處理
+        /// POST 搜尋備忘錄
         /// </summary>
         public IActionResult OnPostSearch()
         {
-            try
-            {
-                // 重新導向到 GET 請求，使用查詢字串保持搜尋條件
-                var routeValues = new RouteValueDictionary { { "page", 1 } };
-                
-                if (!string.IsNullOrWhiteSpace(SearchFilter.Keyword))
-                    routeValues.Add("SearchFilter.Keyword", SearchFilter.Keyword);
-                
-                if (SearchFilter.Tags.Any())
-                {
-                    for (int i = 0; i < SearchFilter.Tags.Count; i++)
-                    {
-                        routeValues.Add($"SearchFilter.Tags[{i}]", SearchFilter.Tags[i]);
-                    }
-                }
-                
-                if (SearchFilter.StartDate.HasValue)
-                    routeValues.Add("SearchFilter.StartDate", SearchFilter.StartDate.Value.ToString("yyyy-MM-dd"));
-                
-                if (SearchFilter.EndDate.HasValue)
-                    routeValues.Add("SearchFilter.EndDate", SearchFilter.EndDate.Value.ToString("yyyy-MM-dd"));
-                
-                if (SearchFilter.CategoryId.HasValue)
-                    routeValues.Add("SearchFilter.CategoryId", SearchFilter.CategoryId.Value);
-                
-                routeValues.Add("SearchFilter.SortBy", SearchFilter.SortBy);
-                routeValues.Add("SearchFilter.SortOrder", SearchFilter.SortOrder);
-
-                return RedirectToPage("index4", routeValues);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "搜尋處理時發生錯誤");
-                TempData["ErrorMessage"] = "搜尋時發生錯誤，請稍後再試。";
-                return Page();
-            }
+            // 重設到第一頁
+            return RedirectToPage("index4", new 
+            { 
+                page = 1,
+                SearchFilter.Keyword,
+                SearchFilter.Tags,
+                SearchFilter.StartDate,
+                SearchFilter.EndDate,
+                SearchFilter.SortBy,
+                SearchFilter.SortOrder,
+                SearchFilter.CategoryId
+            });
         }
 
         /// <summary>
-        /// POST 清除搜尋
+        /// POST 清除搜尋條件
         /// </summary>
         public IActionResult OnPostClearSearch()
         {
@@ -203,7 +185,7 @@ namespace Demo.Pages
         }
 
         /// <summary>
-        /// POST 批次操作處理
+        /// POST 批次操作
         /// </summary>
         public async Task<IActionResult> OnPostBatchOperationAsync(string operation, string selectedIds, string parameters = "")
         {
@@ -211,12 +193,21 @@ namespace Demo.Pages
             {
                 if (string.IsNullOrWhiteSpace(selectedIds))
                 {
-                    TempData["ErrorMessage"] = "請至少選擇一個項目。";
+                    TempData["ErrorMessage"] = "請選擇要操作的項目。";
                     return RedirectToPage("index4");
                 }
 
-                var noteIds = selectedIds.Split(',').Select(int.Parse).ToList();
-                
+                var noteIds = selectedIds.Split(',')
+                    .Where(id => !string.IsNullOrWhiteSpace(id))
+                    .Select(int.Parse)
+                    .ToList();
+
+                if (!noteIds.Any())
+                {
+                    TempData["ErrorMessage"] = "請選擇要操作的項目。";
+                    return RedirectToPage("index4");
+                }
+
                 var request = new BatchOperationRequest
                 {
                     NoteIds = noteIds,
@@ -233,7 +224,9 @@ namespace Demo.Pages
                         var keyValue = pair.Split('=');
                         if (keyValue.Length == 2)
                         {
-                            request.Parameters[keyValue[0]] = keyValue[1];
+                            // URL 解碼參數值
+                            var decodedValue = System.Web.HttpUtility.UrlDecode(keyValue[1]);
+                            request.Parameters[keyValue[0]] = decodedValue;
                         }
                     }
                 }
@@ -261,31 +254,77 @@ namespace Demo.Pages
         }
 
         /// <summary>
-        /// AJAX 取得標籤建議
+        /// POST 建立分類
+        /// </summary>
+        public async Task<IActionResult> OnPostCreateCategoryAsync(string categoryName)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(categoryName))
+                {
+                    return new JsonResult(new { success = false, message = "分類名稱不能為空" });
+                }
+
+                if (categoryName.Length > 50)
+                {
+                    return new JsonResult(new { success = false, message = "分類名稱不能超過 50 個字元" });
+                }
+
+                // 檢查分類名稱是否已存在
+                var existingCategories = await _noteService.GetCategoriesAsync();
+                if (existingCategories.Any(c => c.Name.Equals(categoryName, StringComparison.OrdinalIgnoreCase)))
+                {
+                    return new JsonResult(new { success = false, message = "此分類名稱已存在" });
+                }
+
+                var newCategory = await _noteService.CreateCategoryAsync(categoryName, null);
+                
+                _logger.LogInformation("成功建立新分類: {CategoryName}, ID: {CategoryId}", categoryName, newCategory.Id);
+                
+                return new JsonResult(new 
+                { 
+                    success = true, 
+                    categoryId = newCategory.Id, 
+                    categoryName = newCategory.Name 
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "建立分類時發生錯誤: {CategoryName}", categoryName);
+                return new JsonResult(new { success = false, message = "建立分類時發生錯誤，請稍後再試" });
+            }
+        }
+
+        /// <summary>
+        /// GET 標籤建議
         /// </summary>
         public async Task<IActionResult> OnGetTagSuggestionsAsync(string query)
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
+                {
+                    return new JsonResult(new List<object>());
+                }
+
                 var allTags = await _noteService.GetAllTagsAsync();
                 var suggestions = allTags
                     .Where(t => t.Name.Contains(query, StringComparison.OrdinalIgnoreCase))
-                    .Take(5)
-                    .Select(t => new { id = t.Id, name = t.Name, color = t.Color, usageCount = t.UsageCount })
+                    .Take(10)
+                    .Select(t => new { id = t.Id, name = t.Name, color = t.Color })
                     .ToList();
 
                 return new JsonResult(suggestions);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "取得標籤建議時發生錯誤");
+                _logger.LogError(ex, "取得標籤建議時發生錯誤，查詢: {Query}", query);
+                return new JsonResult(new List<object>());
             }
-
-            return RedirectToPage("index4");
         }
 
         /// <summary>
-        /// POST 匯出處理
+        /// POST 匯出備忘錄
         /// </summary>
         public async Task<IActionResult> OnPostExportAsync(string format, string selectedIds)
         {
@@ -293,25 +332,28 @@ namespace Demo.Pages
             {
                 if (string.IsNullOrWhiteSpace(selectedIds))
                 {
-                    TempData["ErrorMessage"] = "請至少選擇一個項目進行匯出。";
+                    TempData["ErrorMessage"] = "請選擇要匯出的項目。";
                     return RedirectToPage("index4");
                 }
 
-                var noteIds = selectedIds.Split(',').Select(int.Parse).ToList();
-                var notes = new List<Note>();
+                var noteIds = selectedIds.Split(',')
+                    .Where(id => !string.IsNullOrWhiteSpace(id))
+                    .Select(int.Parse)
+                    .ToList();
 
-                foreach (var noteId in noteIds)
+                if (!noteIds.Any())
                 {
-                    var note = await _noteService.GetNoteByIdAsync(noteId);
-                    if (note != null)
-                    {
-                        notes.Add(note);
-                    }
+                    TempData["ErrorMessage"] = "請選擇要匯出的項目。";
+                    return RedirectToPage("index4");
                 }
 
-                if (!notes.Any())
+                // 取得要匯出的備忘錄
+                var allNotes = await _noteService.GetAllNotesAsync();
+                var notesToExport = allNotes.Where(n => noteIds.Contains(n.Id)).ToList();
+
+                if (!notesToExport.Any())
                 {
-                    TempData["ErrorMessage"] = "沒有找到要匯出的備忘錄。";
+                    TempData["ErrorMessage"] = "找不到要匯出的備忘錄。";
                     return RedirectToPage("index4");
                 }
 
@@ -319,22 +361,22 @@ namespace Demo.Pages
                 string fileName;
                 string contentType;
 
-                switch (format?.ToLower())
+                switch (format.ToLower())
                 {
                     case "pdf":
-                        fileData = await GeneratePdfExport(notes);
+                        fileData = await GeneratePdfExport(notesToExport);
                         fileName = $"備忘錄匯出_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
                         contentType = "application/pdf";
                         break;
 
                     case "excel":
-                        fileData = await GenerateExcelExport(notes);
+                        fileData = await GenerateExcelExport(notesToExport);
                         fileName = $"備忘錄匯出_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
                         contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
                         break;
 
                     case "json":
-                        fileData = await GenerateJsonExport(notes);
+                        fileData = await GenerateJsonExport(notesToExport);
                         fileName = $"備忘錄匯出_{DateTime.Now:yyyyMMdd_HHmmss}.json";
                         contentType = "application/json";
                         break;
@@ -344,61 +386,62 @@ namespace Demo.Pages
                         return RedirectToPage("index4");
                 }
 
-                _logger.LogInformation("匯出 {Count} 則備忘錄為 {Format} 格式", notes.Count, format);
+                _logger.LogInformation("成功匯出 {Count} 則備忘錄為 {Format} 格式", notesToExport.Count, format.ToUpper());
+
                 return File(fileData, contentType, fileName);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "匯出備忘錄時發生錯誤: {Format}", format);
+                _logger.LogError(ex, "匯出備忘錄時發生錯誤，格式: {Format}", format);
                 TempData["ErrorMessage"] = "匯出時發生錯誤，請稍後再試。";
                 return RedirectToPage("index4");
             }
         }
 
+        #region 私有方法
+
         /// <summary>
-        /// 產生 PDF 匯出
+        /// 產生 PDF 匯出檔案
         /// </summary>
         private Task<byte[]> GeneratePdfExport(List<Note> notes)
         {
-            // 簡單的 HTML to PDF 實作（實際專案中建議使用專業的 PDF 函式庫）
-            var html = GenerateHtmlReport(notes, "PDF 匯出報告");
+            // TODO: 實作 PDF 匯出功能
+            // 這裡可以使用 iTextSharp 或其他 PDF 產生套件
+            var htmlReport = GenerateHtmlReport(notes, "備忘錄 PDF 匯出");
+            var htmlBytes = System.Text.Encoding.UTF8.GetBytes(htmlReport);
             
-            // 暫時返回 HTML 轉換為 UTF-8 字節
-            // 實際使用時可以集成 iTextSharp、PuppeteerSharp 等
-            return Task.FromResult(System.Text.Encoding.UTF8.GetBytes(html));
+            // 暫時返回 HTML 內容作為 PDF（實際應該轉換為真正的 PDF）
+            return Task.FromResult(htmlBytes);
         }
 
         /// <summary>
-        /// 產生 Excel 匯出
+        /// 產生 Excel 匯出檔案
         /// </summary>
         private Task<byte[]> GenerateExcelExport(List<Note> notes)
         {
-            // 簡單的 CSV 格式（實際專案中建議使用 EPPlus 或 NPOI）
-            var csv = new System.Text.StringBuilder();
-            
-            // 標題行
-            csv.AppendLine("ID,標題,內容,標籤,分類,建立日期,修改日期");
+            // TODO: 實作 Excel 匯出功能
+            // 這裡可以使用 ClosedXML 或 EPPlus 套件
+            var csvContent = "標題,內容,標籤,分類,建立日期,修改日期\n";
             
             foreach (var note in notes)
             {
-                var tags = string.Join(";", note.Tags.Select(t => t.Name));
-                var category = note.Category?.Name ?? "";
-                
-                csv.AppendLine($"{note.Id},\"{EscapeCsv(note.Title)}\",\"{EscapeCsv(note.Content)}\",\"{tags}\",\"{category}\",{note.CreatedDate:yyyy-MM-dd HH:mm:ss},{note.ModifiedDate:yyyy-MM-dd HH:mm:ss}");
+                var tags = string.Join("; ", note.Tags.Select(t => t.Name));
+                var category = note.Category?.Name ?? "無分類";
+                csvContent += $"\"{note.Title}\",\"{note.Content}\",\"{tags}\",\"{category}\",\"{note.CreatedDate:yyyy-MM-dd HH:mm}\",\"{note.ModifiedDate:yyyy-MM-dd HH:mm}\"\n";
             }
             
-            return Task.FromResult(System.Text.Encoding.UTF8.GetBytes(csv.ToString()));
+            // 暫時返回 CSV 內容（實際應該產生真正的 Excel 檔案）
+            return Task.FromResult(System.Text.Encoding.UTF8.GetBytes(csvContent));
         }
 
         /// <summary>
-        /// 產生 JSON 匯出
+        /// 產生 JSON 匯出檔案
         /// </summary>
         private Task<byte[]> GenerateJsonExport(List<Note> notes)
         {
             var exportData = new
             {
-                ExportDate = DateTime.Now,
-                ExportVersion = "1.0",
+                ExportTime = DateTime.Now,
                 TotalCount = notes.Count,
                 Notes = notes.Select(n => new
                 {
@@ -412,8 +455,8 @@ namespace Demo.Pages
                 })
             };
 
-            var json = JsonSerializer.Serialize(exportData, new JsonSerializerOptions
-            {
+            var json = JsonSerializer.Serialize(exportData, new JsonSerializerOptions 
+            { 
                 WriteIndented = true,
                 Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
             });
@@ -426,77 +469,55 @@ namespace Demo.Pages
         /// </summary>
         private string GenerateHtmlReport(List<Note> notes, string title)
         {
-            var html = new System.Text.StringBuilder();
-            
-            html.AppendLine("<!DOCTYPE html>");
-            html.AppendLine("<html>");
-            html.AppendLine("<head>");
-            html.AppendLine("<meta charset='utf-8'>");
-            html.AppendLine($"<title>{title}</title>");
-            html.AppendLine("<style>");
-            html.AppendLine("body { font-family: 'Microsoft JhengHei', Arial, sans-serif; margin: 20px; }");
-            html.AppendLine("h1 { color: #333; border-bottom: 2px solid #007bff; }");
-            html.AppendLine(".note { border: 1px solid #ddd; margin: 20px 0; padding: 15px; border-radius: 5px; }");
-            html.AppendLine(".note-title { color: #007bff; font-size: 18px; font-weight: bold; margin-bottom: 10px; }");
-            html.AppendLine(".note-content { margin: 10px 0; line-height: 1.6; }");
-            html.AppendLine(".note-meta { font-size: 12px; color: #666; margin-top: 10px; }");
-            html.AppendLine(".tag { background: #007bff; color: white; padding: 2px 6px; border-radius: 3px; margin-right: 5px; font-size: 11px; }");
-            html.AppendLine("</style>");
-            html.AppendLine("</head>");
-            html.AppendLine("<body>");
-            
-            html.AppendLine($"<h1>{title}</h1>");
-            html.AppendLine($"<p>匯出時間：{DateTime.Now:yyyy-MM-dd HH:mm:ss}</p>");
-            html.AppendLine($"<p>備忘錄數量：{notes.Count} 則</p>");
-            html.AppendLine("<hr>");
-            
+            var html = $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <title>{title}</title>
+    <style>
+        body {{ font-family: Arial, sans-serif; margin: 40px; }}
+        .header {{ text-align: center; margin-bottom: 30px; }}
+        .note {{ margin-bottom: 30px; border-bottom: 1px solid #ccc; padding-bottom: 20px; }}
+        .note-title {{ font-size: 18px; font-weight: bold; color: #333; }}
+        .note-content {{ margin: 10px 0; line-height: 1.6; }}
+        .note-meta {{ font-size: 12px; color: #666; }}
+        .tags {{ margin: 5px 0; }}
+        .tag {{ background: #007bff; color: white; padding: 2px 6px; border-radius: 3px; margin-right: 5px; }}
+    </style>
+</head>
+<body>
+    <div class='header'>
+        <h1>{title}</h1>
+        <p>匯出時間：{DateTime.Now:yyyy-MM-dd HH:mm:ss}</p>
+        <p>總計：{notes.Count} 則備忘錄</p>
+    </div>";
+
             foreach (var note in notes)
             {
-                html.AppendLine("<div class='note'>");
-                html.AppendLine($"<div class='note-title'>{System.Web.HttpUtility.HtmlEncode(note.Title)}</div>");
-                html.AppendLine($"<div class='note-content'>{System.Web.HttpUtility.HtmlEncode(note.Content).Replace("\n", "<br>")}</div>");
+                var tags = string.Join("", note.Tags.Select(t => $"<span class='tag'>{t.Name}</span>"));
+                var category = note.Category?.Name ?? "無分類";
                 
-                if (note.Tags.Any())
-                {
-                    html.AppendLine("<div>");
-                    foreach (var tag in note.Tags)
-                    {
-                        html.AppendLine($"<span class='tag' style='background-color: {tag.Color}'>{System.Web.HttpUtility.HtmlEncode(tag.Name)}</span>");
-                    }
-                    html.AppendLine("</div>");
-                }
-                
-                html.AppendLine("<div class='note-meta'>");
-                html.AppendLine($"建立時間：{note.CreatedDate:yyyy-MM-dd HH:mm:ss} | ");
-                html.AppendLine($"修改時間：{note.ModifiedDate:yyyy-MM-dd HH:mm:ss}");
-                if (note.Category != null)
-                {
-                    html.AppendLine($" | 分類：{System.Web.HttpUtility.HtmlEncode(note.Category.Name)}");
-                }
-                html.AppendLine("</div>");
-                html.AppendLine("</div>");
+                html += $@"
+    <div class='note'>
+        <div class='note-title'>{note.Title}</div>
+        <div class='note-content'>{note.Content.Replace("\n", "<br>")}</div>
+        <div class='tags'>{tags}</div>
+        <div class='note-meta'>
+            分類：{category} | 
+            建立：{note.CreatedDate:yyyy-MM-dd HH:mm} | 
+            修改：{note.ModifiedDate:yyyy-MM-dd HH:mm}
+        </div>
+    </div>";
             }
-            
-            html.AppendLine("</body>");
-            html.AppendLine("</html>");
-            
-            return html.ToString();
+
+            html += @"
+</body>
+</html>";
+
+            return html;
         }
 
-        /// <summary>
-        /// CSV 字串跳脫處理
-        /// </summary>
-        private string EscapeCsv(string value)
-        {
-            if (string.IsNullOrEmpty(value)) return value;
-            
-            value = value.Replace("\"", "\"\""); // 跳脫雙引號
-            if (value.Contains(",") || value.Contains("\n") || value.Contains("\r"))
-            {
-                value = $"\"{value}\""; // 包含逗號或換行符時用雙引號包圍
-            }
-            
-            return value;
-        }
+        #endregion
     }
 }

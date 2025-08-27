@@ -1,10 +1,18 @@
 [
   {
     "Id": 1,
-    "Name": "%E6%A8%99%E7%B1%A4%E4%B8%80%E8%99%9F",
-    "Color": "%23b51a00",
+    "Name": "標籤一號",
+    "Color": "#b51a00",
     "Description": null,
     "CreatedDate": "2025-08-27T22:46:12.045114+08:00",
+    "UsageCount": 2
+  },
+  {
+    "Id": 2,
+    "Name": "標籤二號",
+    "Color": "#4f7a28",
+    "Description": null,
+    "CreatedDate": "2025-08-27T23:14:28.501399+08:00",
     "UsageCount": 1
   }
 ]

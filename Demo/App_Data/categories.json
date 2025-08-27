@@ -1,0 +1,10 @@
+[
+  {
+    "Id": 1,
+    "Name": "類別1",
+    "Description": null,
+    "ParentId": null,
+    "Icon": "fas fa-folder",
+    "Children": []
+  }
+]
