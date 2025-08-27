@@ -1,11 +1,280 @@
 @page
 @model Demo.Pages.index5
 @{
-    ViewData["Title"] = "index5";
+    ViewData["Title"] = Model.ViewModel.IsEditMode ? "編輯備忘錄" : "新增備忘錄";
 }
 
-<h1>@ViewData["Title"]</h1>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- 標題區域 -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2">@ViewData["Title"]</h1>
+                <a asp-page="index4" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> 返回列表
+                </a>
+            </div>
 
-<div>
-    
+            <!-- 錯誤訊息 -->
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <!-- 表單 -->
+            <div class="card shadow">
+                <div class="card-body p-4">
+                    <form method="post" asp-page-handler="Save">
+                        <input type="hidden" asp-for="ViewModel.Id" />
+                        <input type="hidden" asp-for="ViewModel.IsEditMode" />
+                        <input type="hidden" asp-for="ViewModel.CreatedDate" />
+                        <input type="hidden" asp-for="ViewModel.ModifiedDate" />
+
+                        <!-- 標題欄位 -->
+                        <div class="mb-3">
+                            <label asp-for="ViewModel.Title" class="form-label">
+                                標題 <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="ViewModel.Title" 
+                                   class="form-control form-control-lg" 
+                                   placeholder="請輸入備忘錄標題" 
+                                   maxlength="200" />
+                            <span asp-validation-for="ViewModel.Title" class="text-danger"></span>
+                            <div class="form-text">
+                                <small>
+                                    <span id="titleCount">@(Model.ViewModel.Title?.Length ?? 0)</span>/200 字元
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- 內容欄位 -->
+                        <div class="mb-4">
+                            <label asp-for="ViewModel.Content" class="form-label">
+                                內容 <span class="text-danger">*</span>
+                            </label>
+                            <textarea asp-for="ViewModel.Content" 
+                                      class="form-control" 
+                                      rows="10" 
+                                      placeholder="請輸入備忘錄內容" 
+                                      maxlength="2000"></textarea>
+                            <span asp-validation-for="ViewModel.Content" class="text-danger"></span>
+                            <div class="form-text">
+                                <small>
+                                    <span id="contentCount">@(Model.ViewModel.Content?.Length ?? 0)</span>/2000 字元
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- 日期資訊（僅編輯模式顯示） -->
+                        @if (Model.ViewModel.IsEditMode)
+                        {
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="card bg-light">
+                                        <div class="card-body py-2">
+                                            <small class="text-muted">
+                                                <i class="fas fa-calendar-plus"></i>
+                                                建立時間：@Model.ViewModel.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss")
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card bg-light">
+                                        <div class="card-body py-2">
+                                            <small class="text-muted">
+                                                <i class="fas fa-edit"></i>
+                                                最後修改：@Model.ViewModel.ModifiedDate.ToString("yyyy-MM-dd HH:mm:ss")
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- 操作按鈕 -->
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <button type="submit" class="btn btn-primary btn-lg me-3">
+                                    <i class="fas fa-save"></i>
+                                    @(Model.ViewModel.IsEditMode ? "儲存變更" : "建立備忘錄")
+                                </button>
+                                <button type="submit" asp-page-handler="Cancel" class="btn btn-secondary btn-lg">
+                                    <i class="fas fa-times"></i> 取消
+                                </button>
+                            </div>
+                            
+                            @if (Model.ViewModel.IsEditMode)
+                            {
+                                <div class="text-muted">
+                                    <small>
+                                        <i class="fas fa-info-circle"></i>
+                                        備忘錄 ID: @Model.ViewModel.Id
+                                    </small>
+                                </div>
+                            }
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 使用提示 -->
+            <div class="mt-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-lightbulb"></i> 使用提示
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="mb-0">
+                            <li>標題和內容都是必填欄位</li>
+                            <li>標題最多可輸入 200 個字元</li>
+                            <li>內容最多可輸入 2,000 個字元</li>
+                            <li>儲存後會自動返回備忘錄列表</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const titleInput = document.querySelector('input[name="ViewModel.Title"]');
+            const contentInput = document.querySelector('textarea[name="ViewModel.Content"]');
+            const titleCount = document.getElementById('titleCount');
+            const contentCount = document.getElementById('contentCount');
+
+            // 標題字元計數
+            if (titleInput && titleCount) {
+                titleInput.addEventListener('input', function() {
+                    const length = this.value.length;
+                    titleCount.textContent = length;
+                    
+                    // 接近上限時改變顏色
+                    if (length > 180) {
+                        titleCount.className = 'text-warning';
+                    } else if (length > 190) {
+                        titleCount.className = 'text-danger';
+                    } else {
+                        titleCount.className = '';
+                    }
+                });
+            }
+
+            // 內容字元計數
+            if (contentInput && contentCount) {
+                contentInput.addEventListener('input', function() {
+                    const length = this.value.length;
+                    contentCount.textContent = length;
+                    
+                    // 接近上限時改變顏色
+                    if (length > 1800) {
+                        contentCount.className = 'text-warning';
+                    } else if (length > 1900) {
+                        contentCount.className = 'text-danger';
+                    } else {
+                        contentCount.className = '';
+                    }
+                });
+            }
+
+            // 自動調整文字區域高度
+            if (contentInput) {
+                contentInput.addEventListener('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = Math.max(this.scrollHeight, 200) + 'px';
+                });
+
+                // 初始設定
+                contentInput.style.height = Math.max(contentInput.scrollHeight, 200) + 'px';
+            }
+
+            // 防止意外離開頁面
+            let formChanged = false;
+            const inputs = document.querySelectorAll('input, textarea');
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    formChanged = true;
+                });
+            });
+
+            window.addEventListener('beforeunload', function(e) {
+                if (formChanged) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                }
+            });
+
+            // 表單提交時取消警告
+            document.querySelector('form').addEventListener('submit', function() {
+                formChanged = false;
+            });
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .card {
+            border-radius: 10px;
+        }
+        
+        .form-control:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        }
+        
+        .form-control-lg {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        
+        textarea.form-control {
+            resize: vertical;
+            min-height: 200px;
+        }
+        
+        .btn-lg {
+            padding: 0.75rem 1.5rem;
+            font-size: 1.1rem;
+        }
+        
+        .text-danger {
+            font-weight: 500;
+        }
+        
+        .form-text {
+            margin-top: 0.5rem;
+        }
+        
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .alert {
+            border-radius: 8px;
+        }
+        
+        @@media (max-width: 768px) {
+            .d-flex.justify-content-between {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .btn-lg {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+        }
+    </style>
+}

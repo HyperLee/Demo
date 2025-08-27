@@ -11,6 +11,7 @@ public class Program
         // Add services to the container.
         builder.Services.AddRazorPages();
         builder.Services.AddSingleton<INoteService, JsonNoteService>();
+        builder.Services.AddSingleton<IMemoNoteService, JsonMemoNoteService>();
 
         var app = builder.Build();
 
