@@ -244,5 +244,94 @@
                 </div>
             </div>
         </div>
+
+        <!-- 備註功能區域 -->
+        <div class="card shadow-sm mt-3" style="border-left: 4px solid #28a745;">
+            <div class="card-body">
+                <h6 class="card-title text-success fw-bold mb-3">
+                    <i class="bi bi-journal-text"></i> 備註
+                </h6>
+                
+                <!-- 顯示驗證錯誤訊息 -->
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <ul class="mb-0">
+                            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                            {
+                                <li>@error.ErrorMessage</li>
+                            }
+                        </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="關閉"></button>
+                    </div>
+                }
+                
+                <form method="post" class="row g-3">
+                    <!-- 隱藏欄位保持日期參數 -->
+                    <input type="hidden" name="Year" value="@Model.Year" />
+                    <input type="hidden" name="Month" value="@Model.Month" />
+                    <input type="hidden" name="Day" value="@Model.Day" />
+                    
+                    <div class="col-12">
+                        <label for="noteText" class="form-label fw-semibold text-secondary">
+                            <i class="bi bi-pencil-square"></i> 備註內容
+                        </label>
+                        <textarea class="form-control form-control-lg shadow-sm" 
+                                  id="noteText" 
+                                  name="NoteText" 
+                                  rows="3" 
+                                  placeholder="在此輸入您的備註..."
+                                  style="resize: vertical; min-height: 80px;"
+                                  aria-describedby="noteHelp">@Model.NoteText</textarea>
+                        <div id="noteHelp" class="form-text">
+                            <i class="bi bi-info-circle"></i> 您可以為這個日期新增備註、提醒或任何重要資訊
+                        </div>
+                    </div>
+                    
+                    <div class="col-12">
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                            <button type="submit" 
+                                    class="btn btn-success btn-lg shadow-sm" 
+                                    formaction="/index3?handler=SaveNote"
+                                    title="儲存備註內容">
+                                <i class="bi bi-check-circle"></i> 儲存備註
+                            </button>
+                            
+                            @if (!string.IsNullOrWhiteSpace(Model.SelectedDateNote))
+                            {
+                                <button type="submit" 
+                                        class="btn btn-outline-danger btn-lg shadow-sm" 
+                                        formaction="/index3?handler=DeleteNote"
+                                        onclick="return confirm('確定要刪除這個備註嗎？')"
+                                        title="刪除目前的備註">
+                                    <i class="bi bi-trash"></i> 刪除備註
+                                </button>
+                            }
+                            
+                            <button type="button" 
+                                    class="btn btn-outline-secondary btn-lg shadow-sm" 
+                                    onclick="document.getElementById('noteText').value = ''"
+                                    title="清空輸入框">
+                                <i class="bi bi-eraser"></i> 清空
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                
+                <!-- 目前儲存的備註顯示 -->
+                @if (!string.IsNullOrWhiteSpace(Model.SelectedDateNote))
+                {
+                    <div class="mt-4 p-3 bg-light rounded-3 border-start border-success border-4">
+                        <h6 class="text-success fw-semibold mb-2">
+                            <i class="bi bi-bookmark-check"></i> 目前儲存的備註
+                        </h6>
+                        <div class="text-dark" style="white-space: pre-wrap;">@Model.SelectedDateNote</div>
+                        <small class="text-muted">
+                            <i class="bi bi-clock"></i> 最後更新：@DateTime.Now.ToString("yyyy年M月d日 HH:mm")
+                        </small>
+                    </div>
+                }
+            </div>
+        </div>
     }
 </div>

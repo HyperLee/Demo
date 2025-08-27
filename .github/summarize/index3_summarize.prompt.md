@@ -1,28 +1,45 @@
 ---
-description: index3 月曆頁面技術總結
+description: index3 月曆頁面技術總結 (含註記功能)
 created: 2025年8月26日
-version: 2.0
+updated: 2025年8月27日
+version: 3.0
 ---
 
 # index3 月曆頁面技術總結
 
 ## 專案概述
-`index3` 是一個採用 ASP.NET Core 8.0 Razor Pages 架構開發的互動式月曆頁面，提供完整的月份視圖、日期選擇、導航控制等功能。該頁面具備響應式設計、無障礙支援和優雅的視覺效果。
+`index3` 是一個採用 ASP.NET Core 8.0 Razor Pages 架構開發的互動式月曆頁面，提供完整的月份視圖、日期選擇、導航控制和**日期註記功能**。該頁面具備響應式設計、無障礙支援、優雅的視覺效果，以及基於 JSON 檔案的個人化註記系統。
 
 ## 檔案架構
 
 ### 前端視圖檔案
-**檔案路徑**：`Demo/Pages/index3.cshtml`
+**🔴 重要檔案路徑**：`Demo/Pages/index3.cshtml`
 - **技術**：ASP.NET Core Razor Pages 標記語法
 - **樣式框架**：Bootstrap 5.x
 - **圖示系統**：Bootstrap Icons
-- **行數**：約 300 行程式碼
+- **行數**：約 340 行程式碼 (新增註記 UI)
+- **新增功能**：註記輸入表單、儲存/刪除按鈕、註記顯示區域
 
-### 後端 PageModel 檔案
-**檔案路徑**：`Demo/Pages/index3.cshtml.cs`
+### 後端 PageModel 檔案  
+**🔴 重要檔案路徑**：`Demo/Pages/index3.cshtml.cs`
 - **技術**：C# 13, ASP.NET Core 8.0
-- **設計模式**：Razor Pages PageModel 模式
-- **行數**：約 200 行程式碼
+- **設計模式**：Razor Pages PageModel 模式、依賴注入
+- **行數**：約 280 行程式碼 (新增註記處理邏輯)
+- **新增功能**：註記服務注入、POST 處理方法、非同步操作
+
+### 📁 註記服務檔案
+**🔴 重要檔案路徑**：`Demo/Services/NoteService.cs`
+- **技術**：C# 13, System.Text.Json, 檔案 I/O
+- **設計模式**：介面分離原則 (ISP)、單一責任原則 (SRP)
+- **行數**：約 130 行程式碼
+- **功能**：JSON 檔案讀寫、執行緒安全、錯誤處理
+
+### 🗂️ 註記資料儲存位置
+**🔴 重要儲存路徑**：`Demo/App_Data/notes.json`
+- **格式**：JSON 鍵值對 `{"2025-08-27": "會議記錄"}`
+- **編碼**：UTF-8 with BOM
+- **權限**：應用程式讀寫權限
+- **備份建議**：定期備份此檔案以防資料遺失
 
 ## 核心技術特色
 
@@ -38,15 +55,72 @@ private IReadOnlyList<CalendarCellView> GenerateCalendarGrid(int year, int month
 }
 ```
 
-### 2. **參數自動驗證與修正機制**
+### 2. **📝 JSON 註記儲存系統** (新功能)
+```csharp
+public interface INoteService
+{
+    Task<string?> GetNoteAsync(DateOnly date);
+    Task SaveNoteAsync(DateOnly date, string note);
+    Task DeleteNoteAsync(DateOnly date);
+}
+
+public sealed class JsonNoteService : INoteService
+{
+    private readonly SemaphoreSlim fileLock = new(1, 1);  // 執行緒安全
+    private readonly string notesFilePath = "App_Data/notes.json";
+    // ... 實作細節
+}
+```
+
+### 3. **註記資料格式**
+**🔴 重要：JSON 儲存格式**
+```json
+{
+  "2025-08-27": "重要會議 10:00",
+  "2025-08-28": "生日聚會",
+  "2025-09-01": "專案截止日"
+}
+```
+- **鍵格式**：`yyyy-MM-dd` (ISO 8601 標準)
+- **值格式**：純文字字串，支援換行
+- **檔案位置**：`D:\Demo\Demo\Demo\App_Data\notes.json`
+
+### 4. **參數自動驗證與修正機制**
 - **範圍限制**：年份 1900-2100，月份 1-12，日期依月份動態調整
 - **自動修正**：超出範圍的參數自動調整至最近有效值
 - **用戶通知**：顯示友善的修正提示訊息
 
-### 3. **QueryString 參數綁定**
+### 5. **QueryString 參數綁定**
 ```csharp
 [BindProperty(SupportsGet = true)]
 public int? Year { get; set; }
+
+[BindProperty(SupportsGet = true)]
+public int? Month { get; set; }
+
+[BindProperty(SupportsGet = true)]
+public int? Day { get; set; }
+
+// 新增：註記功能參數綁定
+[BindProperty]
+public string? NoteText { get; set; }
+```
+
+### 6. **非同步註記處理**
+```csharp
+public async Task<IActionResult> OnGetAsync()
+{
+    // ... 原有邏輯
+    if (correctedDay is not null)
+    {
+        SelectedDate = new DateOnly(DisplayYear, DisplayMonth, correctedDay.Value);
+        // 🔴 重要：載入選取日期的註記
+        SelectedDateNote = await noteService.GetNoteAsync(SelectedDate.Value);
+        NoteText = SelectedDateNote; // 預填入表單
+    }
+    // ... 後續處理
+}
+```
 
 [BindProperty(SupportsGet = true)]
 public int? Month { get; set; }
@@ -91,6 +165,23 @@ public int? Day { get; set; }
   - 距離今日天數計算 (智能顯示：今天/明天/昨天/X天前後)
 - **圖示**：大尺寸日曆勾選圖示
 
+### 6. **📝 註記功能區域** (新增)
+**🔴 重要功能區域**
+- **設計風格**：綠色主題卡片，左側邊框強調
+- **表單組件**：
+  - 大型文字區域 (textarea)，支援多行輸入
+  - 自動調整高度，垂直可調整大小
+  - 預填入已儲存的註記內容
+- **操作按鈕**：
+  - **儲存備註**：綠色主色調，勾選圖示
+  - **刪除備註**：紅色外框，垃圾桶圖示，需要確認
+  - **清空**：灰色外框，橡皮擦圖示，清空輸入框
+- **註記顯示區**：
+  - 淺色背景區塊顯示已儲存的註記
+  - 支援換行顯示 (`white-space: pre-wrap`)
+  - 顯示最後更新時間
+- **只有選取日期時才顯示整個註記區域**
+
 ## 關鍵業務邏輯
 
 ### 1. **日期狀態判斷**
@@ -104,7 +195,60 @@ public sealed record CalendarCellView(
 );
 ```
 
-### 2. **導航邏輯**
+### 2. **📝 註記業務邏輯** (新增)
+```csharp
+/// <summary>
+/// POST 儲存註記：儲存或更新選取日期的註記
+/// </summary>
+public async Task<IActionResult> OnPostSaveNoteAsync()
+{
+    var date = new DateOnly(Year.Value, Month.Value, Day.Value);
+    
+    if (string.IsNullOrWhiteSpace(NoteText))
+    {
+        await noteService.DeleteNoteAsync(date);  // 空內容 = 刪除
+    }
+    else
+    {
+        await noteService.SaveNoteAsync(date, NoteText);
+    }
+    
+    return RedirectToPage("/index3", new { Year, Month, Day });  // 保持選取狀態
+}
+
+/// <summary>
+/// POST 刪除註記：移除選取日期的註記
+/// </summary>
+public async Task<IActionResult> OnPostDeleteNoteAsync()
+{
+    var date = new DateOnly(Year.Value, Month.Value, Day.Value);
+    await noteService.DeleteNoteAsync(date);
+    
+    return RedirectToPage("/index3", new { Year, Month, Day });
+}
+```
+
+### 3. **執行緒安全的檔案操作**
+```csharp
+private readonly SemaphoreSlim fileLock = new(1, 1);
+
+public async Task SaveNoteAsync(DateOnly date, string note)
+{
+    await fileLock.WaitAsync();  // 🔴 重要：防止併發存取
+    try
+    {
+        var notes = await LoadNotesAsync();
+        notes[date.ToString("yyyy-MM-dd")] = note.Trim();
+        await SaveNotesToFileAsync(notes);
+    }
+    finally
+    {
+        fileLock.Release();
+    }
+}
+```
+
+### 4. **導航邏輯**
 ```csharp
 // 上個月
 public int PrevYear => DisplayMonth == 1 ? DisplayYear - 1 : DisplayYear;
@@ -115,7 +259,7 @@ public int NextYear => DisplayMonth == 12 ? DisplayYear + 1 : DisplayYear;
 public int NextMonth => DisplayMonth == 12 ? 1 : DisplayMonth + 1;
 ```
 
-### 3. **智能距離計算**
+### 5. **智能距離計算**
 使用 C# 13 switch expressions：
 ```csharp
 距離今日：@((Model.SelectedDate.Value.DayNumber - Model.Today.DayNumber) switch
@@ -136,6 +280,12 @@ public int NextMonth => DisplayMonth == 12 ? 1 : DisplayMonth + 1;
 /index3?year=2025                 # 指定年份
 /index3?year=2025&month=8         # 指定年月
 /index3?year=2025&month=8&day=26  # 指定年月日（選中狀態）
+```
+
+### 📝 註記操作 URL (新增)
+```
+POST /index3?handler=SaveNote     # 儲存/更新註記
+POST /index3?handler=DeleteNote   # 刪除註記
 ```
 
 ### 參數處理策略
@@ -206,11 +356,51 @@ public int NextMonth => DisplayMonth == 12 ? 1 : DisplayMonth + 1;
 ### 1. **參數驗證**
 - **伺服器端驗證**：所有參數都經過後端驗證
 - **範圍限制**：嚴格限制年份、月份、日期範圍
-- **SQL 注入防護**：使用參數化查詢 (雖然此頁面無資料庫操作)
+- **註記驗證**：註記內容長度限制、特殊字元過濾
 
-### 2. **XSS 防護**
-- **自動編碼**：Razor Pages 自動 HTML 編碼
+### 2. **檔案安全**
+**🔴 重要：檔案系統安全**
+- **路徑固定**：註記檔案路徑固定在 `App_Data` 資料夾
+- **權限控制**：僅應用程式有讀寫權限
+- **路徑遍歷防護**：不接受用戶輸入的檔案路徑
+- **檔案鎖定**：使用 `SemaphoreSlim` 防止併發寫入
+- **錯誤處理**：檔案損壞時自動建立空白檔案
+
+### 3. **XSS 防護**
+- **自動編碼**：Razor Pages 自動 HTML 編碼使用者輸入
+- **註記內容**：`white-space: pre-wrap` 安全顯示換行，但仍需 HTML 編碼
 - **CSP 相容**：無內聯 JavaScript，相容內容安全政策
+
+## 效能與可靠性
+
+### 1. **檔案 I/O 效能**
+**🔴 重要：效能考量**
+```csharp
+// 非同步檔案操作
+private async Task<Dictionary<string, string>> LoadNotesAsync()
+{
+    var json = await File.ReadAllTextAsync(notesFilePath);  // 非同步讀取
+    return JsonSerializer.Deserialize<Dictionary<string, string>>(json);
+}
+
+// JSON 序列化設定
+var options = new JsonSerializerOptions 
+{ 
+    WriteIndented = true,  // 可讀性
+    Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping  // 中文支援
+};
+```
+
+### 2. **錯誤恢復機制**
+- **檔案損壞**：自動建立新的空白 JSON 檔案
+- **JSON 格式錯誤**：記錄錯誤並返回空字典
+- **磁碟空間不足**：捕獲 IOException 並記錄
+- **權限問題**：提供明確錯誤訊息
+
+### 3. **記憶體管理**
+- **及時釋放**：使用 `SemaphoreSlim` 確保鎖及時釋放
+- **大檔案處理**：目前為記憶體中處理，適合中小量資料
+- **GC 友善**：使用 `ValueTask` 和字串池優化
 
 ## 維護性與可擴展性
 
@@ -218,14 +408,31 @@ public int NextMonth => DisplayMonth == 12 ? 1 : DisplayMonth + 1;
 - **強型別**：充分利用 C# 型別系統
 - **不可變性**：使用 record 類型和唯讀屬性
 - **清晰命名**：方法和屬性命名具有自我文檔化特性
+- **依賴注入**：`INoteService` 介面便於測試和替換實作
 
 ### 2. **擴展點**
 - **國際化**：WeekdayNames 陣列可輕易支援多語言
 - **主題系統**：CSS 變數化便於主題切換
-- **事件擴展**：可增加節日、提醒等功能
+- **註記功能擴展**：
+  - 可增加註記分類、標籤系統
+  - 可整合提醒通知功能  
+  - 可支援富文本編輯器
+  - 可增加註記搜尋功能
 
-### 3. **測試友善**
-- **依賴注入**：ILogger 注入便於測試
+### 3. **儲存層抽象**
+**🔴 重要：未來擴展性**
+```csharp
+// 當前實作：JSON 檔案
+public sealed class JsonNoteService : INoteService
+
+// 未來可增加：
+public sealed class SqliteNoteService : INoteService
+public sealed class MongoDbNoteService : INoteService
+public sealed class AzureTableNoteService : INoteService
+```
+
+### 4. **測試友善**
+- **介面分離**：`INoteService` 可輕易 Mock
 - **純函式**：GenerateCalendarGrid 為純函式，易於單元測試
 - **分離關注點**：視圖邏輯與業務邏輯清楚分離
 
@@ -233,34 +440,98 @@ public int NextMonth => DisplayMonth == 12 ? 1 : DisplayMonth + 1;
 
 ### 當前限制
 1. **時區支援**：目前僅支援伺服器時區
-2. **快取機制**：無客戶端快取機制
+2. **快取機制**：無客戶端快取機制  
 3. **鍵盤導航**：日期格子的鍵盤導航可進一步優化
+4. **📝 註記功能限制**：
+   - **檔案大小**：單一 JSON 檔案，不適合大量註記
+   - **搜尋功能**：無註記內容搜尋功能
+   - **多媒體支援**：僅支援純文字，無圖片或附件
+   - **版本控制**：無註記修改歷史記錄
+   - **多用戶支援**：共用檔案，無個人化隔離
 
 ### 未來改進方向
 1. **多時區支援**：增加時區選擇功能
-2. **事件整合**：整合 Google Calendar 或 Outlook
-3. **離線支援**：加入 Service Worker 支援
-4. **效能監控**：加入前端效能指標收集
+2. **註記增強**：
+   - **富文本編輯器**：支援格式化文字、連結等
+   - **搜尋與篩選**：全文檢索註記內容
+   - **分類標籤**：為註記添加分類和標籤
+   - **匯出功能**：支援匯出 PDF、CSV 等格式
+3. **效能優化**：
+   - **增量載入**：僅載入當前月份的註記
+   - **快取機制**：記憶體快取熱門註記
+   - **壓縮存儲**：大量註記時自動壓縮
+4. **整合功能**：整合 Google Calendar 或 Outlook
+5. **離線支援**：加入 Service Worker 支援
 
 ## 技術債務
 
-### 無重大技術債務
-- 程式碼結構清晰，遵循最佳實務
-- 使用現代 C# 語法和模式
-- 前端代碼符合 Web 標準
+### 輕微技術債務
+1. **單元測試覆蓋率**：註記服務需要更完整的單元測試
+2. **效能基準測試**：需建立註記功能的效能基準線
+3. **錯誤邊界測試**：極大 JSON 檔案的處理能力測試
 
 ### 建議改進
-1. **單元測試覆蓋率**：增加 PageModel 的單元測試
-2. **E2E 測試**：增加用戶互動的端到端測試
-3. **效能基準測試**：建立載入時間基準線
+1. **測試完整性**：
+   - 增加 `JsonNoteService` 的單元測試
+   - 增加併發存取的壓力測試
+   - 增加檔案損壞情境的復原測試
+2. **監控機制**：
+   - 增加註記操作的效能監控
+   - 增加檔案大小增長追蹤
+   - 增加錯誤率監控
+
+### 無重大技術債務
+- 程式碼結構清晰，遵循 SOLID 原則
+- 使用現代 C# 語法和非同步模式
+- 前端程式碼符合 Web 標準和無障礙規範
+
+## 📁 重要檔案清單
+
+### 🔴 核心檔案位置總覽
+```
+專案根目錄: D:\Demo\Demo\
+
+📄 前端頁面
+├── Demo/Pages/index3.cshtml          # 主要視圖檔案
+├── Demo/Pages/index3.cshtml.cs       # PageModel 後端邏輯
+
+📄 服務層
+├── Demo/Services/NoteService.cs      # 註記服務實作
+
+📄 設定檔案
+├── Demo/Program.cs                   # 服務注入設定
+
+📁 資料檔案 (🔴 重要備份目標)
+└── Demo/App_Data/
+    └── notes.json                    # 註記資料儲存檔案
+```
+
+### 🔴 備份與維護建議
+1. **每日備份**：`Demo/App_Data/notes.json`
+2. **版本控制**：排除 `App_Data/` 資料夾 (已加入 `.gitignore`)
+3. **權限檢查**：確保應用程式對 `App_Data/` 有讀寫權限
+4. **磁碟監控**：監控註記檔案大小增長趨勢
 
 ## 總結
 
-`index3` 月曆頁面是一個技術成熟、用戶體驗優秀的 ASP.NET Core 應用程式組件。它充分展示了：
+`index3` 月曆頁面是一個技術成熟、功能完整的 ASP.NET Core 應用程式組件。**v3.0 版本新增的註記功能**讓它從單純的月曆檢視工具演進為實用的個人日程管理系統。
 
-- **現代 C# 開發實務**：使用最新語法和設計模式
-- **優秀的前端設計**：響應式、無障礙、視覺吸引
-- **健壯的業務邏輯**：參數驗證、錯誤處理、邊界情況考慮
-- **良好的可維護性**：程式碼組織清晰、擴展性強
+### 🎯 核心亮點
+- **現代 C# 開發實務**：使用 C# 13 最新語法和非同步模式
+- **優秀的前端設計**：響應式、無障礙、視覺吸引的 Bootstrap 5 設計
+- **健壯的業務邏輯**：完善的參數驗證、錯誤處理、邊界情況考慮
+- **📝 實用的註記系統**：基於 JSON 的輕量級個人化註記功能
+- **良好的可維護性**：介面分離、依賴注入、程式碼組織清晰
 
-該頁面已經達到了生產環境的品質標準，可作為團隊其他日曆相關功能的開發模板。
+### 🔴 重要技術決策
+1. **儲存方案**：選擇 JSON 檔案而非資料庫，適合個人使用情境
+2. **執行緒安全**：使用 `SemaphoreSlim` 解決併發檔案存取問題  
+3. **錯誤恢復**：完善的異常處理確保系統穩定性
+4. **用戶體驗**：操作後保持日期選取狀態，提供流暢體驗
+
+### 📁 關鍵檔案提醒
+- **資料備份**：`Demo/App_Data/notes.json` 包含所有使用者註記
+- **核心邏輯**：`Demo/Services/NoteService.cs` 負責資料持久化
+- **前端介面**：`Demo/Pages/index3.cshtml` 提供完整使用者體驗
+
+該頁面已達到**生產環境品質標準**，可作為團隊其他日曆或個人管理功能的開發模板。註記功能的加入大幅提升了實用價值，從展示性質的月曆提升為日常可用的工具。

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Demo.Services;
 
 namespace Demo.Pages;
 
@@ -10,6 +11,7 @@ namespace Demo.Pages;
 public sealed class Index3Model : PageModel
 {
     private readonly ILogger<Index3Model> logger;
+    private readonly INoteService noteService;
 
     /// <summary>
     /// 以 QueryString 綁定的年份。允許為 null；為 null 時會使用今日年分。
@@ -30,6 +32,12 @@ public sealed class Index3Model : PageModel
     public int? Day { get; set; }
 
     /// <summary>
+    /// 備註內容，用於 POST 操作。
+    /// </summary>
+    [BindProperty]
+    public string? NoteText { get; set; }
+
+    /// <summary>
     /// 實際顯示的年份。
     /// </summary>
     public int DisplayYear { get; private set; }
@@ -48,6 +56,11 @@ public sealed class Index3Model : PageModel
     /// 使用者選取的日期（若提供有效 Day 參數）。
     /// </summary>
     public DateOnly? SelectedDate { get; private set; }
+
+    /// <summary>
+    /// 選取日期的備註內容。
+    /// </summary>
+    public string? SelectedDateNote { get; private set; }
 
     /// <summary>
     /// 42 格（6 週 × 7 天）的月曆視圖模型。
@@ -102,15 +115,16 @@ public sealed class Index3Model : PageModel
     /// <summary>
     /// 建構函式。
     /// </summary>
-    public Index3Model(ILogger<Index3Model> logger)
+    public Index3Model(ILogger<Index3Model> logger, INoteService noteService)
     {
         this.logger = logger;
+        this.noteService = noteService;
     }
 
     /// <summary>
     /// GET 進入點：讀取查詢參數、進行驗證與自動更正，並生成 42 格月曆模型。
     /// </summary>
-    public IActionResult OnGet()
+    public async Task<IActionResult> OnGetAsync()
     {
         // 初始化輸入（缺省以今天為準）
         var inputYear = Year ?? Today.Year;
@@ -137,6 +151,9 @@ public sealed class Index3Model : PageModel
         if (correctedDay is not null)
         {
             SelectedDate = new DateOnly(DisplayYear, DisplayMonth, correctedDay.Value);
+            // 載入選取日期的註記
+            SelectedDateNote = await noteService.GetNoteAsync(SelectedDate.Value);
+            NoteText = SelectedDateNote; // 預填入表單
         }
 
         if (hasCorrection)
@@ -150,6 +167,72 @@ public sealed class Index3Model : PageModel
 
         CalendarCells = GenerateCalendarGrid(DisplayYear, DisplayMonth, SelectedDate);
         return Page();
+    }
+
+    /// <summary>
+    /// POST 儲存註記：儲存或更新選取日期的註記。
+    /// </summary>
+    public async Task<IActionResult> OnPostSaveNoteAsync()
+    {
+        if (!Year.HasValue || !Month.HasValue || !Day.HasValue)
+        {
+            return BadRequest("缺少必要的日期參數");
+        }
+
+        try
+        {
+            var date = new DateOnly(Year.Value, Month.Value, Day.Value);
+            
+            if (string.IsNullOrWhiteSpace(NoteText))
+            {
+                await noteService.DeleteNoteAsync(date);
+            }
+            else
+            {
+                await noteService.SaveNoteAsync(date, NoteText);
+            }
+
+            // 重新導向到相同頁面，保持選取狀態
+            return RedirectToPage("/index3", new { Year, Month, Day });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "儲存註記時發生錯誤");
+            ModelState.AddModelError(string.Empty, "儲存註記時發生錯誤，請稍後再試。");
+            
+            // 重新載入頁面資料
+            await OnGetAsync();
+            return Page();
+        }
+    }
+
+    /// <summary>
+    /// POST 刪除註記：移除選取日期的註記。
+    /// </summary>
+    public async Task<IActionResult> OnPostDeleteNoteAsync()
+    {
+        if (!Year.HasValue || !Month.HasValue || !Day.HasValue)
+        {
+            return BadRequest("缺少必要的日期參數");
+        }
+
+        try
+        {
+            var date = new DateOnly(Year.Value, Month.Value, Day.Value);
+            await noteService.DeleteNoteAsync(date);
+
+            // 重新導向到相同頁面，保持選取狀態
+            return RedirectToPage("/index3", new { Year, Month, Day });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "刪除註記時發生錯誤");
+            ModelState.AddModelError(string.Empty, "刪除註記時發生錯誤，請稍後再試。");
+            
+            // 重新載入頁面資料
+            await OnGetAsync();
+            return Page();
+        }
     }
 
     /// <summary>
