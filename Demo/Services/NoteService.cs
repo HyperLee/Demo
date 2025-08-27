@@ -828,6 +828,19 @@ public sealed class JsonMemoNoteService : IEnhancedMemoNoteService
             }
 
             var notes = JsonSerializer.Deserialize<List<Note>>(json) ?? new List<Note>();
+            
+            // 載入分類資料以供關聯
+            var categories = await LoadCategoriesAsync();
+            
+            // 為每個備忘錄載入分類關聯
+            foreach (var note in notes)
+            {
+                if (note.CategoryId.HasValue)
+                {
+                    note.Category = categories.FirstOrDefault(c => c.Id == note.CategoryId.Value);
+                }
+            }
+            
             return notes;
         }
         catch (JsonException ex)

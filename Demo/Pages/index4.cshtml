@@ -41,14 +41,14 @@
                     <div class="card card-body">
                         <div class="row">
                             <!-- 標籤篩選 -->
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label">
                                     <i class="fas fa-tags"></i> 標籤篩選
                                 </label>
                                 <div class="tag-filter-container">
                                     @if (Model.AllTags.Any())
                                     {
-                                        @foreach (var tag in Model.AllTags.Take(10))
+                                        @foreach (var tag in Model.AllTags.Take(8))
                                         {
                                             <div class="form-check form-check-inline">
                                                 <input class="form-check-input" type="checkbox" 
@@ -70,8 +70,34 @@
                                 </div>
                             </div>
 
+                            <!-- 分類篩選 -->
+                            <div class="col-md-3">
+                                <label class="form-label">
+                                    <i class="fas fa-folder"></i> 分類篩選
+                                </label>
+                                <div class="category-filter-container">
+                                    <select class="form-select form-select-sm" asp-for="SearchFilter.CategoryId">
+                                        <option value="">所有分類</option>
+                                        @if (Model.AllCategories.Any())
+                                        {
+                                            @foreach (var category in Model.AllCategories)
+                                            {
+                                                <option value="@category.Id" selected="@(Model.SearchFilter.CategoryId == category.Id)">
+                                                    @category.Name
+                                                </option>
+                                            }
+                                        }
+                                        <option value="0" selected="@(Model.SearchFilter.CategoryId == 0)">未分類</option>
+                                    </select>
+                                    @if (!Model.AllCategories.Any())
+                                    {
+                                        <small class="text-muted d-block mt-1">尚無分類</small>
+                                    }
+                                </div>
+                            </div>
+
                             <!-- 日期範圍 -->
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label">
                                     <i class="fas fa-calendar"></i> 日期範圍
                                 </label>
@@ -88,7 +114,7 @@
                             </div>
 
                             <!-- 排序選項 -->
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label">
                                     <i class="fas fa-sort"></i> 排序方式
                                 </label>

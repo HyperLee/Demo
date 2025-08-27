@@ -24,8 +24,15 @@
     "Content": "備忘錄2\r\n備忘錄2\r\n備忘錄2\r\n備忘錄2",
     "CreatedDate": "2025-08-27T22:46:45.333128+08:00",
     "ModifiedDate": "2025-08-27T22:46:45.358416+08:00",
-    "CategoryId": 1,
-    "Category": null,
+    "CategoryId": 2,
+    "Category": {
+      "Id": 1,
+      "Name": "類別1",
+      "Description": null,
+      "ParentId": null,
+      "Icon": "fas fa-folder",
+      "Children": []
+    },
     "Tags": [
       {
         "Id": 1,
