@@ -442,6 +442,101 @@
     </div>
 </div>
 
+<!-- 批次更改分類對話框 -->
+<div class="modal fade" id="batchCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">批次更改分類</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">選擇分類</label>
+                    <select class="form-select" id="batchCategorySelect">
+                        <option value="">請選擇分類</option>
+                        @if (Model.AllCategories.Any())
+                        {
+                            @foreach (var category in Model.AllCategories)
+                            {
+                                <option value="@category.Id">@category.Name</option>
+                            }
+                        }
+                    </select>
+                    <div class="form-text">為選中的 <strong id="batchCategoryCount">0</strong> 則備忘錄更改分類</div>
+                </div>
+                
+                @if (!Model.AllCategories.Any())
+                {
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>提示：</strong>尚未建立任何分類，請先到設定頁面建立分類。
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-info" onclick="executeBatchCategory()" 
+                        @(!Model.AllCategories.Any() ? "disabled" : "")>
+                    更改分類
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 批次匯出對話框 -->
+<div class="modal fade" id="batchExportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">批次匯出備忘錄</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>選擇要匯出 <strong id="batchExportCount">0</strong> 則備忘錄的格式：</p>
+                
+                <div class="row text-center">
+                    <div class="col-md-4 mb-3">
+                        <button type="button" class="btn btn-outline-danger w-100" 
+                                onclick="executeBatchExport('pdf')">
+                            <i class="fas fa-file-pdf fa-2x d-block mb-2"></i>
+                            <strong>PDF 文件</strong>
+                            <small class="d-block text-muted">適合列印和分享</small>
+                        </button>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <button type="button" class="btn btn-outline-success w-100" 
+                                onclick="executeBatchExport('excel')">
+                            <i class="fas fa-file-excel fa-2x d-block mb-2"></i>
+                            <strong>Excel 試算表</strong>
+                            <small class="d-block text-muted">適合資料分析</small>
+                        </button>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <button type="button" class="btn btn-outline-primary w-100" 
+                                onclick="executeBatchExport('json')">
+                            <i class="fas fa-file-code fa-2x d-block mb-2"></i>
+                            <strong>JSON 備份</strong>
+                            <small class="d-block text-muted">適合系統備份</small>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>提示：</strong>匯出的檔案將包含備忘錄的標題、內容、標籤、分類和日期資訊。
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         // 批次選擇管理
@@ -583,6 +678,85 @@
             const selectedIds = batchSelector.getSelectedIds();
             const parameters = `tagName=${encodeURIComponent(tagName)}&tagColor=${encodeURIComponent(tagColor)}`;
             submitBatchOperation('AddTag', selectedIds.join(','), parameters);
+        }
+
+        // 顯示批次更改分類對話框
+        function showBatchCategoryModal() {
+            const selectedIds = batchSelector.getSelectedIds();
+            if (selectedIds.length === 0) {
+                alert('請至少選擇一個項目');
+                return;
+            }
+            
+            document.getElementById('batchCategoryCount').textContent = selectedIds.length;
+            var modal = new bootstrap.Modal(document.getElementById('batchCategoryModal'));
+            modal.show();
+        }
+
+        // 執行批次更改分類
+        function executeBatchCategory() {
+            const categoryId = document.getElementById('batchCategorySelect').value;
+            
+            if (!categoryId) {
+                alert('請選擇一個分類');
+                return;
+            }
+            
+            const selectedIds = batchSelector.getSelectedIds();
+            const parameters = `categoryId=${encodeURIComponent(categoryId)}`;
+            submitBatchOperation('ChangeCategory', selectedIds.join(','), parameters);
+        }
+
+        // 顯示批次匯出對話框
+        function batchExport() {
+            const selectedIds = batchSelector.getSelectedIds();
+            if (selectedIds.length === 0) {
+                alert('請至少選擇一個項目');
+                return;
+            }
+            
+            document.getElementById('batchExportCount').textContent = selectedIds.length;
+            var modal = new bootstrap.Modal(document.getElementById('batchExportModal'));
+            modal.show();
+        }
+
+        // 執行批次匯出
+        function executeBatchExport(format) {
+            const selectedIds = batchSelector.getSelectedIds();
+            
+            // 創建下載表單
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/index4?handler=Export&format=${format}`;
+            form.style.display = 'none';
+            
+            // CSRF Token
+            const token = document.querySelector('input[name="__RequestVerificationToken"]');
+            if (token) {
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '__RequestVerificationToken';
+                tokenInput.value = token.value;
+                form.appendChild(tokenInput);
+            }
+            
+            // 選中項目ID
+            const idsInput = document.createElement('input');
+            idsInput.type = 'hidden';
+            idsInput.name = 'selectedIds';
+            idsInput.value = selectedIds.join(',');
+            form.appendChild(idsInput);
+            
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+            
+            // 關閉對話框
+            var modal = bootstrap.Modal.getInstance(document.getElementById('batchExportModal'));
+            modal.hide();
+            
+            // 顯示提示訊息
+            alert(`正在匯出 ${selectedIds.length} 則備忘錄為 ${format.toUpperCase()} 格式...`);
         }
 
         // 提交批次操作
