@@ -296,6 +296,116 @@ namespace Demo.Pages
         }
 
         /// <summary>
+        /// POST 建立標籤
+        /// </summary>
+        public async Task<IActionResult> OnPostCreateTagAsync(string tagName, string tagColor)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(tagName))
+                {
+                    return new JsonResult(new { success = false, message = "標籤名稱不能為空" });
+                }
+
+                if (tagName.Length > 30)
+                {
+                    return new JsonResult(new { success = false, message = "標籤名稱不能超過 30 個字元" });
+                }
+
+                // 檢查標籤名稱是否已存在
+                var existingTags = await _noteService.GetAllTagsAsync();
+                if (existingTags.Any(t => t.Name.Equals(tagName, StringComparison.OrdinalIgnoreCase)))
+                {
+                    return new JsonResult(new { success = false, message = "此標籤名稱已存在" });
+                }
+
+                var newTag = await _noteService.CreateTagAsync(tagName, tagColor ?? "#007bff");
+                
+                _logger.LogInformation("成功建立新標籤: {TagName}, ID: {TagId}", tagName, newTag.Id);
+                
+                return new JsonResult(new 
+                { 
+                    success = true, 
+                    tagId = newTag.Id, 
+                    tagName = newTag.Name,
+                    tagColor = newTag.Color
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "建立標籤時發生錯誤: {TagName}", tagName);
+                return new JsonResult(new { success = false, message = "建立標籤時發生錯誤，請稍後再試" });
+            }
+        }
+
+        /// <summary>
+        /// POST 刪除標籤
+        /// </summary>
+        public async Task<IActionResult> OnPostDeleteTagAsync(int tagId)
+        {
+            try
+            {
+                if (tagId <= 0)
+                {
+                    return new JsonResult(new { success = false, message = "無效的標籤ID" });
+                }
+
+                var success = await _noteService.DeleteTagAsync(tagId);
+                
+                if (success)
+                {
+                    _logger.LogInformation("成功刪除標籤，ID: {TagId}", tagId);
+                    return new JsonResult(new { success = true, message = "標籤已成功刪除" });
+                }
+                else
+                {
+                    return new JsonResult(new { success = false, message = "找不到指定的標籤" });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "刪除標籤時發生錯誤，ID: {TagId}", tagId);
+                return new JsonResult(new { success = false, message = "刪除標籤時發生錯誤，請稍後再試" });
+            }
+        }
+
+        /// <summary>
+        /// POST 刪除分類
+        /// </summary>
+        public async Task<IActionResult> OnPostDeleteCategoryAsync(int categoryId)
+        {
+            try
+            {
+                if (categoryId <= 0)
+                {
+                    return new JsonResult(new { success = false, message = "無效的分類ID" });
+                }
+
+                var success = await _noteService.DeleteCategoryAsync(categoryId);
+                
+                if (success)
+                {
+                    _logger.LogInformation("成功刪除分類，ID: {CategoryId}", categoryId);
+                    return new JsonResult(new { success = true, message = "分類已成功刪除" });
+                }
+                else
+                {
+                    return new JsonResult(new { success = false, message = "找不到指定的分類" });
+                }
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning("刪除分類時發生業務邏輯錯誤，ID: {CategoryId}, 錯誤: {Error}", categoryId, ex.Message);
+                return new JsonResult(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "刪除分類時發生錯誤，ID: {CategoryId}", categoryId);
+                return new JsonResult(new { success = false, message = "刪除分類時發生錯誤，請稍後再試" });
+            }
+        }
+
+        /// <summary>
         /// GET 標籤建議
         /// </summary>
         public async Task<IActionResult> OnGetTagSuggestionsAsync(string query)

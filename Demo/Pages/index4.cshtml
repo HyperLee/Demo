@@ -9,6 +9,7 @@
     <div class="row mb-4">
         <div class="col-12">
             <form method="post" asp-page-handler="Search" id="searchForm">
+                @Html.AntiForgeryToken()
                 <!-- 主搜尋列 -->
                 <div class="search-container mb-3">
                     <div class="input-group input-group-lg">
@@ -42,9 +43,14 @@
                         <div class="row">
                             <!-- 標籤篩選 -->
                             <div class="col-md-3">
-                                <label class="form-label">
-                                    <i class="fas fa-tags"></i> 標籤篩選
-                                </label>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="form-label mb-0">
+                                        <i class="fas fa-tags"></i> 標籤篩選
+                                    </label>
+                                    <button type="button" class="btn btn-link btn-sm p-0" onclick="showTagManagementModal()">
+                                        <i class="fas fa-cog"></i> 管理
+                                    </button>
+                                </div>
                                 <div class="tag-filter-container">
                                     @if (Model.AllTags.Any())
                                     {
@@ -72,9 +78,14 @@
 
                             <!-- 分類篩選 -->
                             <div class="col-md-3">
-                                <label class="form-label">
-                                    <i class="fas fa-folder"></i> 分類篩選
-                                </label>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="form-label mb-0">
+                                        <i class="fas fa-folder"></i> 分類篩選
+                                    </label>
+                                    <button type="button" class="btn btn-link btn-sm p-0" onclick="showCategoryManagementModal()">
+                                        <i class="fas fa-cog"></i> 管理
+                                    </button>
+                                </div>
                                 <div class="category-filter-container">
                                     <select class="form-select form-select-sm" asp-for="SearchFilter.CategoryId">
                                         <option value="">所有分類</option>
@@ -607,6 +618,181 @@
     </div>
 </div>
 
+<!-- 標籤管理對話框 -->
+<div class="modal fade" id="tagManagementModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-tags"></i> 標籤管理
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <!-- 標籤清單 -->
+                    <div class="col-md-8">
+                        <h6><i class="fas fa-list"></i> 現有標籤</h6>
+                        <div id="tagList">
+                            @if (Model.AllTags.Any())
+                            {
+                                @foreach (var tag in Model.AllTags)
+                                {
+                                    <div class="tag-item d-flex justify-content-between align-items-center mb-2 p-2 border rounded" data-tag-id="@tag.Id">
+                                        <div class="d-flex align-items-center">
+                                            <span class="tag-badge me-2" style="background-color: @tag.Color">
+                                                @tag.Name
+                                            </span>
+                                            <small class="text-muted">使用次數: @tag.UsageCount</small>
+                                        </div>
+                                        <button type="button" class="btn btn-outline-danger btn-sm" 
+                                                onclick="confirmDeleteTag(@tag.Id, '@Html.Raw(Html.Encode(tag.Name))', @tag.UsageCount)"
+                                                title="刪除標籤">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <p class="text-muted">尚無標籤</p>
+                            }
+                        </div>
+                    </div>
+                    
+                    <!-- 新增標籤 -->
+                    <div class="col-md-4">
+                        <h6><i class="fas fa-plus"></i> 新增標籤</h6>
+                        <div class="mb-3">
+                            <label class="form-label">標籤名稱</label>
+                            <input type="text" class="form-control" id="newTagName" placeholder="輸入標籤名稱" maxlength="30" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">標籤顏色</label>
+                            <input type="color" class="form-control form-control-color" id="newTagColor" value="#007bff" />
+                        </div>
+                        <button type="button" class="btn btn-primary w-100" onclick="createNewTagFromManagement()">
+                            <i class="fas fa-plus"></i> 新增標籤
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 分類管理對話框 -->
+<div class="modal fade" id="categoryManagementModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-folder"></i> 分類管理
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <!-- 分類清單 -->
+                    <div class="col-md-8">
+                        <h6><i class="fas fa-list"></i> 現有分類</h6>
+                        <div id="categoryList">
+                            @if (Model.AllCategories.Any())
+                            {
+                                @foreach (var category in Model.AllCategories)
+                                {
+                                    <div class="category-item d-flex justify-content-between align-items-center mb-2 p-2 border rounded" data-category-id="@category.Id">
+                                        <div class="d-flex align-items-center">
+                                            <span class="category-badge me-2">
+                                                <i class="@category.Icon"></i> @category.Name
+                                            </span>
+                                        </div>
+                                        <button type="button" class="btn btn-outline-danger btn-sm" 
+                                                onclick="confirmDeleteCategory(@category.Id, '@Html.Raw(Html.Encode(category.Name))')"
+                                                title="刪除分類">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <p class="text-muted">尚無分類</p>
+                            }
+                        </div>
+                    </div>
+                    
+                    <!-- 新增分類 -->
+                    <div class="col-md-4">
+                        <h6><i class="fas fa-plus"></i> 新增分類</h6>
+                        <div class="mb-3">
+                            <label class="form-label">分類名稱</label>
+                            <input type="text" class="form-control" id="newCategoryName" placeholder="輸入分類名稱" maxlength="50" />
+                        </div>
+                        <button type="button" class="btn btn-primary w-100" onclick="createNewCategoryFromManagement()">
+                            <i class="fas fa-plus"></i> 新增分類
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 刪除標籤確認對話框 -->
+<div class="modal fade" id="deleteTagModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">確認刪除標籤</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>您確定要刪除標籤「<strong id="deleteTagName"></strong>」嗎？</p>
+                <div id="tagUsageWarning" class="alert alert-warning" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    此標籤目前被 <strong id="tagUsageCount">0</strong> 則備忘錄使用，刪除後將會從這些備忘錄中移除此標籤。
+                </div>
+                <p class="text-danger"><small><i class="fas fa-exclamation-triangle"></i> 此操作無法復原！</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteTagBtn">確認刪除</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 刪除分類確認對話框 -->
+<div class="modal fade" id="deleteCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">確認刪除分類</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>您確定要刪除分類「<strong id="deleteCategoryName"></strong>」嗎？</p>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    刪除分類後，使用此分類的備忘錄將變為「未分類」狀態。
+                </div>
+                <p class="text-danger"><small><i class="fas fa-exclamation-triangle"></i> 此操作無法復原！</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteCategoryBtn">確認刪除</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         // 批次選擇管理
@@ -971,6 +1157,246 @@
                 }, 300);
             });
         }
+
+        // 標籤管理相關函式
+        function showTagManagementModal() {
+            var modal = new bootstrap.Modal(document.getElementById('tagManagementModal'));
+            modal.show();
+        }
+
+        function createNewTagFromManagement() {
+            const tagName = document.getElementById('newTagName').value.trim();
+            const tagColor = document.getElementById('newTagColor').value;
+            
+            if (!tagName) {
+                alert('請輸入標籤名稱');
+                return;
+            }
+            
+            // 檢查名稱是否已存在
+            const existingTags = Array.from(document.querySelectorAll('.tag-item'));
+            const exists = existingTags.some(item => {
+                const tagBadge = item.querySelector('.tag-badge');
+                return tagBadge && tagBadge.textContent.trim() === tagName;
+            });
+            
+            if (exists) {
+                alert('此標籤名稱已存在，請使用其他名稱');
+                return;
+            }
+            
+            // 顯示載入狀態
+            const createBtn = document.querySelector('[onclick="createNewTagFromManagement()"]');
+            const originalText = createBtn.innerHTML;
+            createBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 建立中...';
+            createBtn.disabled = true;
+            
+            // 提交建立標籤請求（這裡需要實作API）
+            fetch('/index4?handler=CreateTag', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: `tagName=${encodeURIComponent(tagName)}&tagColor=${encodeURIComponent(tagColor)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 清空輸入框
+                    document.getElementById('newTagName').value = '';
+                    document.getElementById('newTagColor').value = '#007bff';
+                    
+                    // 重新載入頁面以顯示新標籤
+                    location.reload();
+                } else {
+                    alert(`建立標籤失敗：${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error('建立標籤時發生錯誤:', error);
+                alert('建立標籤時發生錯誤，請稍後再試');
+            })
+            .finally(() => {
+                // 恢復按鈕狀態
+                createBtn.innerHTML = originalText;
+                createBtn.disabled = false;
+            });
+        }
+
+        function confirmDeleteTag(tagId, tagName, usageCount) {
+            document.getElementById('deleteTagName').textContent = tagName;
+            
+            const usageWarning = document.getElementById('tagUsageWarning');
+            if (usageCount > 0) {
+                document.getElementById('tagUsageCount').textContent = usageCount;
+                usageWarning.style.display = 'block';
+            } else {
+                usageWarning.style.display = 'none';
+            }
+            
+            // 設定確認按鈕的點擊事件
+            const confirmBtn = document.getElementById('confirmDeleteTagBtn');
+            confirmBtn.onclick = function() {
+                deleteTag(tagId);
+            };
+            
+            var modal = new bootstrap.Modal(document.getElementById('deleteTagModal'));
+            modal.show();
+        }
+
+        function deleteTag(tagId) {
+            // 顯示載入狀態
+            const confirmBtn = document.getElementById('confirmDeleteTagBtn');
+            const originalText = confirmBtn.innerHTML;
+            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 刪除中...';
+            confirmBtn.disabled = true;
+            
+            fetch('/index4?handler=DeleteTag', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: `tagId=${tagId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 關閉對話框
+                    bootstrap.Modal.getInstance(document.getElementById('deleteTagModal')).hide();
+                    
+                    // 重新載入頁面
+                    location.reload();
+                } else {
+                    alert(`刪除標籤失敗：${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error('刪除標籤時發生錯誤:', error);
+                alert('刪除標籤時發生錯誤，請稍後再試');
+            })
+            .finally(() => {
+                // 恢復按鈕狀態
+                confirmBtn.innerHTML = originalText;
+                confirmBtn.disabled = false;
+            });
+        }
+
+        // 分類管理相關函式
+        function showCategoryManagementModal() {
+            var modal = new bootstrap.Modal(document.getElementById('categoryManagementModal'));
+            modal.show();
+        }
+
+        function createNewCategoryFromManagement() {
+            const categoryName = document.getElementById('newCategoryName').value.trim();
+            
+            if (!categoryName) {
+                alert('請輸入分類名稱');
+                return;
+            }
+            
+            // 檢查名稱是否已存在
+            const existingCategories = Array.from(document.querySelectorAll('.category-item'));
+            const exists = existingCategories.some(item => {
+                const categoryBadge = item.querySelector('.category-badge');
+                return categoryBadge && categoryBadge.textContent.includes(categoryName);
+            });
+            
+            if (exists) {
+                alert('此分類名稱已存在，請使用其他名稱');
+                return;
+            }
+            
+            // 顯示載入狀態
+            const createBtn = document.querySelector('[onclick="createNewCategoryFromManagement()"]');
+            const originalText = createBtn.innerHTML;
+            createBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 建立中...';
+            createBtn.disabled = true;
+            
+            // 提交建立分類請求
+            fetch('/index4?handler=CreateCategory', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: `categoryName=${encodeURIComponent(categoryName)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 清空輸入框
+                    document.getElementById('newCategoryName').value = '';
+                    
+                    // 重新載入頁面以顯示新分類
+                    location.reload();
+                } else {
+                    alert(`建立分類失敗：${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error('建立分類時發生錯誤:', error);
+                alert('建立分類時發生錯誤，請稍後再試');
+            })
+            .finally(() => {
+                // 恢復按鈕狀態
+                createBtn.innerHTML = originalText;
+                createBtn.disabled = false;
+            });
+        }
+
+        function confirmDeleteCategory(categoryId, categoryName) {
+            document.getElementById('deleteCategoryName').textContent = categoryName;
+            
+            // 設定確認按鈕的點擊事件
+            const confirmBtn = document.getElementById('confirmDeleteCategoryBtn');
+            confirmBtn.onclick = function() {
+                deleteCategory(categoryId);
+            };
+            
+            var modal = new bootstrap.Modal(document.getElementById('deleteCategoryModal'));
+            modal.show();
+        }
+
+        function deleteCategory(categoryId) {
+            // 顯示載入狀態
+            const confirmBtn = document.getElementById('confirmDeleteCategoryBtn');
+            const originalText = confirmBtn.innerHTML;
+            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 刪除中...';
+            confirmBtn.disabled = true;
+            
+            fetch('/index4?handler=DeleteCategory', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: `categoryId=${categoryId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 關閉對話框
+                    bootstrap.Modal.getInstance(document.getElementById('deleteCategoryModal')).hide();
+                    
+                    // 重新載入頁面
+                    location.reload();
+                } else {
+                    alert(`刪除分類失敗：${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error('刪除分類時發生錯誤:', error);
+                alert('刪除分類時發生錯誤，請稍後再試');
+            })
+            .finally(() => {
+                // 恢復按鈕狀態
+                confirmBtn.innerHTML = originalText;
+                confirmBtn.disabled = false;
+            });
+        }
     </script>
 }
 
@@ -1073,6 +1499,31 @@
         }
         
         .category-toggle-btn:hover {
+            color: #0a58ca;
+            text-decoration: underline;
+        }
+        
+        /* 管理對話框樣式 */
+        .tag-item, .category-item {
+            transition: all 0.3s ease;
+        }
+        
+        .tag-item:hover, .category-item:hover {
+            background-color: #f8f9fa;
+            border-color: #0d6efd !important;
+        }
+        
+        .modal-lg .modal-body {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .btn-link {
+            color: #0d6efd;
+            text-decoration: none;
+        }
+        
+        .btn-link:hover {
             color: #0a58ca;
             text-decoration: underline;
         }

@@ -430,6 +430,16 @@ public interface IEnhancedMemoNoteService : IMemoNoteService
     Task<Category> CreateCategoryAsync(string name, int? parentId);
     
     /// <summary>
+    /// 刪除標籤
+    /// </summary>
+    Task<bool> DeleteTagAsync(int tagId);
+    
+    /// <summary>
+    /// 刪除分類
+    /// </summary>
+    Task<bool> DeleteCategoryAsync(int categoryId);
+    
+    /// <summary>
     /// 執行批次操作
     /// </summary>
     Task<BatchOperationResult> ExecuteBatchOperationAsync(BatchOperationRequest request);
@@ -1109,6 +1119,104 @@ public sealed class JsonMemoNoteService : IEnhancedMemoNoteService
             await SaveCategoriesAsync(categories);
 
             return newCategory;
+        }
+        finally
+        {
+            _fileLock.Release();
+        }
+    }
+
+    /// <summary>
+    /// 刪除標籤
+    /// </summary>
+    public async Task<bool> DeleteTagAsync(int tagId)
+    {
+        await _fileLock.WaitAsync();
+        try
+        {
+            var tags = await LoadTagsAsync();
+            var tagToDelete = tags.FirstOrDefault(t => t.Id == tagId);
+            
+            if (tagToDelete == null)
+            {
+                return false;
+            }
+
+            // 檢查是否有備忘錄使用此標籤
+            var notes = await LoadNotesAsync();
+            var notesWithTag = notes.Where(n => n.Tags.Any(t => t.Id == tagId)).ToList();
+            
+            if (notesWithTag.Any())
+            {
+                // 從所有使用此標籤的備忘錄中移除此標籤
+                foreach (var note in notesWithTag)
+                {
+                    note.Tags.RemoveAll(t => t.Id == tagId);
+                    note.ModifiedDate = DateTime.Now;
+                }
+                
+                // 儲存更新後的備忘錄
+                await SaveNotesAsync(notes);
+            }
+
+            // 從標籤列表中移除
+            tags.Remove(tagToDelete);
+            await SaveTagsAsync(tags);
+
+            return true;
+        }
+        finally
+        {
+            _fileLock.Release();
+        }
+    }
+
+    /// <summary>
+    /// 刪除分類
+    /// </summary>
+    public async Task<bool> DeleteCategoryAsync(int categoryId)
+    {
+        await _fileLock.WaitAsync();
+        try
+        {
+            var categories = await LoadCategoriesAsync();
+            var categoryToDelete = categories.FirstOrDefault(c => c.Id == categoryId);
+            
+            if (categoryToDelete == null)
+            {
+                return false;
+            }
+
+            // 檢查是否有子分類
+            var hasChildren = categories.Any(c => c.ParentId == categoryId);
+            if (hasChildren)
+            {
+                throw new InvalidOperationException("無法刪除包含子分類的分類，請先刪除子分類");
+            }
+
+            // 檢查是否有備忘錄使用此分類
+            var notes = await LoadNotesAsync();
+            var notesWithCategory = notes.Where(n => n.CategoryId == categoryId).ToList();
+            
+            if (notesWithCategory.Any())
+            {
+                // 將使用此分類的備忘錄的分類設為null
+                foreach (var note in notesWithCategory)
+                {
+                    note.CategoryId = null;
+                    note.Category = null;
+                    note.ModifiedDate = DateTime.Now;
+                }
+                
+                // 儲存更新後的備忘錄
+                await SaveNotesAsync(notes);
+            }
+
+            // 從分類列表中移除
+            categories.Remove(categoryToDelete);
+            await SaveCategoriesAsync(categories);
+
+            return true;
         }
         finally
         {
