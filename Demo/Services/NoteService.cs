@@ -3,6 +3,234 @@ using System.Text.Json;
 namespace Demo.Services;
 
 /// <summary>
+/// 標籤資料模型
+/// </summary>
+public class Tag
+{
+    /// <summary>
+    /// 標籤 ID
+    /// </summary>
+    public int Id { get; set; }
+    
+    /// <summary>
+    /// 標籤名稱
+    /// </summary>
+    public string Name { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// 標籤顏色
+    /// </summary>
+    public string Color { get; set; } = "#007bff";
+    
+    /// <summary>
+    /// 標籤描述
+    /// </summary>
+    public string? Description { get; set; }
+    
+    /// <summary>
+    /// 建立日期
+    /// </summary>
+    public DateTime CreatedDate { get; set; }
+    
+    /// <summary>
+    /// 使用次數
+    /// </summary>
+    public int UsageCount { get; set; }
+}
+
+/// <summary>
+/// 分類資料模型
+/// </summary>
+public class Category
+{
+    /// <summary>
+    /// 分類 ID
+    /// </summary>
+    public int Id { get; set; }
+    
+    /// <summary>
+    /// 分類名稱
+    /// </summary>
+    public string Name { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// 分類描述
+    /// </summary>
+    public string? Description { get; set; }
+    
+    /// <summary>
+    /// 父分類 ID
+    /// </summary>
+    public int? ParentId { get; set; }
+    
+    /// <summary>
+    /// 分類圖示
+    /// </summary>
+    public string Icon { get; set; } = "fas fa-folder";
+    
+    /// <summary>
+    /// 子分類
+    /// </summary>
+    public List<Category> Children { get; set; } = new();
+}
+
+/// <summary>
+/// 排序方式
+/// </summary>
+public enum SortBy
+{
+    /// <summary>
+    /// 建立日期
+    /// </summary>
+    CreatedDate,
+    
+    /// <summary>
+    /// 修改日期
+    /// </summary>
+    ModifiedDate,
+    
+    /// <summary>
+    /// 標題
+    /// </summary>
+    Title,
+    
+    /// <summary>
+    /// 相關性
+    /// </summary>
+    Relevance
+}
+
+/// <summary>
+/// 排序順序
+/// </summary>
+public enum SortOrder
+{
+    /// <summary>
+    /// 升冪
+    /// </summary>
+    Asc,
+    
+    /// <summary>
+    /// 降冪
+    /// </summary>
+    Desc
+}
+
+/// <summary>
+/// 搜尋篩選模型
+/// </summary>
+public class SearchFilterModel
+{
+    /// <summary>
+    /// 搜尋關鍵字
+    /// </summary>
+    public string? Keyword { get; set; }
+    
+    /// <summary>
+    /// 標籤篩選
+    /// </summary>
+    public List<string> Tags { get; set; } = new();
+    
+    /// <summary>
+    /// 開始日期
+    /// </summary>
+    public DateTime? StartDate { get; set; }
+    
+    /// <summary>
+    /// 結束日期
+    /// </summary>
+    public DateTime? EndDate { get; set; }
+    
+    /// <summary>
+    /// 排序方式
+    /// </summary>
+    public SortBy SortBy { get; set; } = SortBy.ModifiedDate;
+    
+    /// <summary>
+    /// 排序順序
+    /// </summary>
+    public SortOrder SortOrder { get; set; } = SortOrder.Desc;
+    
+    /// <summary>
+    /// 分類ID
+    /// </summary>
+    public int? CategoryId { get; set; }
+}
+
+/// <summary>
+/// 批次操作類型
+/// </summary>
+public enum BatchOperation
+{
+    /// <summary>
+    /// 刪除
+    /// </summary>
+    Delete,
+    
+    /// <summary>
+    /// 新增標籤
+    /// </summary>
+    AddTag,
+    
+    /// <summary>
+    /// 移除標籤
+    /// </summary>
+    RemoveTag,
+    
+    /// <summary>
+    /// 更改分類
+    /// </summary>
+    ChangeCategory,
+    
+    /// <summary>
+    /// 匯出
+    /// </summary>
+    Export
+}
+
+/// <summary>
+/// 批次操作請求
+/// </summary>
+public class BatchOperationRequest
+{
+    /// <summary>
+    /// 備忘錄 ID 清單
+    /// </summary>
+    public List<int> NoteIds { get; set; } = new();
+    
+    /// <summary>
+    /// 操作類型
+    /// </summary>
+    public BatchOperation Operation { get; set; }
+    
+    /// <summary>
+    /// 操作參數
+    /// </summary>
+    public Dictionary<string, object> Parameters { get; set; } = new();
+}
+
+/// <summary>
+/// 批次操作結果
+/// </summary>
+public class BatchOperationResult
+{
+    /// <summary>
+    /// 操作是否成功
+    /// </summary>
+    public bool Success { get; set; }
+    
+    /// <summary>
+    /// 處理筆數
+    /// </summary>
+    public int ProcessedCount { get; set; }
+    
+    /// <summary>
+    /// 錯誤訊息
+    /// </summary>
+    public string? ErrorMessage { get; set; }
+}
+
+/// <summary>
 /// 備忘錄資料模型
 /// </summary>
 public class Note
@@ -31,6 +259,21 @@ public class Note
     /// 修改日期
     /// </summary>
     public DateTime ModifiedDate { get; set; }
+    
+    /// <summary>
+    /// 分類ID
+    /// </summary>
+    public int? CategoryId { get; set; }
+    
+    /// <summary>
+    /// 分類
+    /// </summary>
+    public Category? Category { get; set; }
+    
+    /// <summary>
+    /// 標籤清單
+    /// </summary>
+    public List<Tag> Tags { get; set; } = new();
 }
 
 /// <summary>
@@ -139,6 +382,67 @@ public interface IMemoNoteService
     /// 刪除備忘錄
     /// </summary>
     Task<bool> DeleteNoteAsync(int id);
+}
+
+/// <summary>
+/// 增強型備忘錄服務介面
+/// </summary>
+public interface IEnhancedMemoNoteService : IMemoNoteService
+{
+    /// <summary>
+    /// 搜尋備忘錄
+    /// </summary>
+    Task<List<Note>> SearchNotesAsync(SearchFilterModel filter, int page, int pageSize);
+    
+    /// <summary>
+    /// 取得搜尋結果總數
+    /// </summary>
+    Task<int> GetSearchResultCountAsync(SearchFilterModel filter);
+    
+    /// <summary>
+    /// 取得所有標籤
+    /// </summary>
+    Task<List<Tag>> GetAllTagsAsync();
+    
+    /// <summary>
+    /// 建立標籤
+    /// </summary>
+    Task<Tag> CreateTagAsync(string name, string color);
+    
+    /// <summary>
+    /// 為備忘錄新增標籤
+    /// </summary>
+    Task<bool> AddTagToNoteAsync(int noteId, int tagId);
+    
+    /// <summary>
+    /// 從備忘錄移除標籤
+    /// </summary>
+    Task<bool> RemoveTagFromNoteAsync(int noteId, int tagId);
+    
+    /// <summary>
+    /// 取得所有分類
+    /// </summary>
+    Task<List<Category>> GetCategoriesAsync();
+    
+    /// <summary>
+    /// 建立分類
+    /// </summary>
+    Task<Category> CreateCategoryAsync(string name, int? parentId);
+    
+    /// <summary>
+    /// 執行批次操作
+    /// </summary>
+    Task<BatchOperationResult> ExecuteBatchOperationAsync(BatchOperationRequest request);
+    
+    /// <summary>
+    /// 匯出為 PDF
+    /// </summary>
+    Task<byte[]> ExportToPdfAsync(List<int> noteIds);
+    
+    /// <summary>
+    /// 匯出為 Excel
+    /// </summary>
+    Task<byte[]> ExportToExcelAsync(List<int> noteIds);
 }
 
 /// <summary>
@@ -335,9 +639,11 @@ public sealed class JsonNoteService : INoteService
 /// <summary>
 /// JSON 檔案為基礎的備忘錄服務實作
 /// </summary>
-public sealed class JsonMemoNoteService : IMemoNoteService
+public sealed class JsonMemoNoteService : IEnhancedMemoNoteService
 {
     private readonly string _dataFilePath;
+    private readonly string _tagsFilePath;
+    private readonly string _categoriesFilePath;
     private readonly ILogger<JsonMemoNoteService> _logger;
     private readonly SemaphoreSlim _fileLock = new(1, 1);
 
@@ -349,6 +655,8 @@ public sealed class JsonMemoNoteService : IMemoNoteService
         var dataDirectory = Path.Combine(Directory.GetCurrentDirectory(), "App_Data");
         Directory.CreateDirectory(dataDirectory);
         _dataFilePath = Path.Combine(dataDirectory, "memo-notes.json");
+        _tagsFilePath = Path.Combine(dataDirectory, "tags.json");
+        _categoriesFilePath = Path.Combine(dataDirectory, "categories.json");
     }
 
     /// <summary>
@@ -555,4 +863,491 @@ public sealed class JsonMemoNoteService : IMemoNoteService
             throw;
         }
     }
+
+    #region 進階功能實作
+
+    /// <summary>
+    /// 搜尋備忘錄
+    /// </summary>
+    public async Task<List<Note>> SearchNotesAsync(SearchFilterModel filter, int page, int pageSize)
+    {
+        var allNotes = await GetAllNotesAsync();
+        var query = allNotes.AsEnumerable();
+
+        // 關鍵字搜尋
+        if (!string.IsNullOrWhiteSpace(filter.Keyword))
+        {
+            var keyword = filter.Keyword.ToLowerInvariant();
+            query = query.Where(n => 
+                n.Title.ToLowerInvariant().Contains(keyword) ||
+                n.Content.ToLowerInvariant().Contains(keyword) ||
+                n.Tags.Any(t => t.Name.ToLowerInvariant().Contains(keyword))
+            );
+        }
+
+        // 標籤篩選
+        if (filter.Tags.Any())
+        {
+            query = query.Where(n => 
+                n.Tags.Any(t => filter.Tags.Contains(t.Name))
+            );
+        }
+
+        // 日期範圍篩選
+        if (filter.StartDate.HasValue)
+        {
+            query = query.Where(n => n.CreatedDate >= filter.StartDate.Value);
+        }
+
+        if (filter.EndDate.HasValue)
+        {
+            query = query.Where(n => n.CreatedDate <= filter.EndDate.Value.AddDays(1));
+        }
+
+        // 分類篩選
+        if (filter.CategoryId.HasValue)
+        {
+            query = query.Where(n => n.CategoryId == filter.CategoryId.Value);
+        }
+
+        // 排序
+        query = filter.SortBy switch
+        {
+            SortBy.CreatedDate => filter.SortOrder == SortOrder.Desc 
+                ? query.OrderByDescending(n => n.CreatedDate)
+                : query.OrderBy(n => n.CreatedDate),
+            SortBy.ModifiedDate => filter.SortOrder == SortOrder.Desc 
+                ? query.OrderByDescending(n => n.ModifiedDate)
+                : query.OrderBy(n => n.ModifiedDate),
+            SortBy.Title => filter.SortOrder == SortOrder.Desc 
+                ? query.OrderByDescending(n => n.Title)
+                : query.OrderBy(n => n.Title),
+            _ => query.OrderByDescending(n => n.ModifiedDate)
+        };
+
+        // 分頁
+        return query.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+    }
+
+    /// <summary>
+    /// 取得搜尋結果總數
+    /// </summary>
+    public async Task<int> GetSearchResultCountAsync(SearchFilterModel filter)
+    {
+        var results = await SearchNotesAsync(filter, 1, int.MaxValue);
+        return results.Count;
+    }
+
+    /// <summary>
+    /// 取得所有標籤
+    /// </summary>
+    public async Task<List<Tag>> GetAllTagsAsync()
+    {
+        await _fileLock.WaitAsync();
+        try
+        {
+            return await LoadTagsAsync();
+        }
+        finally
+        {
+            _fileLock.Release();
+        }
+    }
+
+    /// <summary>
+    /// 建立標籤
+    /// </summary>
+    public async Task<Tag> CreateTagAsync(string name, string color)
+    {
+        await _fileLock.WaitAsync();
+        try
+        {
+            var tags = await LoadTagsAsync();
+            
+            var existingTag = tags.FirstOrDefault(t => t.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            if (existingTag != null)
+            {
+                return existingTag;
+            }
+
+            var newTag = new Tag
+            {
+                Id = tags.Count > 0 ? tags.Max(t => t.Id) + 1 : 1,
+                Name = name,
+                Color = color,
+                CreatedDate = DateTime.Now,
+                UsageCount = 0
+            };
+
+            tags.Add(newTag);
+            await SaveTagsAsync(tags);
+
+            return newTag;
+        }
+        finally
+        {
+            _fileLock.Release();
+        }
+    }
+
+    /// <summary>
+    /// 為備忘錄新增標籤
+    /// </summary>
+    public async Task<bool> AddTagToNoteAsync(int noteId, int tagId)
+    {
+        await _fileLock.WaitAsync();
+        try
+        {
+            var notes = await LoadNotesAsync();
+            var note = notes.FirstOrDefault(n => n.Id == noteId);
+            if (note == null) return false;
+
+            var tags = await LoadTagsAsync();
+            var tag = tags.FirstOrDefault(t => t.Id == tagId);
+            if (tag == null) return false;
+
+            if (!note.Tags.Any(t => t.Id == tagId))
+            {
+                note.Tags.Add(tag);
+                tag.UsageCount++;
+                
+                await SaveNotesAsync(notes);
+                await SaveTagsAsync(tags);
+            }
+
+            return true;
+        }
+        finally
+        {
+            _fileLock.Release();
+        }
+    }
+
+    /// <summary>
+    /// 從備忘錄移除標籤
+    /// </summary>
+    public async Task<bool> RemoveTagFromNoteAsync(int noteId, int tagId)
+    {
+        await _fileLock.WaitAsync();
+        try
+        {
+            var notes = await LoadNotesAsync();
+            var note = notes.FirstOrDefault(n => n.Id == noteId);
+            if (note == null) return false;
+
+            var tagToRemove = note.Tags.FirstOrDefault(t => t.Id == tagId);
+            if (tagToRemove != null)
+            {
+                note.Tags.Remove(tagToRemove);
+                
+                var tags = await LoadTagsAsync();
+                var tag = tags.FirstOrDefault(t => t.Id == tagId);
+                if (tag != null)
+                {
+                    tag.UsageCount = Math.Max(0, tag.UsageCount - 1);
+                    await SaveTagsAsync(tags);
+                }
+                
+                await SaveNotesAsync(notes);
+            }
+
+            return true;
+        }
+        finally
+        {
+            _fileLock.Release();
+        }
+    }
+
+    /// <summary>
+    /// 取得所有分類
+    /// </summary>
+    public async Task<List<Category>> GetCategoriesAsync()
+    {
+        await _fileLock.WaitAsync();
+        try
+        {
+            return await LoadCategoriesAsync();
+        }
+        finally
+        {
+            _fileLock.Release();
+        }
+    }
+
+    /// <summary>
+    /// 建立分類
+    /// </summary>
+    public async Task<Category> CreateCategoryAsync(string name, int? parentId)
+    {
+        await _fileLock.WaitAsync();
+        try
+        {
+            var categories = await LoadCategoriesAsync();
+            
+            var newCategory = new Category
+            {
+                Id = categories.Count > 0 ? categories.Max(c => c.Id) + 1 : 1,
+                Name = name,
+                ParentId = parentId
+            };
+
+            categories.Add(newCategory);
+            await SaveCategoriesAsync(categories);
+
+            return newCategory;
+        }
+        finally
+        {
+            _fileLock.Release();
+        }
+    }
+
+    /// <summary>
+    /// 執行批次操作
+    /// </summary>
+    public async Task<BatchOperationResult> ExecuteBatchOperationAsync(BatchOperationRequest request)
+    {
+        var result = new BatchOperationResult();
+
+        try
+        {
+            switch (request.Operation)
+            {
+                case BatchOperation.Delete:
+                    result = await BatchDeleteAsync(request.NoteIds);
+                    break;
+
+                case BatchOperation.AddTag:
+                    if (request.Parameters.TryGetValue("tagName", out var tagNameObj) && 
+                        request.Parameters.TryGetValue("tagColor", out var tagColorObj))
+                    {
+                        result = await BatchAddTagAsync(request.NoteIds, tagNameObj.ToString()!, tagColorObj.ToString()!);
+                    }
+                    break;
+
+                case BatchOperation.ChangeCategory:
+                    if (request.Parameters.TryGetValue("categoryId", out var categoryIdObj))
+                    {
+                        var categoryId = Convert.ToInt32(categoryIdObj);
+                        result = await BatchChangeCategoryAsync(request.NoteIds, categoryId);
+                    }
+                    break;
+
+                default:
+                    result.Success = false;
+                    result.ErrorMessage = "不支援的批次操作類型";
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            result.Success = false;
+            result.ErrorMessage = ex.Message;
+            _logger.LogError(ex, "批次操作失敗: {Operation}", request.Operation);
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// 匯出為 PDF（目前返回空陣列，待實作）
+    /// </summary>
+    public async Task<byte[]> ExportToPdfAsync(List<int> noteIds)
+    {
+        // 暫時實作，實際使用時需要安裝 PDF 產生套件
+        await Task.Delay(1);
+        return Array.Empty<byte>();
+    }
+
+    /// <summary>
+    /// 匯出為 Excel（目前返回空陣列，待實作）
+    /// </summary>
+    public async Task<byte[]> ExportToExcelAsync(List<int> noteIds)
+    {
+        // 暫時實作，實際使用時需要安裝 Excel 產生套件
+        await Task.Delay(1);
+        return Array.Empty<byte>();
+    }
+
+    #endregion
+
+    #region 私有方法
+
+    /// <summary>
+    /// 載入標籤資料
+    /// </summary>
+    private async Task<List<Tag>> LoadTagsAsync()
+    {
+        try
+        {
+            if (!File.Exists(_tagsFilePath))
+            {
+                return new List<Tag>();
+            }
+
+            var json = await File.ReadAllTextAsync(_tagsFilePath);
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                return new List<Tag>();
+            }
+
+            var tags = JsonSerializer.Deserialize<List<Tag>>(json) ?? new List<Tag>();
+            return tags;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "載入標籤檔案時發生錯誤: {FilePath}", _tagsFilePath);
+            return new List<Tag>();
+        }
+    }
+
+    /// <summary>
+    /// 儲存標籤資料
+    /// </summary>
+    private async Task SaveTagsAsync(List<Tag> tags)
+    {
+        try
+        {
+            var json = JsonSerializer.Serialize(tags, new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            });
+            
+            await File.WriteAllTextAsync(_tagsFilePath, json);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "儲存標籤檔案時發生錯誤: {FilePath}", _tagsFilePath);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// 載入分類資料
+    /// </summary>
+    private async Task<List<Category>> LoadCategoriesAsync()
+    {
+        try
+        {
+            if (!File.Exists(_categoriesFilePath))
+            {
+                return new List<Category>();
+            }
+
+            var json = await File.ReadAllTextAsync(_categoriesFilePath);
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                return new List<Category>();
+            }
+
+            var categories = JsonSerializer.Deserialize<List<Category>>(json) ?? new List<Category>();
+            return categories;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "載入分類檔案時發生錯誤: {FilePath}", _categoriesFilePath);
+            return new List<Category>();
+        }
+    }
+
+    /// <summary>
+    /// 儲存分類資料
+    /// </summary>
+    private async Task SaveCategoriesAsync(List<Category> categories)
+    {
+        try
+        {
+            var json = JsonSerializer.Serialize(categories, new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            });
+            
+            await File.WriteAllTextAsync(_categoriesFilePath, json);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "儲存分類檔案時發生錯誤: {FilePath}", _categoriesFilePath);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// 批次刪除
+    /// </summary>
+    private async Task<BatchOperationResult> BatchDeleteAsync(List<int> noteIds)
+    {
+        var notes = await LoadNotesAsync();
+        var notesToDelete = notes.Where(n => noteIds.Contains(n.Id)).ToList();
+
+        foreach (var note in notesToDelete)
+        {
+            notes.Remove(note);
+        }
+
+        await SaveNotesAsync(notes);
+
+        return new BatchOperationResult 
+        { 
+            Success = true, 
+            ProcessedCount = notesToDelete.Count 
+        };
+    }
+
+    /// <summary>
+    /// 批次新增標籤
+    /// </summary>
+    private async Task<BatchOperationResult> BatchAddTagAsync(List<int> noteIds, string tagName, string tagColor)
+    {
+        var tag = await CreateTagAsync(tagName, tagColor);
+        var processedCount = 0;
+
+        foreach (var noteId in noteIds)
+        {
+            if (await AddTagToNoteAsync(noteId, tag.Id))
+            {
+                processedCount++;
+            }
+        }
+
+        return new BatchOperationResult 
+        { 
+            Success = true, 
+            ProcessedCount = processedCount 
+        };
+    }
+
+    /// <summary>
+    /// 批次更改分類
+    /// </summary>
+    private async Task<BatchOperationResult> BatchChangeCategoryAsync(List<int> noteIds, int categoryId)
+    {
+        var notes = await LoadNotesAsync();
+        var processedCount = 0;
+
+        foreach (var noteId in noteIds)
+        {
+            var note = notes.FirstOrDefault(n => n.Id == noteId);
+            if (note != null)
+            {
+                note.CategoryId = categoryId;
+                processedCount++;
+            }
+        }
+
+        if (processedCount > 0)
+        {
+            await SaveNotesAsync(notes);
+        }
+
+        return new BatchOperationResult 
+        { 
+            Success = true, 
+            ProcessedCount = processedCount 
+        };
+    }
+
+    #endregion
 }

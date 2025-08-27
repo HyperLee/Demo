@@ -5,13 +5,132 @@
 }
 
 <div class="container-fluid">
-    <!-- 標題區域 -->
+    <!-- 搜尋區域 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <form method="post" asp-page-handler="Search" id="searchForm">
+                <!-- 主搜尋列 -->
+                <div class="search-container mb-3">
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" class="form-control" asp-for="SearchFilter.Keyword"
+                               placeholder="搜尋備忘錄標題、內容或標籤..." 
+                               id="searchInput" />
+                        <button class="btn btn-outline-secondary" type="button" 
+                                data-bs-toggle="collapse" data-bs-target="#advancedFilters" 
+                                aria-expanded="false">
+                            <i class="fas fa-filter"></i> 進階篩選
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> 搜尋
+                        </button>
+                        @if (Model.HasSearchCriteria())
+                        {
+                            <button type="submit" class="btn btn-outline-secondary" 
+                                    asp-page-handler="ClearSearch">
+                                <i class="fas fa-times"></i> 清除
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <!-- 進階篩選面板 -->
+                <div class="collapse @(Model.HasSearchCriteria() ? "show" : "")" id="advancedFilters">
+                    <div class="card card-body">
+                        <div class="row">
+                            <!-- 標籤篩選 -->
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-tags"></i> 標籤篩選
+                                </label>
+                                <div class="tag-filter-container">
+                                    @if (Model.AllTags.Any())
+                                    {
+                                        @foreach (var tag in Model.AllTags.Take(10))
+                                        {
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       name="SearchFilter.Tags" value="@tag.Name" 
+                                                       id="tag-@tag.Id" 
+                                                       @(Model.SearchFilter.Tags.Contains(tag.Name) ? "checked" : "") />
+                                                <label class="form-check-label" for="tag-@tag.Id">
+                                                    <span class="tag-badge" style="background-color: @tag.Color">
+                                                        @tag.Name
+                                                    </span>
+                                                </label>
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <small class="text-muted">尚無標籤</small>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- 日期範圍 -->
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-calendar"></i> 日期範圍
+                                </label>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <input type="date" class="form-control form-control-sm" 
+                                               asp-for="SearchFilter.StartDate" placeholder="開始日期" />
+                                    </div>
+                                    <div class="col-6">
+                                        <input type="date" class="form-control form-control-sm" 
+                                               asp-for="SearchFilter.EndDate" placeholder="結束日期" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 排序選項 -->
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-sort"></i> 排序方式
+                                </label>
+                                <div class="row">
+                                    <div class="col-8">
+                                        <select class="form-select form-select-sm" asp-for="SearchFilter.SortBy">
+                                            <option value="ModifiedDate">修改日期</option>
+                                            <option value="CreatedDate">建立日期</option>
+                                            <option value="Title">標題</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-4">
+                                        <select class="form-select form-select-sm" asp-for="SearchFilter.SortOrder">
+                                            <option value="Desc">降冪</option>
+                                            <option value="Asc">升冪</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 標題和操作區域 -->
     <div class="row mb-4">
         <div class="col-md-6">
             <h1 class="h2">@ViewData["Title"]</h1>
             @if (Model.ViewModel.TotalCount > 0)
             {
-                <p class="text-muted">總共 @Model.ViewModel.TotalCount 則備忘錄</p>
+                <p class="text-muted">
+                    @if (Model.HasSearchCriteria())
+                    {
+                        <span>搜尋結果：@Model.ViewModel.TotalCount 則備忘錄</span>
+                    }
+                    else
+                    {
+                        <span>總共 @Model.ViewModel.TotalCount 則備忘錄</span>
+                    }
+                </p>
             }
         </div>
         <div class="col-md-6 text-end">
@@ -38,9 +157,55 @@
         </div>
     }
 
+    <!-- 批次操作工具列 -->
+    <div class="batch-toolbar" id="batchToolbar" style="display: none;">
+        <div class="card border-primary mb-3">
+            <div class="card-body py-2">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="selected-count text-primary fw-bold">
+                            已選擇 <strong id="selectedCount">0</strong> 項
+                        </span>
+                    </div>
+                    
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="showBatchTagModal()">
+                            <i class="fas fa-tag"></i> 加標籤
+                        </button>
+                        <button type="button" class="btn btn-outline-info btn-sm" onclick="showBatchCategoryModal()">
+                            <i class="fas fa-folder"></i> 更改分類
+                        </button>
+                        <button type="button" class="btn btn-outline-success btn-sm" onclick="batchExport()">
+                            <i class="fas fa-download"></i> 匯出
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="showBatchDeleteModal()">
+                            <i class="fas fa-trash"></i> 刪除
+                        </button>
+                    </div>
+                    
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearAllSelections()">
+                        <i class="fas fa-times"></i> 取消選擇
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 備忘錄列表 -->
     @if (Model.ViewModel.Notes.Any())
     {
+        <!-- 全選控制 -->
+        <div class="row mb-2">
+            <div class="col-12">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="masterCheckbox">
+                    <label class="form-check-label fw-bold" for="masterCheckbox">
+                        全選 / 取消全選
+                    </label>
+                </div>
+            </div>
+        </div>
+
         <div class="row">
             @for (int i = 0; i < Model.ViewModel.Notes.Count; i++)
             {
@@ -52,6 +217,15 @@
                     <div class="card @backgroundClass shadow-sm h-100 note-card">
                         <div class="card-body">
                             <div class="row">
+                                <!-- 選擇核取方塊 -->
+                                <div class="col-auto d-flex align-items-center">
+                                    <input class="form-check-input item-checkbox me-2" 
+                                           type="checkbox" 
+                                           value="@note.Id" 
+                                           id="note-@note.Id"
+                                           onchange="toggleItemSelection(this)" />
+                                </div>
+
                                 <div class="col-md-8">
                                     <!-- 標題 -->
                                     <h5 class="card-title mb-2">
@@ -64,6 +238,23 @@
                                     <p class="card-text text-muted mb-2">
                                         @(note.Content.Length > 100 ? note.Content.Substring(0, 100) + "..." : note.Content)
                                     </p>
+                                    
+                                    <!-- 標籤顯示 -->
+                                    @if (note.Tags.Any())
+                                    {
+                                        <div class="mb-2">
+                                            @foreach (var tag in note.Tags.Take(5))
+                                            {
+                                                <span class="badge me-1" style="background-color: @tag.Color; color: white;">
+                                                    <i class="fas fa-tag"></i> @tag.Name
+                                                </span>
+                                            }
+                                            @if (note.Tags.Count > 5)
+                                            {
+                                                <span class="text-muted small">+@(note.Tags.Count - 5) 個標籤</span>
+                                            }
+                                        </div>
+                                    }
                                     
                                     <!-- 日期資訊 -->
                                     <div class="row text-sm text-muted">
@@ -83,7 +274,7 @@
                                 </div>
                                 
                                 <!-- 操作按鈕 -->
-                                <div class="col-md-4 text-end d-flex flex-column justify-content-center">
+                                <div class="col-md-3 text-end d-flex flex-column justify-content-center">
                                     <div class="btn-group" role="group">
                                         <a asp-page="index5" asp-route-id="@note.Id" class="btn btn-info btn-sm">
                                             <i class="fas fa-eye"></i> 查看
@@ -204,8 +395,140 @@
     </div>
 </div>
 
+<!-- 批次刪除確認對話框 -->
+<div class="modal fade" id="batchDeleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">批次刪除確認</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>您確定要刪除選中的 <strong id="batchDeleteCount">0</strong> 則備忘錄嗎？</p>
+                <p class="text-warning"><i class="fas fa-exclamation-triangle"></i> 此操作無法復原！</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" onclick="executeBatchDelete()">確認刪除</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 批次新增標籤對話框 -->
+<div class="modal fade" id="batchTagModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">批次新增標籤</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">標籤名稱</label>
+                    <input type="text" class="form-control" id="batchTagName" placeholder="輸入標籤名稱" />
+                    <div class="form-text">為選中的 <strong id="batchTagCount">0</strong> 則備忘錄新增標籤</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">標籤顏色</label>
+                    <input type="color" class="form-control form-control-color" id="batchTagColor" value="#007bff" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="executeBatchTag()">新增標籤</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
+        // 批次選擇管理
+        class BatchSelector {
+            constructor() {
+                this.selectedItems = new Set();
+                this.init();
+            }
+            
+            init() {
+                // 主控核取方塊
+                const masterCheckbox = document.getElementById('masterCheckbox');
+                if (masterCheckbox) {
+                    masterCheckbox.addEventListener('change', (e) => {
+                        this.toggleAll(e.target.checked);
+                    });
+                }
+            }
+            
+            toggleAll(checked) {
+                const itemCheckboxes = document.querySelectorAll('.item-checkbox');
+                itemCheckboxes.forEach(checkbox => {
+                    checkbox.checked = checked;
+                    this.toggleItem(checkbox.value, checked);
+                });
+            }
+            
+            toggleItem(noteId, checked) {
+                if (checked) {
+                    this.selectedItems.add(noteId);
+                } else {
+                    this.selectedItems.delete(noteId);
+                }
+                
+                this.updateUI();
+            }
+            
+            updateUI() {
+                const count = this.selectedItems.size;
+                document.getElementById('selectedCount').textContent = count;
+                document.getElementById('batchToolbar').style.display = count > 0 ? 'block' : 'none';
+                
+                // 更新主控核取方塊狀態
+                const masterCheckbox = document.getElementById('masterCheckbox');
+                const itemCheckboxes = document.querySelectorAll('.item-checkbox');
+                const checkedCount = Array.from(itemCheckboxes).filter(cb => cb.checked).length;
+                
+                if (masterCheckbox) {
+                    if (checkedCount === 0) {
+                        masterCheckbox.checked = false;
+                        masterCheckbox.indeterminate = false;
+                    } else if (checkedCount === itemCheckboxes.length) {
+                        masterCheckbox.checked = true;
+                        masterCheckbox.indeterminate = false;
+                    } else {
+                        masterCheckbox.checked = false;
+                        masterCheckbox.indeterminate = true;
+                    }
+                }
+            }
+            
+            getSelectedIds() {
+                return Array.from(this.selectedItems);
+            }
+            
+            clearAll() {
+                this.selectedItems.clear();
+                document.querySelectorAll('.item-checkbox').forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                this.updateUI();
+            }
+        }
+
+        const batchSelector = new BatchSelector();
+
+        // 項目選擇切換
+        function toggleItemSelection(checkbox) {
+            batchSelector.toggleItem(checkbox.value, checkbox.checked);
+        }
+
+        // 清除所有選擇
+        function clearAllSelections() {
+            batchSelector.clearAll();
+        }
+
+        // 單項刪除確認
         function confirmDelete(noteId, noteTitle, currentPage) {
             document.getElementById('deleteNoteId').value = noteId;
             document.getElementById('deleteNoteTitle').textContent = noteTitle;
@@ -214,11 +537,135 @@
             var modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
             modal.show();
         }
+
+        // 顯示批次刪除對話框
+        function showBatchDeleteModal() {
+            const selectedIds = batchSelector.getSelectedIds();
+            if (selectedIds.length === 0) {
+                alert('請至少選擇一個項目');
+                return;
+            }
+            
+            document.getElementById('batchDeleteCount').textContent = selectedIds.length;
+            var modal = new bootstrap.Modal(document.getElementById('batchDeleteModal'));
+            modal.show();
+        }
+
+        // 執行批次刪除
+        function executeBatchDelete() {
+            const selectedIds = batchSelector.getSelectedIds();
+            submitBatchOperation('Delete', selectedIds.join(','));
+        }
+
+        // 顯示批次標籤對話框
+        function showBatchTagModal() {
+            const selectedIds = batchSelector.getSelectedIds();
+            if (selectedIds.length === 0) {
+                alert('請至少選擇一個項目');
+                return;
+            }
+            
+            document.getElementById('batchTagCount').textContent = selectedIds.length;
+            var modal = new bootstrap.Modal(document.getElementById('batchTagModal'));
+            modal.show();
+        }
+
+        // 執行批次標籤
+        function executeBatchTag() {
+            const tagName = document.getElementById('batchTagName').value.trim();
+            const tagColor = document.getElementById('batchTagColor').value;
+            
+            if (!tagName) {
+                alert('請輸入標籤名稱');
+                return;
+            }
+            
+            const selectedIds = batchSelector.getSelectedIds();
+            const parameters = `tagName=${encodeURIComponent(tagName)}&tagColor=${encodeURIComponent(tagColor)}`;
+            submitBatchOperation('AddTag', selectedIds.join(','), parameters);
+        }
+
+        // 提交批次操作
+        function submitBatchOperation(operation, selectedIds, parameters = '') {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/index4?handler=BatchOperation';
+            
+            // CSRF Token
+            const token = document.querySelector('input[name="__RequestVerificationToken"]');
+            if (token) {
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '__RequestVerificationToken';
+                tokenInput.value = token.value;
+                form.appendChild(tokenInput);
+            }
+            
+            // 操作類型
+            const operationInput = document.createElement('input');
+            operationInput.type = 'hidden';
+            operationInput.name = 'operation';
+            operationInput.value = operation;
+            form.appendChild(operationInput);
+            
+            // 選中項目ID
+            const idsInput = document.createElement('input');
+            idsInput.type = 'hidden';
+            idsInput.name = 'selectedIds';
+            idsInput.value = selectedIds;
+            form.appendChild(idsInput);
+            
+            // 參數
+            if (parameters) {
+                const parametersInput = document.createElement('input');
+                parametersInput.type = 'hidden';
+                parametersInput.name = 'parameters';
+                parametersInput.value = parameters;
+                form.appendChild(parametersInput);
+            }
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        // 即時搜尋
+        let searchTimeout;
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    if (this.value.length >= 2 || this.value.length === 0) {
+                        document.getElementById('searchForm').submit();
+                    }
+                }, 300);
+            });
+        }
     </script>
 }
 
 @section Styles {
     <style>
+        .search-highlight {
+            background-color: #fff3cd;
+            color: #856404;
+            font-weight: bold;
+        }
+        
+        .tag-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            color: white;
+            font-size: 0.875rem;
+            text-decoration: none;
+        }
+        
+        .tag-filter-container {
+            max-height: 120px;
+            overflow-y: auto;
+        }
+        
         .note-card {
             transition: box-shadow 0.3s ease;
             border: 1px solid #dee2e6;
@@ -237,12 +684,26 @@
             text-decoration: underline !important;
         }
         
+        .batch-toolbar {
+            position: sticky;
+            top: 10px;
+            z-index: 1020;
+        }
+        
         .btn-group .btn {
             margin-right: 5px;
         }
         
         .btn-group .btn:last-child {
             margin-right: 0;
+        }
+        
+        .item-checkbox {
+            transform: scale(1.2);
+        }
+        
+        #masterCheckbox {
+            transform: scale(1.2);
         }
         
         @@media (max-width: 768px) {
@@ -254,6 +715,16 @@
             .btn-group .btn {
                 flex: 1;
                 margin-right: 5px;
+                font-size: 0.8rem;
+            }
+            
+            .search-container .btn {
+                font-size: 0.9rem;
+            }
+            
+            .batch-toolbar .btn-group .btn {
+                font-size: 0.75rem;
+                padding: 0.25rem 0.5rem;
             }
         }
     </style>
