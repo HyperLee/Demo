@@ -7,6 +7,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using Demo.Services;
+using iText.Html2pdf;
+using iText.Kernel.Pdf;
+using iText.Layout;
+using ClosedXML.Excel;
+using System.IO;
 
 namespace Demo.Pages
 {
@@ -474,9 +479,24 @@ namespace Demo.Pages
                 switch (format.ToLower())
                 {
                     case "pdf":
-                        fileData = await GeneratePdfExport(notesToExport);
-                        fileName = $"備忘錄匯出_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
-                        contentType = "application/pdf";
+                        try
+                        {
+                            fileData = await GeneratePdfExport(notesToExport);
+                            fileName = $"備忘錄匯出_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+                            contentType = "application/pdf";
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "PDF 轉換失敗，回退到 HTML 格式");
+                            
+                            // 回退到 HTML 格式
+                            var htmlReport = GenerateHtmlReport(notesToExport, "備忘錄 PDF 匯出");
+                            fileData = System.Text.Encoding.UTF8.GetBytes(htmlReport);
+                            fileName = $"備忘錄匯出_{DateTime.Now:yyyyMMdd_HHmmss}.html";
+                            contentType = "text/html";
+                            
+                            _logger.LogWarning("PDF 轉換失敗，回退到 HTML 格式，大小: {Size} bytes", fileData.Length);
+                        }
                         break;
 
                     case "excel":
@@ -496,7 +516,9 @@ namespace Demo.Pages
                         return RedirectToPage("index4");
                 }
 
-                _logger.LogInformation("成功匯出 {Count} 則備忘錄為 {Format} 格式", notesToExport.Count, format.ToUpper());
+                // 從檔案名稱中提取實際的匯出格式
+                var actualFormat = fileName.Split('.').Last().ToUpper();
+                _logger.LogInformation("成功匯出 {Count} 則備忘錄為 {Format} 格式", notesToExport.Count, actualFormat);
 
                 return File(fileData, contentType, fileName);
             }
@@ -515,13 +537,44 @@ namespace Demo.Pages
         /// </summary>
         private Task<byte[]> GeneratePdfExport(List<Note> notes)
         {
-            // TODO: 實作 PDF 匯出功能
-            // 這裡可以使用 iTextSharp 或其他 PDF 產生套件
-            var htmlReport = GenerateHtmlReport(notes, "備忘錄 PDF 匯出");
-            var htmlBytes = System.Text.Encoding.UTF8.GetBytes(htmlReport);
-            
-            // 暫時返回 HTML 內容作為 PDF（實際應該轉換為真正的 PDF）
-            return Task.FromResult(htmlBytes);
+            try
+            {
+                _logger.LogInformation("開始生成 PDF 匯出，備忘錄數量: {Count}", notes.Count);
+                
+                var htmlReport = GenerateHtmlReport(notes, "備忘錄 PDF 匯出");
+                _logger.LogDebug("HTML 報告長度: {Length}", htmlReport.Length);
+                
+                using (var memoryStream = new MemoryStream())
+                using (var htmlStream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(htmlReport)))
+                {
+                    // 使用 iText7 將 HTML 轉換為 PDF
+                    var converterProperties = new ConverterProperties();
+                    
+                    // 設定字型以支援中文字元
+                    converterProperties.SetCharset("UTF-8");
+                    
+                    HtmlConverter.ConvertToPdf(htmlStream, memoryStream, converterProperties);
+                    
+                    var pdfBytes = memoryStream.ToArray();
+                    
+                    // 檢查是否成功產生 PDF
+                    if (pdfBytes.Length == 0)
+                    {
+                        throw new InvalidOperationException("PDF 檔案大小為 0，產生失敗");
+                    }
+                    
+                    _logger.LogInformation("PDF 轉換成功，檔案大小: {Size} bytes", pdfBytes.Length);
+                    
+                    return Task.FromResult(pdfBytes);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "產生 PDF 匯出時發生錯誤");
+                
+                // 重新拋出錯誤，讓上層處理回退邏輯
+                throw;
+            }
         }
 
         /// <summary>
@@ -529,19 +582,62 @@ namespace Demo.Pages
         /// </summary>
         private Task<byte[]> GenerateExcelExport(List<Note> notes)
         {
-            // TODO: 實作 Excel 匯出功能
-            // 這裡可以使用 ClosedXML 或 EPPlus 套件
-            var csvContent = "標題,內容,標籤,分類,建立日期,修改日期\n";
-            
-            foreach (var note in notes)
+            try
             {
-                var tags = string.Join("; ", note.Tags.Select(t => t.Name));
-                var category = note.Category?.Name ?? "無分類";
-                csvContent += $"\"{note.Title}\",\"{note.Content}\",\"{tags}\",\"{category}\",\"{note.CreatedDate:yyyy-MM-dd HH:mm}\",\"{note.ModifiedDate:yyyy-MM-dd HH:mm}\"\n";
+                using (var workbook = new XLWorkbook())
+                {
+                    var worksheet = workbook.Worksheets.Add("備忘錄清單");
+                    
+                    // 設定標題列
+                    var headers = new[] { "標題", "內容", "標籤", "分類", "建立日期", "修改日期" };
+                    for (int i = 0; i < headers.Length; i++)
+                    {
+                        worksheet.Cell(1, i + 1).Value = headers[i];
+                        worksheet.Cell(1, i + 1).Style.Font.Bold = true;
+                        worksheet.Cell(1, i + 1).Style.Fill.BackgroundColor = XLColor.LightBlue;
+                    }
+                    
+                    // 填入資料
+                    for (int i = 0; i < notes.Count; i++)
+                    {
+                        var note = notes[i];
+                        var row = i + 2; // 從第二列開始（第一列是標題）
+                        
+                        worksheet.Cell(row, 1).Value = note.Title;
+                        worksheet.Cell(row, 2).Value = note.Content;
+                        worksheet.Cell(row, 3).Value = string.Join("; ", note.Tags.Select(t => t.Name));
+                        worksheet.Cell(row, 4).Value = note.Category?.Name ?? "無分類";
+                        worksheet.Cell(row, 5).Value = note.CreatedDate.ToString("yyyy-MM-dd HH:mm");
+                        worksheet.Cell(row, 6).Value = note.ModifiedDate.ToString("yyyy-MM-dd HH:mm");
+                    }
+                    
+                    // 調整欄寬
+                    worksheet.Columns().AdjustToContents();
+                    
+                    // 匯出為 byte array
+                    using (var stream = new MemoryStream())
+                    {
+                        workbook.SaveAs(stream);
+                        return Task.FromResult(stream.ToArray());
+                    }
+                }
             }
-            
-            // 暫時返回 CSV 內容（實際應該產生真正的 Excel 檔案）
-            return Task.FromResult(System.Text.Encoding.UTF8.GetBytes(csvContent));
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "產生 Excel 匯出時發生錯誤");
+                
+                // 如果 Excel 產生失敗，回退到 CSV 格式
+                var csvContent = "標題,內容,標籤,分類,建立日期,修改日期\n";
+                
+                foreach (var note in notes)
+                {
+                    var tags = string.Join("; ", note.Tags.Select(t => t.Name));
+                    var category = note.Category?.Name ?? "無分類";
+                    csvContent += $"\"{note.Title}\",\"{note.Content}\",\"{tags}\",\"{category}\",\"{note.CreatedDate:yyyy-MM-dd HH:mm}\",\"{note.ModifiedDate:yyyy-MM-dd HH:mm}\"\n";
+                }
+                
+                return Task.FromResult(System.Text.Encoding.UTF8.GetBytes(csvContent));
+            }
         }
 
         /// <summary>
