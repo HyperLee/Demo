@@ -5,8 +5,9 @@
 基於現有的 `index5.cshtml` 備忘錄編輯器，針對個人使用的超輕量級網站，使用 JSON 檔案儲存，增強以下核心功能：
 - ✅ 自動儲存草稿機制 (適合 JSON)
 - ✅ Markdown 富文本編輯器 (適合 JSON)
-- ❌ 版本控制與編輯歷史 (JSON 不適合，移除)
 - ✅ 標籤分類管理系統 (簡化版，適合 JSON)
+- ✅ 分類選擇功能 (與現有系統整合)
+- ❌ 版本控制與編輯歷史 (JSON 不適合，移除)
 - ❌ 附件檔案上傳功能 (JSON 不適合大檔案，移除)
 
 **設計原則**: 
@@ -38,7 +39,25 @@ public class JsonAutoSaveService
     private readonly string _draftFilePath = "App_Data/draft-memo.json";
     
     public async Task<bool> SaveDraftAsync(MemoViewModel draft);
-    public async Task<MemoViewModel> GetDraftAsync();
+    public async Task<MemoVi**標籤和分類系統整合**:
+- `index4`: 標籤和分類管理中心 (建立、編輯、刪除、批次操作)
+- `index5`: 標籤和分類選擇和分配 (選擇現有項目、快速建立新項目)
+- **共用**: 相同的資料服務、API 端點、檔案格式
+
+**資料流向**:
+```
+index4 (列表頁) ←→ tags.json & categories.json ←→ index5 (編輯頁)
+     ↓                                                    ↓
+memo-notes.json ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←→→→→→→→→→→→→→→→
+     ↓                                                    ↓
+index4 (顯示標籤/分類) ←←←←←←←←←←← index5 (儲存標籤/分類關聯)
+```
+
+**相容性保證**:
+- 使用現有的 `IEnhancedMemoNoteService` 介面
+- 沿用現有的標籤和分類資料結構
+- 保持顯示風格和互動邏輯一致性
+- 確保資料在兩頁面正確同步ync();
     public async Task<bool> DeleteDraftAsync();
     private async Task<string> ReadJsonFileAsync(string filePath);
     private async Task WriteJsonFileAsync(string filePath, object data);
@@ -321,6 +340,243 @@ function removeTag(tagId) {
 
 ---
 
+### 4. 分類選擇功能 ✅ (與現有系統整合)
+
+#### 4.1 需求分析 (基於現有 index4 分類系統)
+- **分類選擇**: 在 `index5` 編輯頁面新增分類下拉選擇器
+- **分類顯示**: 顯示當前備忘錄所屬分類
+- **快速建立**: 支援在編輯頁面快速建立新分類
+- **資料一致性**: 確保與 `index4` 分類管理功能完全同步
+- **UX 完整性**: 避免使用者需回到列表頁才能設定分類
+
+#### 4.2 現有資料結構整合 (無需變更)
+```json
+// App_Data/categories.json (現有檔案，index4 已建立)
+// 此檔案由現有的 NoteService 管理，無需修改
+
+// memo-notes.json (現有結構)
+// Note 類別已包含 CategoryId 和 Category 屬性，無需修改
+```
+
+#### 4.3 需要擴充的部分 (index5 專用)
+
+**A. NoteEditViewModel 分類支援**
+```csharp
+// 需擴充現有的 NoteEditViewModel
+public class NoteEditViewModel
+{
+    // ... 現有屬性 ...
+    
+    /// <summary>
+    /// 選中的分類 ID
+    /// </summary>
+    public int? CategoryId { get; set; }
+    
+    /// <summary>
+    /// 可用的分類清單 (for UI 顯示)
+    /// </summary>
+    public List<Category> AvailableCategories { get; set; } = new();
+}
+```
+
+**B. index5 後端方法擴充**
+```csharp
+// 在 index5.cshtml.cs 中新增
+public List<Category> AllCategories { get; set; } = new();
+
+// OnGetAsync 方法中載入分類
+AllCategories = await _noteService.GetCategoriesAsync(); // 使用現有 API
+
+// 編輯模式時載入備忘錄的分類
+ViewModel.CategoryId = note.CategoryId;
+ViewModel.AvailableCategories = AllCategories;
+
+// 儲存時處理分類關聯 (使用現有邏輯)
+```
+
+#### 4.4 UI 元件 (分類選擇器)
+```html
+<!-- 分類選擇區域 (新增到 index5.cshtml) -->
+<div class="mb-3">
+    <label class="form-label">
+        <i class="fas fa-folder"></i> 分類
+    </label>
+    
+    <!-- 分類選擇下拉選單 -->
+    <div class="category-selection-container">
+        <select asp-for="ViewModel.CategoryId" class="form-select" id="categorySelect">
+            <option value="">請選擇分類 (可不選)</option>
+            
+            @foreach (var category in Model.AllCategories)
+            {
+                <option value="@category.Id" 
+                        selected="@(Model.ViewModel.CategoryId == category.Id)">
+                    <i class="@category.Icon"></i> @category.Name
+                </option>
+            }
+            
+            <option value="0">未分類</option>
+        </select>
+        
+        <!-- 快速建立分類按鈕 -->
+        <button type="button" 
+                class="btn btn-outline-secondary btn-sm ms-2" 
+                onclick="showQuickCategoryModal()">
+            <i class="fas fa-plus"></i> 新增
+        </button>
+    </div>
+    
+    <!-- 當前分類顯示 (編輯模式) -->
+    @if (Model.ViewModel.IsEditMode && Model.ViewModel.CategoryId.HasValue)
+    {
+        var currentCategory = Model.AllCategories.FirstOrDefault(c => c.Id == Model.ViewModel.CategoryId);
+        if (currentCategory != null)
+        {
+            <div class="form-text mt-2">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle"></i>
+                    目前分類：
+                    <span class="badge category-badge">
+                        <i class="@currentCategory.Icon"></i> @currentCategory.Name
+                    </span>
+                </small>
+            </div>
+        }
+    }
+</div>
+
+<!-- 快速建立分類對話框 -->
+<div class="modal fade" id="quickCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">快速建立分類</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">分類名稱</label>
+                    <input type="text" class="form-control" id="quickCategoryName" 
+                           placeholder="請輸入分類名稱" maxlength="50">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="createQuickCategory()">建立分類</button>
+            </div>
+        </div>
+    </div>
+</div>
+```
+
+#### 4.5 JavaScript 整合 (複用 index4 分類邏輯)
+```javascript
+// 分類相關函式 (整合版)
+function showQuickCategoryModal() {
+    document.getElementById('quickCategoryName').value = '';
+    var modal = new bootstrap.Modal(document.getElementById('quickCategoryModal'));
+    modal.show();
+}
+
+function createQuickCategory() {
+    const categoryName = document.getElementById('quickCategoryName').value.trim();
+    
+    if (!categoryName) {
+        alert('請輸入分類名稱');
+        return;
+    }
+    
+    // 檢查分類是否已存在
+    const categorySelect = document.getElementById('categorySelect');
+    const existingOptions = Array.from(categorySelect.options);
+    const exists = existingOptions.some(option => 
+        option.text.includes(categoryName) && option.value !== ''
+    );
+    
+    if (exists) {
+        alert('此分類名稱已存在');
+        return;
+    }
+    
+    // 使用 index4 現有的 CreateCategory API
+    fetch('/index4?handler=CreateCategory', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'RequestVerificationToken': getToken()
+        },
+        body: `categoryName=${encodeURIComponent(categoryName)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 新增選項到下拉選單
+            const newOption = document.createElement('option');
+            newOption.value = data.categoryId;
+            newOption.text = data.categoryName;
+            newOption.selected = true;
+            
+            // 插入到「未分類」選項之前
+            const uncategorizedOption = categorySelect.querySelector('option[value="0"]');
+            categorySelect.insertBefore(newOption, uncategorizedOption);
+            
+            // 關閉對話框
+            var modal = bootstrap.Modal.getInstance(document.getElementById('quickCategoryModal'));
+            modal.hide();
+            
+            // 顯示成功訊息
+            showSuccessMessage(`已建立新分類「${data.categoryName}」並自動選取`);
+        } else {
+            alert(data.message || '建立分類失敗');
+        }
+    })
+    .catch(error => {
+        alert('建立分類時發生錯誤，請稍後再試');
+    });
+}
+
+function getToken() {
+    return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+}
+
+function showSuccessMessage(message) {
+    // 在頁面頂部顯示成功訊息
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-success alert-dismissible fade show';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.container .row .col-lg-8');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    // 3 秒後自動隱藏
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 3000);
+}
+```
+
+#### 4.6 與現有系統的整合點
+
+**A. 共用服務層**
+- 使用現有的 `IEnhancedMemoNoteService.GetCategoriesAsync()`
+- 使用現有的 `IEnhancedMemoNoteService.CreateCategoryAsync()`
+- 儲存時使用現有的分類關聯邏輯
+
+**B. 資料一致性**
+- 兩頁面使用相同的 `categories.json` 檔案
+- 分類的建立和管理在兩頁面都保持同步
+- 分類關聯資料在 `memo-notes.json` 中正確維護
+
+**C. UX 流程完整性**
+- `index5`: 建立/編輯時直接選擇分類
+- `index4`: 分類管理中心 + 批次分類操作
+- **無縫整合**: 在任一頁面建立的分類在另一頁面立即可用
+
+---
+
 ### ❌ 移除的功能說明
 
 #### 版本控制功能 (不適合 JSON)
@@ -440,26 +696,28 @@ App_Data/
 ## 🚀 **開發階段規劃 (整合版本)**
 
 ### Phase 1: 基礎整合 (1 週)
-1. **NoteEditViewModel 標籤支援**
-   - 擴充現有的 `NoteEditViewModel` 增加標籤屬性
-   - 在 `index5.cshtml.cs` 載入標籤資料
-   - 確保與 `index4` 標籤系統完全相容
+1. **NoteEditViewModel 標籤和分類支援**
+   - 擴充現有的 `NoteEditViewModel` 增加標籤和分類屬性
+   - 在 `index5.cshtml.cs` 載入標籤和分類資料
+   - 確保與 `index4` 標籤和分類系統完全相容
 
 2. **自動儲存基礎功能**
-   - 建立 `JsonAutoSaveService` (不與標籤系統衝突)
+   - 建立 `JsonAutoSaveService` (不與現有系統衝突)
    - 實作基本草稿儲存到 `draft-memo.json`
    - 前端定時器機制，避免與現有表單衝突
 
 ### Phase 2: UI 整合 (1 週)  
-3. **index5 標籤選擇器**
+3. **index5 標籤和分類選擇器**
    - 在 `index5.cshtml` 新增標籤選擇元件
-   - 複用 `index4` 的標籤建議 API (`OnGetTagSuggestionsAsync`)
-   - 整合標籤建立功能 (使用 `index4` 的 `OnPostCreateTagAsync`)
-   - 確保標籤 UI 風格與 `index4` 一致
+   - 新增分類下拉選擇器和快速建立功能
+   - 複用 `index4` 的標籤建議和分類建立 API
+   - 整合標籤和分類建立功能
+   - 確保 UI 風格與 `index4` 一致
 
 4. **資料流整合測試**
-   - 測試標籤在兩頁面間的資料一致性
+   - 測試標籤和分類在兩頁面間的資料一致性
    - 確認標籤的 `UsageCount` 正確更新
+   - 驗證分類關聯正確儲存和顯示
    - 驗證草稿功能不會干擾正式儲存
 
 ### Phase 3: Markdown 功能 (1-2 週)
@@ -470,16 +728,16 @@ App_Data/
    - 編輯/預覽模式切換
 
 6. **自動儲存完整功能**
-   - 整合標籤資料到自動儲存
+   - 整合標籤和分類資料到自動儲存
    - Markdown 內容的草稿儲存
    - 視覺狀態指示器
    - localStorage 備援機制
 
 ### Phase 4: 最終整合 (1 週)
 7. **系統整合與測試**
-   - 功能整合測試 (特別關注標籤系統相容性)
+   - 功能整合測試 (特別關注標籤和分類系統相容性)
    - 與 `index4` 列表頁面的互動測試  
-   - UI/UX 統一性調整
+   - UI/UX 統一性調整 (標籤和分類顯示一致性)
    - 效能優化和錯誤處理完善
 
 ---
@@ -599,6 +857,7 @@ App_Data/
 - **自動儲存**: 簡單的草稿機制，不干擾現有儲存邏輯
 - **Markdown 支援**: 純文本儲存，前端渲染，相容現有內容
 - **標籤系統**: 完全整合 `index4` 現有標籤功能，確保資料一致性
+- **分類系統**: 完全整合 `index4` 現有分類功能，提供完整編輯體驗
 
 ### ❌ 移除的功能 (不適合 JSON 或已有替代)
 - **版本控制**: 資料量大，結構複雜，個人使用不必要
@@ -630,9 +889,10 @@ index4 (顯示標籤) ←←←←←←← index5 (儲存標籤關聯)
 
 1. **最小侵入性**: 盡量不修改現有 `index4` 程式碼
 2. **資料一致性**: 兩頁面使用相同的資料來源和服務
-3. **功能互補性**: `index4` 專注管理，`index5` 專注使用
-4. **向下相容**: 所有變更都不能破壞現有功能
+3. **功能互補性**: `index4` 專注管理，`index5` 專注使用和編輯
+4. **UX 完整性**: 使用者可在編輯頁面直接處理標籤和分類，無需頻繁切換頁面
+5. **向下相容**: 所有變更都不能破壞現有功能
 
 ---
 
-*此開發規格書專為與現有 index4 標籤系統完全整合的超輕量級個人備忘錄系統設計，確保兩頁面功能互通且資料一致。*
+*此開發規格書專為與現有 index4 標籤和分類系統完全整合的超輕量級個人備忘錄系統設計，確保兩頁面功能互通且資料一致，提供完整的使用者體驗。*
