@@ -63,6 +63,24 @@ namespace Demo.Pages
 
         public async Task OnGetAsync()
         {
+            // 如果有查詢參數，則更新對應的屬性值
+            if (Request.Query.ContainsKey("IsTwdToForeign"))
+            {
+                bool.TryParse(Request.Query["IsTwdToForeign"], out bool isTwdToForeign);
+                IsTwdToForeign = isTwdToForeign;
+            }
+            
+            if (Request.Query.ContainsKey("ToCurrency"))
+            {
+                ToCurrency = Request.Query["ToCurrency"].ToString() ?? "USD";
+            }
+            
+            if (Request.Query.ContainsKey("Amount"))
+            {
+                decimal.TryParse(Request.Query["Amount"], out decimal amount);
+                Amount = amount;
+            }
+
             await InitializePageDataAsync();
         }
 

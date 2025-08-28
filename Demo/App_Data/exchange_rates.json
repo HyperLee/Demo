@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2025-08-28T22:14:13.228494+08:00",
+  "lastUpdated": "2025-08-28T22:25:43.31337+08:00",
   "source": "\u53F0\u7063\u9280\u884CCSV API",
   "rates": [
     {
@@ -21,34 +21,34 @@
     {
       "currencyCode": "GBP",
       "currencyName": "\u82F1\u938A",
-      "buyRate": 41.02500,
+      "buyRate": 41.06500,
       "sellRate": 41.05100,
       "cashBuyRate": 0,
-      "cashSellRate": 40.13000
+      "cashSellRate": 40.17000
     },
     {
       "currencyCode": "AUD",
       "currencyName": "\u6FB3\u5E63",
-      "buyRate": 19.76500,
+      "buyRate": 19.79500,
       "sellRate": 19.80400,
       "cashBuyRate": 0,
-      "cashSellRate": 19.55000
+      "cashSellRate": 19.58000
     },
     {
       "currencyCode": "JPY",
       "currencyName": "\u65E5\u5713",
-      "buyRate": 0.20550,
+      "buyRate": 0.20580,
       "sellRate": 0.20590,
       "cashBuyRate": 0,
-      "cashSellRate": 0.19870
+      "cashSellRate": 0.19900
     },
     {
       "currencyCode": "EUR",
       "currencyName": "\u6B50\u5143",
-      "buyRate": 35.39500,
+      "buyRate": 35.42500,
       "sellRate": 35.39900,
       "cashBuyRate": 0,
-      "cashSellRate": 34.88000
+      "cashSellRate": 34.91000
     },
     {
       "currencyCode": "CNY",

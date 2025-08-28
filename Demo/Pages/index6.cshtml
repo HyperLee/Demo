@@ -336,19 +336,17 @@
     }
 
     <script>
-        // 當計算方式改變時，自動清除結果並更新 FromCurrency 和匯率顯示
+        // 當計算方式改變時，自動清除結果並更新 FromCurrency
         $('input[name="IsTwdToForeign"]').change(function() {
             $('#Amount').val('');
             updateFromCurrency();
-            // 重新提交表單以更新匯率顯示
-            refreshRateDisplay();
+            updateRateDisplay();
         });
 
         // 當目標貨幣改變時，也要更新 FromCurrency 和匯率顯示
         $('#ToCurrency').change(function() {
             updateFromCurrency();
-            // 重新提交表單以更新匯率顯示
-            refreshRateDisplay();
+            updateRateDisplay();
         });
 
         // 更新 FromCurrency 隱藏欄位
@@ -363,16 +361,45 @@
             }
         }
 
-        // 重新整理匯率顯示
-        function refreshRateDisplay() {
-            // 創建一個隱藏的表單來提交 GET 請求更新匯率顯示
-            var form = $('<form method="get" style="display:none;"></form>');
-            form.append($('<input name="IsTwdToForeign">').val($('input[name="IsTwdToForeign"]:checked').val()));
-            form.append($('<input name="ToCurrency">').val($('#ToCurrency').val()));
-            form.append($('<input name="Amount">').val($('#Amount').val()));
+        // 更新匯率顯示 (不重新載入頁面)
+        function updateRateDisplay() {
+            var isTwdToForeign = $('input[name="IsTwdToForeign"]:checked').val() === 'true';
+            var toCurrency = $('#ToCurrency').val();
             
-            $('body').append(form);
-            form.submit();
+            // 使用 AJAX 獲取匯率資料
+            $.get(window.location.pathname, {
+                IsTwdToForeign: isTwdToForeign,
+                ToCurrency: toCurrency,
+                Amount: $('#Amount').val() || 0
+            }).done(function(data) {
+                // 解析返回的 HTML 並更新匯率顯示區域
+                var $newContent = $(data);
+                var $rateCard = $newContent.find('.card.border-success, .card.border-danger').first();
+                var $calculateBtn = $newContent.find('#calculateBtn');
+                var $warningMsg = $newContent.find('.text-danger:contains("計算功能已停用")').parent();
+                
+                if ($rateCard.length) {
+                    $('.card.border-success, .card.border-danger').replaceWith($rateCard);
+                }
+                
+                if ($calculateBtn.length) {
+                    $('#calculateBtn').prop('disabled', $calculateBtn.prop('disabled'));
+                }
+                
+                // 更新或移除警告訊息
+                var $currentWarning = $('.text-danger:contains("計算功能已停用")').parent();
+                if ($warningMsg.length) {
+                    if ($currentWarning.length) {
+                        $currentWarning.replaceWith($warningMsg);
+                    } else {
+                        $('#calculateBtn').closest('.col-12').append($warningMsg);
+                    }
+                } else {
+                    $currentWarning.remove();
+                }
+            }).fail(function() {
+                console.log('無法更新匯率顯示');
+            });
         }
 
         // 頁面載入時初始化 FromCurrency
