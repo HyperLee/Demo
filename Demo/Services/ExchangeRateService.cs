@@ -227,7 +227,15 @@ namespace Demo.Services
                         };
                     }
 
-                    var exchangeRate = rate.CashSellRate; // 使用現金賣出匯率
+                    var exchangeRate = rate.CashSellRate > 0 ? rate.CashSellRate : rate.SellRate; // 使用現金賣出匯率，如果為0則用即期賣出匯率
+                    if (exchangeRate == 0)
+                    {
+                        return new ExchangeCalculationResult
+                        {
+                            IsSuccess = false,
+                            ErrorMessage = $"{toCurrency} 的匯率資料不完整"
+                        };
+                    }
                     var result = Math.Round(amount / exchangeRate, 6);
 
                     return new ExchangeCalculationResult
@@ -252,7 +260,15 @@ namespace Demo.Services
                         };
                     }
 
-                    var exchangeRate = rate.CashBuyRate; // 使用現金買入匯率
+                    var exchangeRate = rate.CashBuyRate > 0 ? rate.CashBuyRate : rate.BuyRate; // 使用現金買入匯率，如果為0則用即期買入匯率
+                    if (exchangeRate == 0)
+                    {
+                        return new ExchangeCalculationResult
+                        {
+                            IsSuccess = false,
+                            ErrorMessage = $"{fromCurrency} 的匯率資料不完整"
+                        };
+                    }
                     var result = Math.Round(amount * exchangeRate, 6);
 
                     return new ExchangeCalculationResult

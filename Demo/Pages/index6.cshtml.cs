@@ -49,6 +49,13 @@ namespace Demo.Pages
         // 匯率相關資訊
         public decimal UsedExchangeRate { get; set; }
         public string CalculationDetails { get; set; } = string.Empty;
+        
+        // 當前匯率顯示
+        public decimal CurrentBuyRate { get; set; }
+        public decimal CurrentSellRate { get; set; }
+        public decimal CurrentCashBuyRate { get; set; }
+        public decimal CurrentCashSellRate { get; set; }
+        public bool HasValidRateData { get; set; } = true;
 
         #endregion
 
@@ -63,10 +70,28 @@ namespace Demo.Pages
         {
             await InitializePageDataAsync();
 
+            // 檢查匯率資料是否有效
+            if (!HasValidRateData)
+            {
+                IsError = true;
+                ErrorMessage = "目前選擇的貨幣缺少有效的匯率資料，請先點擊「更新匯率」更新資料後再進行計算";
+                return Page();
+            }
+
             if (!ModelState.IsValid)
             {
                 IsError = true;
-                ErrorMessage = "請檢查輸入的資料是否正確";
+                // 聚合欄位錯誤訊息
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).Where(m => !string.IsNullOrEmpty(m)).ToList();
+                if (errors.Any())
+                {
+                    ErrorMessage = string.Join("; ", errors);
+                }
+                else
+                {
+                    ErrorMessage = "請檢查輸入的資料是否正確";
+                }
+
                 return Page();
             }
 
@@ -188,6 +213,9 @@ namespace Demo.Pages
 
             // 設定貨幣選項
             SetupCurrencyOptions();
+            
+            // 更新當前匯率顯示
+            await UpdateCurrentRateDisplayAsync();
         }
 
         /// <summary>
@@ -223,6 +251,45 @@ namespace Demo.Pages
                 DayOfWeek.Sunday => "日",
                 _ => ""
             };
+        }
+
+        /// <summary>
+        /// 更新當前匯率顯示
+        /// </summary>
+        private async Task UpdateCurrentRateDisplayAsync()
+        {
+            var exchangeData = await _exchangeRateService.LoadExchangeRatesAsync();
+            if (exchangeData == null || !exchangeData.Rates.Any())
+            {
+                HasValidRateData = false;
+                return;
+            }
+
+            var targetCurrency = ToCurrency?.ToUpper();
+            var rate = exchangeData.Rates.FirstOrDefault(r => r.CurrencyCode.ToUpper() == targetCurrency);
+            
+            if (rate == null)
+            {
+                HasValidRateData = false;
+                return;
+            }
+
+            CurrentBuyRate = rate.BuyRate;
+            CurrentSellRate = rate.SellRate;
+            CurrentCashBuyRate = rate.CashBuyRate;
+            CurrentCashSellRate = rate.CashSellRate;
+
+            // 檢查是否有有效的匯率資料
+            if (IsTwdToForeign)
+            {
+                // 台幣轉外幣需要賣出匯率
+                HasValidRateData = (CurrentCashSellRate > 0 || CurrentSellRate > 0);
+            }
+            else
+            {
+                // 外幣轉台幣需要買入匯率
+                HasValidRateData = (CurrentCashBuyRate > 0 || CurrentBuyRate > 0);
+            }
         }
 
         #endregion

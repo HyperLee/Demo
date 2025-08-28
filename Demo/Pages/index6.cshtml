@@ -77,6 +77,9 @@
 
     <!-- 計算表單 -->
     <form method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <!-- 隱藏欄位用來傳遞 FromCurrency -->
+        <input type="hidden" asp-for="FromCurrency" />
         <div class="row">
             <div class="col-lg-8 mx-auto">
                 <div class="card">
@@ -156,20 +159,111 @@
                             </div>
                         </div>
 
+                        <!-- 當前匯率顯示 -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <div class="card @(Model.HasValidRateData ? "border-success" : "border-danger")">
+                                    <div class="card-header @(Model.HasValidRateData ? "bg-success" : "bg-danger") text-white">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-chart-bar"></i> 
+                                            目前 @Model.ToCurrency 匯率資訊
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        @if (Model.HasValidRateData)
+                                        {
+                                            <div class="row text-center">
+                                                <div class="col-6 col-md-3">
+                                                    <small class="text-muted">即期買入</small>
+                                                    <div class="fw-bold @(Model.CurrentBuyRate > 0 ? "text-primary" : "text-muted")">
+                                                        @(Model.CurrentBuyRate > 0 ? Model.CurrentBuyRate.ToString("N6") : "無資料")
+                                                    </div>
+                                                </div>
+                                                <div class="col-6 col-md-3">
+                                                    <small class="text-muted">即期賣出</small>
+                                                    <div class="fw-bold @(Model.CurrentSellRate > 0 ? "text-success" : "text-muted")">
+                                                        @(Model.CurrentSellRate > 0 ? Model.CurrentSellRate.ToString("N6") : "無資料")
+                                                    </div>
+                                                </div>
+                                                <div class="col-6 col-md-3">
+                                                    <small class="text-muted">現金買入</small>
+                                                    <div class="fw-bold @(Model.CurrentCashBuyRate > 0 ? "text-info" : "text-muted")">
+                                                        @(Model.CurrentCashBuyRate > 0 ? Model.CurrentCashBuyRate.ToString("N6") : "無資料")
+                                                    </div>
+                                                </div>
+                                                <div class="col-6 col-md-3">
+                                                    <small class="text-muted">現金賣出</small>
+                                                    <div class="fw-bold @(Model.CurrentCashSellRate > 0 ? "text-warning" : "text-muted")">
+                                                        @(Model.CurrentCashSellRate > 0 ? Model.CurrentCashSellRate.ToString("N6") : "無資料")
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <hr class="my-2">
+                                            <div class="text-center">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-info-circle"></i>
+                                                    計算將使用: 
+                                                    @if (Model.IsTwdToForeign)
+                                                    {
+                                                        <span class="fw-bold text-warning">現金賣出匯率</span>
+                                                        @if (Model.CurrentCashSellRate == 0)
+                                                        {
+                                                            <span> (或即期賣出匯率)</span>
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="fw-bold text-info">現金買入匯率</span>
+                                                        @if (Model.CurrentCashBuyRate == 0)
+                                                        {
+                                                            <span> (或即期買入匯率)</span>
+                                                        }
+                                                    }
+                                                </small>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="text-center">
+                                                <div class="text-danger mb-2">
+                                                    <i class="fas fa-exclamation-triangle fa-2x"></i>
+                                                </div>
+                                                <h6 class="text-danger">匯率資料不完整或缺失</h6>
+                                                <p class="text-muted mb-0">
+                                                    目前選擇的貨幣 (@Model.ToCurrency) 缺少有效的匯率資料，
+                                                    請點擊「更新匯率」按鈕更新最新資料後再進行計算。
+                                                </p>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- 操作按鈕 -->
                         <div class="row mb-4">
                             <div class="col-12">
                                 <div class="d-grid gap-2 d-md-flex justify-content-md-center">
-                                    <button type="submit" asp-page-handler="Calculate" class="btn btn-success btn-lg me-md-2">
+                                    <button type="submit" asp-page-handler="Calculate" class="btn btn-success btn-lg me-md-2" 
+                                            id="calculateBtn" disabled="@(!Model.HasValidRateData)">
                                         <i class="fas fa-calculator"></i> 計算匯率
                                     </button>
-                                    <button type="submit" asp-page-handler="Clear" class="btn btn-secondary btn-lg me-md-2">
+                                    <button type="submit" asp-page-handler="Clear" class="btn btn-secondary btn-lg me-md-2" formnovalidate>
                                         <i class="fas fa-eraser"></i> 清除
                                     </button>
-                                    <button type="submit" asp-page-handler="UpdateRates" class="btn btn-warning btn-lg">
+                                    <button type="submit" asp-page-handler="UpdateRates" class="btn btn-warning btn-lg" formnovalidate>
                                         <i class="fas fa-sync-alt"></i> 更新匯率
                                     </button>
                                 </div>
+                                @if (!Model.HasValidRateData)
+                                {
+                                    <div class="text-center mt-2">
+                                        <small class="text-danger">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                            計算功能已停用，請先更新匯率資料
+                                        </small>
+                                    </div>
+                                }
                             </div>
                         </div>
 
@@ -242,9 +336,48 @@
     }
 
     <script>
-        // 當計算方式改變時，自動清除結果
+        // 當計算方式改變時，自動清除結果並更新 FromCurrency 和匯率顯示
         $('input[name="IsTwdToForeign"]').change(function() {
             $('#Amount').val('');
+            updateFromCurrency();
+            // 重新提交表單以更新匯率顯示
+            refreshRateDisplay();
+        });
+
+        // 當目標貨幣改變時，也要更新 FromCurrency 和匯率顯示
+        $('#ToCurrency').change(function() {
+            updateFromCurrency();
+            // 重新提交表單以更新匯率顯示
+            refreshRateDisplay();
+        });
+
+        // 更新 FromCurrency 隱藏欄位
+        function updateFromCurrency() {
+            var isTwdToForeign = $('input[name="IsTwdToForeign"]:checked').val() === 'true';
+            var toCurrency = $('#ToCurrency').val();
+            
+            if (isTwdToForeign) {
+                $('input[name="FromCurrency"]').val('TWD');
+            } else {
+                $('input[name="FromCurrency"]').val(toCurrency);
+            }
+        }
+
+        // 重新整理匯率顯示
+        function refreshRateDisplay() {
+            // 創建一個隱藏的表單來提交 GET 請求更新匯率顯示
+            var form = $('<form method="get" style="display:none;"></form>');
+            form.append($('<input name="IsTwdToForeign">').val($('input[name="IsTwdToForeign"]:checked').val()));
+            form.append($('<input name="ToCurrency">').val($('#ToCurrency').val()));
+            form.append($('<input name="Amount">').val($('#Amount').val()));
+            
+            $('body').append(form);
+            form.submit();
+        }
+
+        // 頁面載入時初始化 FromCurrency
+        $(document).ready(function() {
+            updateFromCurrency();
         });
 
         // 數字輸入格式化

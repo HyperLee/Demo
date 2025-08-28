@@ -1,62 +1,62 @@
 {
-  "lastUpdated": "2025-08-28T10:30:00Z",
-  "source": "台灣銀行CSV API",
+  "lastUpdated": "2025-08-28T22:14:13.228494+08:00",
+  "source": "\u53F0\u7063\u9280\u884CCSV API",
   "rates": [
     {
       "currencyCode": "USD",
-      "currencyName": "美金",
-      "buyRate": 31.250000,
-      "sellRate": 31.350000,
-      "cashBuyRate": 31.180000,
-      "cashSellRate": 31.420000
-    },
-    {
-      "currencyCode": "JPY",
-      "currencyName": "日圓",
-      "buyRate": 0.215000,
-      "sellRate": 0.219000,
-      "cashBuyRate": 0.213000,
-      "cashSellRate": 0.221000
-    },
-    {
-      "currencyCode": "CNY",
-      "currencyName": "人民幣",
-      "buyRate": 4.320000,
-      "sellRate": 4.380000,
-      "cashBuyRate": 4.280000,
-      "cashSellRate": 4.420000
-    },
-    {
-      "currencyCode": "EUR",
-      "currencyName": "歐元",
-      "buyRate": 33.850000,
-      "sellRate": 34.450000,
-      "cashBuyRate": 33.520000,
-      "cashSellRate": 34.780000
-    },
-    {
-      "currencyCode": "GBP",
-      "currencyName": "英鎊",
-      "buyRate": 39.180000,
-      "sellRate": 39.980000,
-      "cashBuyRate": 38.780000,
-      "cashSellRate": 40.380000
+      "currencyName": "\u7F8E\u91D1",
+      "buyRate": 30.50500,
+      "sellRate": 30.51000,
+      "cashBuyRate": 0,
+      "cashSellRate": 30.18000
     },
     {
       "currencyCode": "HKD",
-      "currencyName": "港幣",
-      "buyRate": 3.980000,
-      "sellRate": 4.080000,
-      "cashBuyRate": 3.950000,
-      "cashSellRate": 4.110000
+      "currencyName": "\u6E2F\u5E63",
+      "buyRate": 3.88800,
+      "sellRate": 3.89200,
+      "cashBuyRate": 0,
+      "cashSellRate": 3.76700
+    },
+    {
+      "currencyCode": "GBP",
+      "currencyName": "\u82F1\u938A",
+      "buyRate": 41.02500,
+      "sellRate": 41.05100,
+      "cashBuyRate": 0,
+      "cashSellRate": 40.13000
     },
     {
       "currencyCode": "AUD",
-      "currencyName": "澳幣",
-      "buyRate": 20.650000,
-      "sellRate": 21.150000,
-      "cashBuyRate": 20.380000,
-      "cashSellRate": 21.420000
+      "currencyName": "\u6FB3\u5E63",
+      "buyRate": 19.76500,
+      "sellRate": 19.80400,
+      "cashBuyRate": 0,
+      "cashSellRate": 19.55000
+    },
+    {
+      "currencyCode": "JPY",
+      "currencyName": "\u65E5\u5713",
+      "buyRate": 0.20550,
+      "sellRate": 0.20590,
+      "cashBuyRate": 0,
+      "cashSellRate": 0.19870
+    },
+    {
+      "currencyCode": "EUR",
+      "currencyName": "\u6B50\u5143",
+      "buyRate": 35.39500,
+      "sellRate": 35.39900,
+      "cashBuyRate": 0,
+      "cashSellRate": 34.88000
+    },
+    {
+      "currencyCode": "CNY",
+      "currencyName": "\u4EBA\u6C11\u5E63",
+      "buyRate": 4.26400,
+      "sellRate": 4.25890,
+      "cashBuyRate": 0,
+      "cashSellRate": 4.19700
     }
   ]
 }
