@@ -111,52 +111,48 @@ public class JsonAutoSaveService
 - **內容類型**: 在 memo JSON 中增加 `contentType: "markdown"` 欄位
 - **前端渲染**: 客戶端即時渲染，無需後端 API
 
----
+### 3. 標籤系統功能 ✅ (與現有系統整合)
 
-### 3. 標籤系統功能 ✅ (簡化版)
+#### 3.1 需求分析 (基於現有 index4 標籤系統)
+- **基礎標籤操作**: 沿用 `index4` 現有的標籤 CRUD 功能
+- **標籤選擇**: 在 `index5` 編輯頁面新增標籤選擇器
+- **標籤顯示**: 顯示已分配給該備忘錄的標籤
+- **標籤建議**: 使用現有的 `OnGetTagSuggestionsAsync` API
+- **資料一致性**: 確保兩頁使用相同的標籤資料來源
 
-#### 3.1 需求分析 (JSON 適配)
-- **標籤建立**: 動態新增標籤
-- **標籤管理**: 簡單的增刪改
-- **標籤分類**: 單層結構 (避免複雜巢狀)
-- **顏色標記**: 預設顏色集合選擇
-- **使用統計**: 簡單的使用次數統計
-
-#### 3.2 JSON 資料結構
+#### 3.2 現有資料結構 (無需變更)
 ```json
-// App_Data/tags.json
+// App_Data/tags.json (現有結構)
 {
   "tags": [
     {
       "id": 1,
       "name": "工作",
-      "color": "#007bff",
+      "color": "#007bff", 
       "description": "工作相關備忘錄",
       "usageCount": 5,
-      "createdAt": "2025-08-28T10:30:00Z",
-      "isActive": true
-    },
-    {
-      "id": 2,
-      "name": "個人",
-      "color": "#28a745",
-      "description": "個人生活記錄",
-      "usageCount": 3,
-      "createdAt": "2025-08-28T11:00:00Z",
-      "isActive": true
+      "createdDate": "2025-08-28T10:30:00Z"
     }
   ]
 }
 
-// memo-notes.json 中的標籤關聯 (現有結構擴充)
+// memo-notes.json (現有結構，Note 類別已包含 Tags)
 {
   "notes": [
     {
       "id": 1,
       "title": "會議記錄",
       "content": "...",
-      "contentType": "markdown",
-      "tags": [1, 2], // 標籤 ID 陣列
+      "tags": [
+        {
+          "id": 1,
+          "name": "工作",
+          "color": "#007bff",
+          "description": "工作相關備忘錄",
+          "createdDate": "2025-08-28T10:30:00Z",
+          "usageCount": 5
+        }
+      ],
       "createdDate": "2025-08-28T10:30:00Z",
       "modifiedDate": "2025-08-28T12:00:00Z"
     }
@@ -164,50 +160,164 @@ public class JsonAutoSaveService
 }
 ```
 
-#### 3.3 API 實作 (簡化)
+#### 3.3 需要擴充的部分 (index5 專用)
+
+**A. NoteEditViewModel 擴充**
 ```csharp
-public class JsonTagService
+// 需擴充現有的 NoteEditViewModel
+public class NoteEditViewModel
 {
-    private readonly string _tagsFilePath = "App_Data/tags.json";
+    // ... 現有屬性 ...
     
-    public async Task<List<Tag>> GetAllTagsAsync();
-    public async Task<Tag> CreateTagAsync(TagCreateModel model);
-    public async Task<bool> UpdateTagAsync(int tagId, TagUpdateModel model);
-    public async Task<bool> DeleteTagAsync(int tagId);
-    public async Task<bool> IncrementUsageAsync(int tagId);
+    /// <summary>
+    /// 選中的標籤 ID 清單
+    /// </summary>
+    public List<int> SelectedTagIds { get; set; } = new();
+    
+    /// <summary>
+    /// 可用的標籤清單 (for UI 顯示)
+    /// </summary>
+    public List<Tag> AvailableTags { get; set; } = new();
 }
 ```
 
-#### 3.4 UI 元件 (輕量化)
-```html
-<!-- 標籤選擇器 -->
-<div class="tag-selector">
-    <input type="text" class="tag-input" placeholder="輸入新標籤或選擇現有標籤" list="tag-suggestions">
-    <datalist id="tag-suggestions">
-        <option value="工作">工作</option>
-        <option value="個人">個人</option>
-    </datalist>
-    
-    <div class="selected-tags">
-        <span class="tag-chip" data-tag-id="1" style="background-color: #007bff;">
-            工作 <button class="tag-remove" type="button">×</button>
-        </span>
-    </div>
-</div>
+**B. index5 後端方法擴充**
+```csharp
+// 在 index5.cshtml.cs 中新增
+public List<Tag> AllTags { get; set; } = new();
 
-<!-- 標籤管理面板 -->
-<div class="tag-management-simple">
-    <div class="tag-list">
-        <div class="tag-item">
-            <span class="tag-color" style="background-color: #007bff;"></span>
-            <span class="tag-name">工作</span>
-            <span class="tag-usage">(5)</span>
-            <button class="btn-edit">編輯</button>
-            <button class="btn-delete">刪除</button>
-        </div>
+// OnGetAsync 方法中載入標籤
+AllTags = await _noteService.GetAllTagsAsync(); // 使用現有 API
+
+// 編輯模式時載入備忘錄的標籤
+ViewModel.SelectedTagIds = note.Tags.Select(t => t.Id).ToList();
+ViewModel.AvailableTags = AllTags;
+
+// 儲存時處理標籤關聯
+// 使用現有的 AddTagToNoteAsync 和 RemoveTagFromNoteAsync
+```
+
+#### 3.4 UI 元件 (輕量化標籤選擇器)
+```html
+<!-- 標籤選擇區域 (新增到 index5.cshtml) -->
+<div class="mb-4">
+    <label class="form-label">標籤</label>
+    
+    <!-- 標籤輸入和建議 -->
+    <div class="tag-input-container">
+        <input type="text" 
+               class="form-control" 
+               id="tagInput" 
+               placeholder="輸入標籤名稱或選擇現有標籤..." 
+               list="tagSuggestions" 
+               autocomplete="off">
+        
+        <datalist id="tagSuggestions">
+            @foreach (var tag in Model.AllTags)
+            {
+                <option value="@tag.Name" data-tag-id="@tag.Id" data-color="@tag.Color">
+            }
+        </datalist>
+        
+        <button type="button" class="btn btn-outline-primary btn-sm ms-2" onclick="addSelectedTag()">
+            新增標籤
+        </button>
+    </div>
+    
+    <!-- 已選擇的標籤 -->
+    <div class="selected-tags mt-3" id="selectedTags">
+        @if (Model.ViewModel.IsEditMode)
+        {
+            @foreach (var tagId in Model.ViewModel.SelectedTagIds)
+            {
+                var tag = Model.AllTags.FirstOrDefault(t => t.Id == tagId);
+                if (tag != null)
+                {
+                    <span class="badge tag-badge me-2 mb-2" 
+                          style="background-color: @tag.Color" 
+                          data-tag-id="@tag.Id">
+                        @tag.Name
+                        <button type="button" 
+                                class="btn-close btn-close-white ms-2" 
+                                onclick="removeTag(@tag.Id)"></button>
+                        <input type="hidden" name="ViewModel.SelectedTagIds" value="@tag.Id" />
+                    </span>
+                }
+            }
+        }
     </div>
 </div>
 ```
+
+#### 3.5 JavaScript 整合 (複用 index4 邏輯)
+```javascript
+// 標籤相關函式 (簡化版，沿用 index4 概念)
+function addSelectedTag() {
+    const input = document.getElementById('tagInput');
+    const tagName = input.value.trim();
+    
+    if (!tagName) return;
+    
+    // 檢查是否為現有標籤
+    const existingTag = findTagByName(tagName);
+    if (existingTag) {
+        addTagToSelected(existingTag);
+    } else {
+        // 建立新標籤 (使用現有 API)
+        createNewTag(tagName, '#007bff');
+    }
+    
+    input.value = '';
+}
+
+function createNewTag(tagName, tagColor) {
+    // 使用 index4 現有的 CreateTag API
+    fetch('/index4?handler=CreateTag', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'RequestVerificationToken': getToken()
+        },
+        body: `tagName=${encodeURIComponent(tagName)}&tagColor=${encodeURIComponent(tagColor)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const newTag = {
+                id: data.tagId,
+                name: data.tagName,
+                color: data.tagColor
+            };
+            addTagToSelected(newTag);
+            updateTagSuggestions(newTag);
+        }
+    });
+}
+
+function removeTag(tagId) {
+    const tagElement = document.querySelector(`[data-tag-id="${tagId}"]`);
+    if (tagElement) {
+        tagElement.remove();
+    }
+}
+```
+
+#### 3.6 與現有系統的整合點
+
+**A. 共用服務層**
+- 使用現有的 `IEnhancedMemoNoteService.GetAllTagsAsync()`
+- 使用現有的 `IEnhancedMemoNoteService.CreateTagAsync()`
+- 使用現有的標籤關聯方法
+
+**B. 資料一致性**
+- 兩頁面使用相同的 `tags.json` 檔案
+- 標籤的 `UsageCount` 在兩頁面都會正確更新
+- 標籤的 CRUD 操作在兩頁面都保持同步
+
+**C. UI 風格一致性**
+- 沿用 `index4` 的標籤顏色系統
+- 使用相同的 Bootstrap 樣式類別
+- 保持標籤顯示格式一致
 
 ---
 
@@ -235,104 +345,78 @@ public class JsonTagService
 
 ---
 
-## 🏗️ **輕量化架構設計**
+## 🏗️ **輕量化架構設計 (整合版本)**
 
-### 前端架構 (JSON 版本)
+### 前端架構 (基於現有系統擴充)
 ```
-index5.cshtml
-├── Components/
+index5.cshtml (擴充現有檔案)
+├── Components/ (新增)
 │   ├── AutoSaveIndicator/
 │   ├── MarkdownEditor/
-│   └── TagSelector/
-├── Scripts/
+│   └── TagSelector/ (整合 index4 標籤邏輯)
+├── Scripts/ (新增)
 │   ├── auto-save.js
 │   ├── markdown-editor.js
-│   └── tag-manager.js
-└── Styles/
+│   └── tag-integration.js (橋接兩頁標籤功能)
+└── Styles/ (新增)
     ├── markdown-editor.css
-    └── tag-system.css
+    └── tag-integration.css
 ```
 
-### 後端架構 (JSON 服務)
+### 後端架構 (最小擴充)
 ```csharp
 Services/
-├── JsonAutoSaveService.cs
-├── JsonTagService.cs
-└── JsonFileService.cs (共用基礎服務)
+├── NoteService.cs (現有，已包含標籤功能)
+├── JsonAutoSaveService.cs (新增)
+└── JsonFileService.cs (新增，共用基礎服務)
 
-Controllers/
-├── AutoSaveController.cs
-└── TagController.cs
+Controllers/ (無需新增控制器)
+// 使用現有的 index4 和 index5 頁面模型
 
-Models/
-├── MemoViewModel.cs (擴充)
-├── Tag.cs
-├── DraftMemo.cs
-└── JsonResponse.cs
+Models/ (最小擴充)
+├── NoteEditViewModel.cs (擴充現有，增加標籤支援)
+├── DraftMemo.cs (新增)
+└── SystemConfig.cs (新增)
 ```
 
-### JSON 檔案結構
+### 檔案結構 (最小變動)
 ```
 App_Data/
-├── memo-notes.json          (現有，擴充標籤支援)
-├── tags.json               (新增，標籤管理)
-├── draft-memo.json         (新增，草稿儲存)
-└── system-config.json      (新增，系統設定)
+├── memo-notes.json        (現有，無需變更)
+├── tags.json              (現有，由 index4 建立)
+├── categories.json        (現有，無需變更)
+├── draft-memo.json        (新增，草稿儲存)
+└── system-config.json     (新增，系統設定)
 ```
 
 ---
 
-## 📊 **JSON 檔案設計**
+## 📊 **JSON 檔案設計 (與現有系統整合)**
 
-### 現有檔案擴充
+### 現有檔案 (無需變更)
 ```json
-// memo-notes.json (擴充現有結構)
-{
-  "notes": [
-    {
-      "id": 1,
-      "title": "會議記錄",
-      "content": "## 今日會議重點\n- 討論專案進度\n- 確認下週目標",
-      "contentType": "markdown", // 新增欄位
-      "tags": [1, 2],            // 新增欄位，標籤 ID 陣列
-      "createdDate": "2025-08-28T10:30:00Z",
-      "modifiedDate": "2025-08-28T12:00:00Z"
-    }
-  ]
-}
+// App_Data/tags.json (現有檔案，index4 已建立)
+// 此檔案由現有的 NoteService 管理，無需修改
+
+// App_Data/memo-notes.json (現有結構)  
+// Note 類別已包含 Tags 屬性，無需修改
 ```
 
-### 新增檔案
+### 新增檔案 (僅新增功能需要)
 ```json
-// tags.json (標籤管理)
-{
-  "tags": [
-    {
-      "id": 1,
-      "name": "工作",
-      "color": "#007bff",
-      "description": "工作相關備忘錄",
-      "usageCount": 5,
-      "createdAt": "2025-08-28T10:30:00Z",
-      "isActive": true
-    }
-  ],
-  "nextId": 2
-}
-
-// draft-memo.json (草稿儲存)
+// App_Data/draft-memo.json (草稿儲存)
 {
   "draftId": "temp-123456",
   "memoId": null,
   "title": "未完成的備忘錄",
   "content": "這是一個草稿內容...",
   "contentType": "markdown",
-  "tags": [1],
+  "selectedTagIds": [1, 3], // 與現有標籤系統相容
   "lastSaved": "2025-08-28T14:30:00Z",
   "isTemp": true
 }
 
-// system-config.json (系統設定)
+// App_Data/system-config.json (系統設定)
 {
   "autoSave": {
     "enabled": true,
@@ -346,45 +430,57 @@ App_Data/
   },
   "tags": {
     "maxTagsPerMemo": 10,
-    "defaultColors": ["#007bff", "#28a745", "#dc3545", "#ffc107", "#6c757d"]
+    "enableAutoSuggestion": true
   }
 }
 ```
 
 ---
 
-## 🚀 **開發階段規劃 (輕量化版本)**
+## 🚀 **開發階段規劃 (整合版本)**
 
-### Phase 1: 基礎功能 (1-2 週)
-1. **自動儲存功能**
-   - 建立 `JsonAutoSaveService`
+### Phase 1: 基礎整合 (1 週)
+1. **NoteEditViewModel 標籤支援**
+   - 擴充現有的 `NoteEditViewModel` 增加標籤屬性
+   - 在 `index5.cshtml.cs` 載入標籤資料
+   - 確保與 `index4` 標籤系統完全相容
+
+2. **自動儲存基礎功能**
+   - 建立 `JsonAutoSaveService` (不與標籤系統衝突)
    - 實作基本草稿儲存到 `draft-memo.json`
-   - 前端定時器機制
+   - 前端定時器機制，避免與現有表單衝突
+
+### Phase 2: UI 整合 (1 週)  
+3. **index5 標籤選擇器**
+   - 在 `index5.cshtml` 新增標籤選擇元件
+   - 複用 `index4` 的標籤建議 API (`OnGetTagSuggestionsAsync`)
+   - 整合標籤建立功能 (使用 `index4` 的 `OnPostCreateTagAsync`)
+   - 確保標籤 UI 風格與 `index4` 一致
+
+4. **資料流整合測試**
+   - 測試標籤在兩頁面間的資料一致性
+   - 確認標籤的 `UsageCount` 正確更新
+   - 驗證草稿功能不會干擾正式儲存
+
+### Phase 3: Markdown 功能 (1-2 週)
+5. **Markdown 編輯器**
+   - 整合 Marked.js 渲染引擎
+   - 在現有的 `textarea` 基礎上新增 Markdown 支援
+   - 實作簡化版編輯器工具列 (不影響現有字元計數功能)
+   - 編輯/預覽模式切換
+
+6. **自動儲存完整功能**
+   - 整合標籤資料到自動儲存
+   - Markdown 內容的草稿儲存
    - 視覺狀態指示器
    - localStorage 備援機制
 
-### Phase 2: 標籤系統 (1 週)
-2. **標籤系統實作**
-   - 建立 `JsonTagService`
-   - 實作 `tags.json` 管理
-   - 擴充現有 `memo-notes.json` 結構
-   - 標籤選擇器 UI 元件
-   - 標籤管理介面
-
-### Phase 3: Markdown 編輯器 (1-2 週)
-3. **Markdown 支援**
-   - 整合 Marked.js 渲染引擎
-   - 實作簡化版編輯器工具列
-   - 編輯/預覽模式切換
-   - 快捷鍵支援
-   - 語法高亮 (Prism.js)
-
-### Phase 4: 整合與優化 (1 週)
-4. **系統整合**
-   - 功能整合測試
-   - UI/UX 調整
-   - 效能優化
-   - 錯誤處理完善
+### Phase 4: 最終整合 (1 週)
+7. **系統整合與測試**
+   - 功能整合測試 (特別關注標籤系統相容性)
+   - 與 `index4` 列表頁面的互動測試  
+   - UI/UX 統一性調整
+   - 效能優化和錯誤處理完善
 
 ---
 
@@ -497,21 +593,46 @@ App_Data/
 
 ---
 
-## 💡 **適合 JSON 的功能總結**
+## 💡 **適合 JSON 的功能總結 (整合版)**
 
-### ✅ 保留的功能 (適合 JSON)
-- **自動儲存**: 簡單的草稿機制
-- **Markdown 支援**: 純文本儲存，前端渲染
-- **標籤系統**: 簡化版本，單層結構
+### ✅ 保留的功能 (與現有系統整合)
+- **自動儲存**: 簡單的草稿機制，不干擾現有儲存邏輯
+- **Markdown 支援**: 純文本儲存，前端渲染，相容現有內容
+- **標籤系統**: 完全整合 `index4` 現有標籤功能，確保資料一致性
 
-### ❌ 移除的功能 (不適合 JSON)
-- **版本控制**: 資料量大，結構複雜
-- **檔案附件**: 二進位檔案處理
+### ❌ 移除的功能 (不適合 JSON 或已有替代)
+- **版本控制**: 資料量大，結構複雜，個人使用不必要
+- **檔案附件**: 二進位檔案處理，JSON 不適合
 
-### 🔄 **簡化的替代方案**
-- **版本控制** → **自動備份** + **匯出功能**
-- **檔案附件** → **連結引用** + **外部儲存**
+### 🔄 **整合策略**
+
+**標籤系統整合**:
+- `index4`: 標籤管理中心 (建立、編輯、刪除、批次操作)
+- `index5`: 標籤選擇和分配 (選擇現有標籤、快速建立新標籤)
+- **共用**: 相同的資料服務、API 端點、檔案格式
+
+**資料流向**:
+```
+index4 (列表頁) ←→ tags.json ←→ index5 (編輯頁)
+     ↓                               ↓
+memo-notes.json ←←←←←←←←←←←←←←←←←←→→→→→→
+     ↓
+index4 (顯示標籤) ←←←←←←← index5 (儲存標籤關聯)
+```
+
+**相容性保證**:
+- 使用現有的 `IEnhancedMemoNoteService` 介面
+- 沿用現有的標籤資料結構 (`Tag` 類別)
+- 保持標籤顏色系統一致性
+- 確保 `UsageCount` 在兩頁面正確同步
+
+### 📋 **核心原則**
+
+1. **最小侵入性**: 盡量不修改現有 `index4` 程式碼
+2. **資料一致性**: 兩頁面使用相同的資料來源和服務
+3. **功能互補性**: `index4` 專注管理，`index5` 專注使用
+4. **向下相容**: 所有變更都不能破壞現有功能
 
 ---
 
-*此開發規格書專為使用 JSON 檔案的超輕量級個人備忘錄系統設計，確保所有功能都適合檔案儲存架構。*
+*此開發規格書專為與現有 index4 標籤系統完全整合的超輕量級個人備忘錄系統設計，確保兩頁面功能互通且資料一致。*
