@@ -14,6 +14,10 @@ public class Program
         builder.Services.AddSingleton<IEnhancedMemoNoteService, JsonMemoNoteService>();
         builder.Services.AddSingleton<IMemoNoteService>(provider => 
             provider.GetRequiredService<IEnhancedMemoNoteService>());
+        
+        // 註冊匯率服務
+        builder.Services.AddHttpClient<ExchangeRateService>();
+        builder.Services.AddScoped<ExchangeRateService>();
 
         var app = builder.Build();
 
