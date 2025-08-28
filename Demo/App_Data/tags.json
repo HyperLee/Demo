@@ -5,7 +5,7 @@
     "Color": "#b51a00",
     "Description": null,
     "CreatedDate": "2025-08-27T22:46:12.045114+08:00",
-    "UsageCount": 2
+    "UsageCount": 3
   },
   {
     "Id": 2,
@@ -14,5 +14,13 @@
     "Description": null,
     "CreatedDate": "2025-08-27T23:14:28.501399+08:00",
     "UsageCount": 1
+  },
+  {
+    "Id": 3,
+    "Name": "標籤三號",
+    "Color": "#007bff",
+    "Description": null,
+    "CreatedDate": "2025-08-28T10:09:55.2402262+08:00",
+    "UsageCount": 0
   }
 ]

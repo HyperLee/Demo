@@ -341,6 +341,26 @@ public class NoteEditViewModel
     /// 修改日期
     /// </summary>
     public DateTime ModifiedDate { get; set; }
+
+    /// <summary>
+    /// 選中的標籤 ID 清單
+    /// </summary>
+    public List<int> SelectedTagIds { get; set; } = new();
+
+    /// <summary>
+    /// 可用的標籤清單 (for UI 顯示)
+    /// </summary>
+    public List<Tag> AvailableTags { get; set; } = new();
+
+    /// <summary>
+    /// 選中的分類 ID
+    /// </summary>
+    public int? CategoryId { get; set; }
+
+    /// <summary>
+    /// 可用的分類清單 (for UI 顯示)
+    /// </summary>
+    public List<Category> AvailableCategories { get; set; } = new();
 }
 
 /// <summary>

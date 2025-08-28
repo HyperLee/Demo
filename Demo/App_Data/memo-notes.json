@@ -20,10 +20,10 @@
   },
   {
     "Id": 2,
-    "Title": "備忘錄2",
-    "Content": "備忘錄2\r\n備忘錄2\r\n備忘錄2\r\n備忘錄2",
-    "CreatedDate": "2025-08-27T22:46:45.333128+08:00",
-    "ModifiedDate": "2025-08-27T22:46:45.358416+08:00",
+    "Title": "20250828 - test",
+    "Content": "這是 index5 功能擴充後的 筆記 紀錄",
+    "CreatedDate": "2025-08-28T10:08:42.9272898+08:00",
+    "ModifiedDate": "2025-08-28T10:10:15.7251658+08:00",
     "CategoryId": 2,
     "Category": {
       "Id": 2,
@@ -40,26 +40,8 @@
         "Color": "#b51a00",
         "Description": null,
         "CreatedDate": "2025-08-27T22:46:12.045114+08:00",
-        "UsageCount": 2
-      },
-      {
-        "Id": 2,
-        "Name": "標籤二號",
-        "Color": "#4f7a28",
-        "Description": null,
-        "CreatedDate": "2025-08-27T23:14:28.501399+08:00",
-        "UsageCount": 1
+        "UsageCount": 3
       }
     ]
-  },
-  {
-    "Id": 3,
-    "Title": "20250828 - memo",
-    "Content": "note memo\r\ntest show1",
-    "CreatedDate": "2025-08-28T09:23:54.9262197+08:00",
-    "ModifiedDate": "2025-08-28T09:23:54.9262222+08:00",
-    "CategoryId": null,
-    "Category": null,
-    "Tags": []
   }
 ]

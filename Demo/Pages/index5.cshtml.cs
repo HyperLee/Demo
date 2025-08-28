@@ -16,7 +16,7 @@ namespace Demo.Pages
     public class index5 : PageModel
     {
         private readonly ILogger<index5> _logger;
-        private readonly IMemoNoteService _noteService;
+        private readonly IEnhancedMemoNoteService _noteService;
 
         /// <summary>
         /// 備忘錄編輯檢視模型
@@ -24,7 +24,17 @@ namespace Demo.Pages
         [BindProperty]
         public NoteEditViewModel ViewModel { get; set; } = new();
 
-        public index5(ILogger<index5> logger, IMemoNoteService noteService)
+        /// <summary>
+        /// 所有標籤清單
+        /// </summary>
+        public List<Tag> AllTags { get; set; } = new();
+
+        /// <summary>
+        /// 所有分類清單
+        /// </summary>
+        public List<Category> AllCategories { get; set; } = new();
+
+        public index5(ILogger<index5> logger, IEnhancedMemoNoteService noteService)
         {
             _logger = logger;
             _noteService = noteService;
@@ -38,6 +48,10 @@ namespace Demo.Pages
         {
             try
             {
+                // 載入標籤和分類資料
+                AllTags = await _noteService.GetAllTagsAsync();
+                AllCategories = await _noteService.GetCategoriesAsync();
+
                 if (id.HasValue && id.Value > 0)
                 {
                     // 編輯模式
@@ -56,7 +70,11 @@ namespace Demo.Pages
                         Content = note.Content,
                         IsEditMode = true,
                         CreatedDate = note.CreatedDate,
-                        ModifiedDate = note.ModifiedDate
+                        ModifiedDate = note.ModifiedDate,
+                        CategoryId = note.CategoryId,
+                        SelectedTagIds = note.Tags.Select(t => t.Id).ToList(),
+                        AvailableTags = AllTags,
+                        AvailableCategories = AllCategories
                     };
 
                     _logger.LogInformation("載入備忘錄編輯模式，ID: {Id}, 標題: {Title}", note.Id, note.Title);
@@ -71,7 +89,9 @@ namespace Demo.Pages
                         Content = string.Empty,
                         IsEditMode = false,
                         CreatedDate = DateTime.Now,
-                        ModifiedDate = DateTime.Now
+                        ModifiedDate = DateTime.Now,
+                        AvailableTags = AllTags,
+                        AvailableCategories = AllCategories
                     };
 
                     _logger.LogInformation("進入備忘錄新增模式");
@@ -94,6 +114,10 @@ namespace Demo.Pages
         {
             try
             {
+                // 重新載入標籤和分類資料 (表單提交後需要重新載入)
+                AllTags = await _noteService.GetAllTagsAsync();
+                AllCategories = await _noteService.GetCategoriesAsync();
+                
                 // 手動驗證
                 if (string.IsNullOrWhiteSpace(ViewModel.Title))
                 {
@@ -115,6 +139,9 @@ namespace Demo.Pages
 
                 if (!ModelState.IsValid)
                 {
+                    // 重新設定 AvailableTags 和 AvailableCategories 供 UI 顯示
+                    ViewModel.AvailableTags = AllTags;
+                    ViewModel.AvailableCategories = AllCategories;
                     return Page();
                 }
 
@@ -122,7 +149,8 @@ namespace Demo.Pages
                 {
                     Id = ViewModel.Id,
                     Title = ViewModel.Title.Trim(),
-                    Content = ViewModel.Content.Trim()
+                    Content = ViewModel.Content.Trim(),
+                    CategoryId = ViewModel.CategoryId
                 };
 
                 if (ViewModel.IsEditMode)
@@ -131,6 +159,9 @@ namespace Demo.Pages
                     var success = await _noteService.UpdateNoteAsync(note);
                     if (success)
                     {
+                        // 處理標籤關聯更新
+                        await UpdateNoteTagsAsync(note.Id, ViewModel.SelectedTagIds);
+                        
                         TempData["SuccessMessage"] = "備忘錄已成功更新。";
                         _logger.LogInformation("成功更新備忘錄，ID: {Id}, 標題: {Title}", note.Id, note.Title);
                     }
@@ -144,6 +175,10 @@ namespace Demo.Pages
                 {
                     // 新增備忘錄
                     var newId = await _noteService.AddNoteAsync(note);
+                    
+                    // 處理標籤關聯新增
+                    await UpdateNoteTagsAsync(newId, ViewModel.SelectedTagIds);
+                    
                     TempData["SuccessMessage"] = "備忘錄已成功新增。";
                     _logger.LogInformation("成功新增備忘錄，ID: {Id}, 標題: {Title}", newId, note.Title);
                 }
@@ -154,7 +189,50 @@ namespace Demo.Pages
             {
                 _logger.LogError(ex, "儲存備忘錄時發生錯誤，ID: {Id}, 標題: {Title}", ViewModel.Id, ViewModel.Title);
                 TempData["ErrorMessage"] = "儲存備忘錄時發生錯誤，請稍後再試。";
+                
+                // 重新設定 AvailableTags 和 AvailableCategories 供 UI 顯示
+                ViewModel.AvailableTags = AllTags;
+                ViewModel.AvailableCategories = AllCategories;
                 return Page();
+            }
+        }
+
+        /// <summary>
+        /// 更新備忘錄的標籤關聯
+        /// </summary>
+        private async Task UpdateNoteTagsAsync(int noteId, List<int> selectedTagIds)
+        {
+            try
+            {
+                // 取得目前的標籤
+                var currentNote = await _noteService.GetNoteByIdAsync(noteId);
+                var currentTagIds = currentNote?.Tags.Select(t => t.Id).ToList() ?? new List<int>();
+
+                // 找出要新增的標籤 (在 selectedTagIds 中但不在 currentTagIds 中)
+                var tagsToAdd = selectedTagIds.Except(currentTagIds).ToList();
+                
+                // 找出要移除的標籤 (在 currentTagIds 中但不在 selectedTagIds 中)
+                var tagsToRemove = currentTagIds.Except(selectedTagIds).ToList();
+
+                // 新增標籤
+                foreach (var tagId in tagsToAdd)
+                {
+                    await _noteService.AddTagToNoteAsync(noteId, tagId);
+                }
+
+                // 移除標籤
+                foreach (var tagId in tagsToRemove)
+                {
+                    await _noteService.RemoveTagFromNoteAsync(noteId, tagId);
+                }
+
+                _logger.LogInformation("更新備忘錄標籤完成，ID: {NoteId}, 新增: {AddCount}, 移除: {RemoveCount}", 
+                    noteId, tagsToAdd.Count, tagsToRemove.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "更新備忘錄標籤時發生錯誤，NoteId: {NoteId}", noteId);
+                // 不拋出異常，讓主要儲存操作能夠完成
             }
         }
 
@@ -164,6 +242,65 @@ namespace Demo.Pages
         public IActionResult OnPostCancel()
         {
             return RedirectToPage("index4");
+        }
+
+        /// <summary>
+        /// 建立新標籤 (AJAX)
+        /// </summary>
+        public async Task<IActionResult> OnPostCreateTagAsync(string tagName, string tagColor = "#007bff")
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(tagName))
+                {
+                    return new JsonResult(new { success = false, message = "標籤名稱不能為空" });
+                }
+
+                var newTag = await _noteService.CreateTagAsync(tagName.Trim(), tagColor);
+                
+                _logger.LogInformation("成功建立新標籤，ID: {Id}, 名稱: {Name}", newTag.Id, newTag.Name);
+                
+                return new JsonResult(new { 
+                    success = true, 
+                    tagId = newTag.Id, 
+                    tagName = newTag.Name, 
+                    tagColor = newTag.Color 
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "建立標籤時發生錯誤，名稱: {TagName}", tagName);
+                return new JsonResult(new { success = false, message = "建立標籤時發生錯誤" });
+            }
+        }
+
+        /// <summary>
+        /// 建立新分類 (AJAX)
+        /// </summary>
+        public async Task<IActionResult> OnPostCreateCategoryAsync(string categoryName)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(categoryName))
+                {
+                    return new JsonResult(new { success = false, message = "分類名稱不能為空" });
+                }
+
+                var newCategory = await _noteService.CreateCategoryAsync(categoryName.Trim(), null);
+                
+                _logger.LogInformation("成功建立新分類，ID: {Id}, 名稱: {Name}", newCategory.Id, newCategory.Name);
+                
+                return new JsonResult(new { 
+                    success = true, 
+                    categoryId = newCategory.Id, 
+                    categoryName = newCategory.Name 
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "建立分類時發生錯誤，名稱: {CategoryName}", categoryName);
+                return new JsonResult(new { success = false, message = "建立分類時發生錯誤" });
+            }
         }
     }
 }

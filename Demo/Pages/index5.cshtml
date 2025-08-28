@@ -68,6 +68,107 @@
                             </div>
                         </div>
 
+                        <!-- 分類選擇區域 -->
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-folder"></i> 分類
+                            </label>
+                            
+                            <!-- 分類選擇下拉選單 -->
+                            <div class="category-selection-container">
+                                <select asp-for="ViewModel.CategoryId" class="form-select" id="categorySelect">
+                                    <option value="">請選擇分類 (可不選)</option>
+                                    
+                                    @foreach (var category in Model.AllCategories)
+                                    {
+                                        <option value="@category.Id" 
+                                                selected="@(Model.ViewModel.CategoryId == category.Id)">
+                                            <i class="@category.Icon"></i> @category.Name
+                                        </option>
+                                    }
+                                    
+                                    <option value="0">未分類</option>
+                                </select>
+                                
+                                <!-- 快速建立分類按鈕 -->
+                                <button type="button" 
+                                        class="btn btn-outline-secondary btn-sm ms-2" 
+                                        onclick="showQuickCategoryModal()">
+                                    <i class="fas fa-plus"></i> 新增
+                                </button>
+                            </div>
+                            
+                            <!-- 當前分類顯示 (編輯模式) -->
+                            @if (Model.ViewModel.IsEditMode && Model.ViewModel.CategoryId.HasValue)
+                            {
+                                var currentCategory = Model.AllCategories.FirstOrDefault(c => c.Id == Model.ViewModel.CategoryId);
+                                if (currentCategory != null)
+                                {
+                                    <div class="form-text mt-2">
+                                        <small class="text-muted">
+                                            <i class="fas fa-info-circle"></i>
+                                            目前分類：
+                                            <span class="badge category-badge">
+                                                <i class="@currentCategory.Icon"></i> @currentCategory.Name
+                                            </span>
+                                        </small>
+                                    </div>
+                                }
+                            }
+                        </div>
+
+                        <!-- 標籤選擇區域 -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <i class="fas fa-tags"></i> 標籤
+                            </label>
+                            
+                            <!-- 標籤輸入和建議 -->
+                            <div class="tag-input-container">
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="tagInput" 
+                                       placeholder="輸入標籤名稱或選擇現有標籤..." 
+                                       list="tagSuggestions" 
+                                       autocomplete="off">
+                                
+                                <datalist id="tagSuggestions">
+                                    @foreach (var tag in Model.AllTags)
+                                    {
+                                        <option value="@tag.Name" data-tag-id="@tag.Id" data-color="@tag.Color"></option>
+                                    }
+                                </datalist>
+                                
+                                <button type="button" class="btn btn-outline-primary btn-sm ms-2" onclick="addSelectedTag()">
+                                    <i class="fas fa-plus"></i> 新增標籤
+                                </button>
+                            </div>
+                            
+                            <!-- 已選擇的標籤 -->
+                            <div class="selected-tags mt-3" id="selectedTags">
+                                @if (Model.ViewModel.IsEditMode)
+                                {
+                                    @foreach (var tagId in Model.ViewModel.SelectedTagIds)
+                                    {
+                                        var selectedTag = Model.AllTags.FirstOrDefault(t => t.Id == tagId);
+                                        if (selectedTag != null)
+                                        {
+                                            <span class="badge tag-badge me-2 mb-2" 
+                                                  style="background-color: @selectedTag.Color" 
+                                                  data-tag-id="@selectedTag.Id">
+                                                @selectedTag.Name
+                                                <button type="button" 
+                                                        class="btn-close btn-close-white ms-2" 
+                                                        aria-label="移除標籤"
+                                                        onclick="removeTag(@selectedTag.Id)"></button>
+                                                <input type="hidden" name="ViewModel.SelectedTagIds" value="@selectedTag.Id" />
+                                            </span>
+                                        }
+                                    }
+                                }
+                            </div>
+                        </div>
+
                         <!-- 日期資訊（僅編輯模式顯示） -->
                         @if (Model.ViewModel.IsEditMode)
                         {
@@ -143,6 +244,29 @@
     </div>
 </div>
 
+<!-- 快速建立分類對話框 -->
+<div class="modal fade" id="quickCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">快速建立分類</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">分類名稱</label>
+                    <input type="text" class="form-control" id="quickCategoryName" 
+                           placeholder="請輸入分類名稱" maxlength="50">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="createQuickCategory()">建立分類</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     
@@ -200,9 +324,12 @@
 
             // 防止意外離開頁面
             let formChanged = false;
-            const inputs = document.querySelectorAll('input, textarea');
+            const inputs = document.querySelectorAll('input, textarea, select');
             inputs.forEach(input => {
                 input.addEventListener('input', function() {
+                    formChanged = true;
+                });
+                input.addEventListener('change', function() {
                     formChanged = true;
                 });
             });
@@ -218,6 +345,214 @@
             document.querySelector('form').addEventListener('submit', function() {
                 formChanged = false;
             });
+        });
+
+        // 標籤管理相關函式
+        function addSelectedTag() {
+            const input = document.getElementById('tagInput');
+            const tagName = input.value.trim();
+            
+            if (!tagName) return;
+            
+            // 檢查是否已選中此標籤
+            const selectedTags = document.getElementById('selectedTags');
+            const existingTags = selectedTags.querySelectorAll('.tag-badge');
+            const isAlreadySelected = Array.from(existingTags).some(badge => 
+                badge.textContent.includes(tagName)
+            );
+            
+            if (isAlreadySelected) {
+                alert('此標籤已經選中');
+                input.value = '';
+                return;
+            }
+            
+            // 檢查是否為現有標籤
+            const datalist = document.getElementById('tagSuggestions');
+            const options = datalist.querySelectorAll('option');
+            let existingTag = null;
+            
+            for (let option of options) {
+                if (option.value === tagName) {
+                    existingTag = {
+                        id: option.getAttribute('data-tag-id'),
+                        name: option.value,
+                        color: option.getAttribute('data-color')
+                    };
+                    break;
+                }
+            }
+            
+            if (existingTag) {
+                // 使用現有標籤
+                addTagToSelected(existingTag);
+            } else {
+                // 建立新標籤
+                createNewTag(tagName, '#007bff');
+            }
+            
+            input.value = '';
+        }
+
+        function addTagToSelected(tag) {
+            const selectedTags = document.getElementById('selectedTags');
+            
+            const tagElement = document.createElement('span');
+            tagElement.className = 'badge tag-badge me-2 mb-2';
+            tagElement.style.backgroundColor = tag.color;
+            tagElement.setAttribute('data-tag-id', tag.id);
+            
+            tagElement.innerHTML = `
+                ${tag.name}
+                <button type="button" 
+                        class="btn-close btn-close-white ms-2" 
+                        aria-label="移除標籤"
+                        onclick="removeTag(${tag.id})"></button>
+                <input type="hidden" name="ViewModel.SelectedTagIds" value="${tag.id}" />
+            `;
+            
+            selectedTags.appendChild(tagElement);
+        }
+
+        function createNewTag(tagName, tagColor) {
+            // 使用當前頁面的 CreateTag API
+            fetch('/index5?handler=CreateTag', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': getToken()
+                },
+                body: `tagName=${encodeURIComponent(tagName)}&tagColor=${encodeURIComponent(tagColor)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const newTag = {
+                        id: data.tagId,
+                        name: data.tagName,
+                        color: data.tagColor
+                    };
+                    addTagToSelected(newTag);
+                    updateTagSuggestions(newTag);
+                    showSuccessMessage(`已建立新標籤「${data.tagName}」`);
+                } else {
+                    alert(data.message || '建立標籤失敗');
+                }
+            })
+            .catch(error => {
+                alert('建立標籤時發生錯誤，請稍後再試');
+            });
+        }
+
+        function removeTag(tagId) {
+            const tagElement = document.querySelector(`[data-tag-id="${tagId}"]`);
+            if (tagElement) {
+                tagElement.remove();
+            }
+        }
+
+        function updateTagSuggestions(newTag) {
+            const datalist = document.getElementById('tagSuggestions');
+            const option = document.createElement('option');
+            option.value = newTag.name;
+            option.setAttribute('data-tag-id', newTag.id);
+            option.setAttribute('data-color', newTag.color);
+            datalist.appendChild(option);
+        }
+
+        // 分類管理相關函式
+        function showQuickCategoryModal() {
+            document.getElementById('quickCategoryName').value = '';
+            var modal = new bootstrap.Modal(document.getElementById('quickCategoryModal'));
+            modal.show();
+        }
+
+        function createQuickCategory() {
+            const categoryName = document.getElementById('quickCategoryName').value.trim();
+            
+            if (!categoryName) {
+                alert('請輸入分類名稱');
+                return;
+            }
+            
+            // 檢查分類是否已存在
+            const categorySelect = document.getElementById('categorySelect');
+            const existingOptions = Array.from(categorySelect.options);
+            const exists = existingOptions.some(option => 
+                option.text.includes(categoryName) && option.value !== ''
+            );
+            
+            if (exists) {
+                alert('此分類名稱已存在');
+                return;
+            }
+            
+            // 使用當前頁面的 CreateCategory API
+            fetch('/index5?handler=CreateCategory', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': getToken()
+                },
+                body: `categoryName=${encodeURIComponent(categoryName)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 新增選項到下拉選單
+                    const newOption = document.createElement('option');
+                    newOption.value = data.categoryId;
+                    newOption.text = data.categoryName;
+                    newOption.selected = true;
+                    
+                    // 插入到「未分類」選項之前
+                    const uncategorizedOption = categorySelect.querySelector('option[value="0"]');
+                    categorySelect.insertBefore(newOption, uncategorizedOption);
+                    
+                    // 關閉對話框
+                    var modal = bootstrap.Modal.getInstance(document.getElementById('quickCategoryModal'));
+                    modal.hide();
+                    
+                    // 顯示成功訊息
+                    showSuccessMessage(`已建立新分類「${data.categoryName}」並自動選取`);
+                } else {
+                    alert(data.message || '建立分類失敗');
+                }
+            })
+            .catch(error => {
+                alert('建立分類時發生錯誤，請稍後再試');
+            });
+        }
+
+        // 輔助函式
+        function getToken() {
+            return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        }
+
+        function showSuccessMessage(message) {
+            // 在頁面頂部顯示成功訊息
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            const container = document.querySelector('.container .row .col-lg-8');
+            container.insertBefore(alertDiv, container.firstChild);
+            
+            // 3 秒後自動隱藏
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 3000);
+        }
+
+        // 處理 Enter 鍵新增標籤
+        document.getElementById('tagInput')?.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addSelectedTag();
+            }
         });
     </script>
 }
@@ -264,7 +599,113 @@
         .alert {
             border-radius: 8px;
         }
-        
+
+        /* 標籤相關樣式 */
+        .tag-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: white;
+            border-radius: 0.375rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .tag-badge:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        .tag-badge .btn-close {
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+
+        .tag-badge .btn-close:hover {
+            opacity: 1;
+        }
+
+        .tag-input-container {
+            display: flex;
+            align-items: stretch;
+        }
+
+        .tag-input-container .form-control {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+            border-right: none;
+        }
+
+        .tag-input-container .btn {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        .selected-tags {
+            min-height: 2.5rem;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 0.5rem;
+            background-color: #f8f9fa;
+        }
+
+        .selected-tags:empty::after {
+            content: '尚未選擇任何標籤';
+            color: #6c757d;
+            font-style: italic;
+            font-size: 0.875rem;
+        }
+
+        /* 分類相關樣式 */
+        .category-selection-container {
+            display: flex;
+            align-items: stretch;
+        }
+
+        .category-selection-container .form-select {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+            border-right: none;
+        }
+
+        .category-selection-container .btn {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        .category-badge {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+            border: none;
+            font-weight: 500;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+        }
+
+        /* 對話框樣式 */
+        .modal-content {
+            border-radius: 0.5rem;
+            border: none;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            border-radius: 0.5rem 0.5rem 0 0;
+        }
+
+        .modal-footer {
+            background-color: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            border-radius: 0 0 0.5rem 0.5rem;
+        }
+
+        /* 響應式設計 */        
         @@media (max-width: 768px) {
             .d-flex.justify-content-between {
                 flex-direction: column;
@@ -275,6 +716,76 @@
                 width: 100%;
                 margin-bottom: 0.5rem;
             }
+
+            .tag-input-container,
+            .category-selection-container {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .tag-input-container .form-control,
+            .category-selection-container .form-select {
+                border-radius: 0.375rem;
+                border: 1px solid #ced4da;
+            }
+
+            .tag-input-container .btn,
+            .category-selection-container .btn {
+                border-radius: 0.375rem;
+                width: 100%;
+            }
+
+            .selected-tags {
+                padding: 1rem;
+            }
+
+            .tag-badge {
+                margin-bottom: 0.5rem !important;
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+
+        /* 表單動畫效果 */
+        .form-control:focus,
+        .form-select:focus {
+            transform: translateY(-1px);
+            transition: all 0.2s ease;
+        }
+
+        .btn {
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* 載入狀態 */
+        .loading {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            margin-left: 0.5rem;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @@keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 }
