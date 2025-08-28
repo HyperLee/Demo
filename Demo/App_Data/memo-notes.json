@@ -26,8 +26,8 @@
     "ModifiedDate": "2025-08-27T22:46:45.358416+08:00",
     "CategoryId": 2,
     "Category": {
-      "Id": 1,
-      "Name": "類別1",
+      "Id": 2,
+      "Name": "類別2",
       "Description": null,
       "ParentId": null,
       "Icon": "fas fa-folder",
@@ -51,5 +51,15 @@
         "UsageCount": 1
       }
     ]
+  },
+  {
+    "Id": 3,
+    "Title": "20250828 - memo",
+    "Content": "note memo\r\ntest show1",
+    "CreatedDate": "2025-08-28T09:23:54.9262197+08:00",
+    "ModifiedDate": "2025-08-28T09:23:54.9262222+08:00",
+    "CategoryId": null,
+    "Category": null,
+    "Tags": []
   }
 ]

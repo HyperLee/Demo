@@ -7,7 +7,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using Demo.Services;
+using Demo.Utilities;
 using iText.Html2pdf;
+using iText.Html2pdf.Resolver.Font;
 using iText.Kernel.Pdf;
 using iText.Layout;
 using ClosedXML.Excel;
@@ -544,29 +546,10 @@ namespace Demo.Pages
                 var htmlReport = GenerateHtmlReport(notes, "備忘錄 PDF 匯出");
                 _logger.LogDebug("HTML 報告長度: {Length}", htmlReport.Length);
                 
-                using (var memoryStream = new MemoryStream())
-                using (var htmlStream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(htmlReport)))
-                {
-                    // 使用 iText7 將 HTML 轉換為 PDF
-                    var converterProperties = new ConverterProperties();
-                    
-                    // 設定字型以支援中文字元
-                    converterProperties.SetCharset("UTF-8");
-                    
-                    HtmlConverter.ConvertToPdf(htmlStream, memoryStream, converterProperties);
-                    
-                    var pdfBytes = memoryStream.ToArray();
-                    
-                    // 檢查是否成功產生 PDF
-                    if (pdfBytes.Length == 0)
-                    {
-                        throw new InvalidOperationException("PDF 檔案大小為 0，產生失敗");
-                    }
-                    
-                    _logger.LogInformation("PDF 轉換成功，檔案大小: {Size} bytes", pdfBytes.Length);
-                    
-                    return Task.FromResult(pdfBytes);
-                }
+                // 使用工具類別轉換 PDF，支援中文字型
+                var pdfBytes = PdfExportUtility.ConvertHtmlToPdfWithChineseSupport(htmlReport, _logger);
+                
+                return Task.FromResult(pdfBytes);
             }
             catch (Exception ex)
             {
@@ -675,6 +658,8 @@ namespace Demo.Pages
         /// </summary>
         private string GenerateHtmlReport(List<Note> notes, string title)
         {
+            var css = PdfExportUtility.GetChineseSupportedCss();
+            
             var html = $@"
 <!DOCTYPE html>
 <html>
@@ -682,14 +667,7 @@ namespace Demo.Pages
     <meta charset='utf-8'>
     <title>{title}</title>
     <style>
-        body {{ font-family: Arial, sans-serif; margin: 40px; }}
-        .header {{ text-align: center; margin-bottom: 30px; }}
-        .note {{ margin-bottom: 30px; border-bottom: 1px solid #ccc; padding-bottom: 20px; }}
-        .note-title {{ font-size: 18px; font-weight: bold; color: #333; }}
-        .note-content {{ margin: 10px 0; line-height: 1.6; }}
-        .note-meta {{ font-size: 12px; color: #666; }}
-        .tags {{ margin: 5px 0; }}
-        .tag {{ background: #007bff; color: white; padding: 2px 6px; border-radius: 3px; margin-right: 5px; }}
+        {css}
     </style>
 </head>
 <body>
