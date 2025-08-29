@@ -1,3 +1,62 @@
+/* 主題系統 CSS 變量 */
+:root {
+    /* 淺色模式 (預設) */
+    --bs-body-bg: #ffffff;
+    --bs-body-color: #212529;
+    --bs-primary: #0d6efd;
+    --bs-secondary: #6c757d;
+    --bs-success: #198754;
+    --bs-info: #0dcaf0;
+    --bs-warning: #ffc107;
+    --bs-danger: #dc3545;
+    --bs-light: #f8f9fa;
+    --bs-dark: #212529;
+    
+    /* 自定義變量 */
+    --surface-color: #ffffff;
+    --surface-variant: #f8f9fa;
+    --border-color: #dee2e6;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    --text-muted: #6c757d;
+    --navbar-bg: #ffffff;
+    --sidebar-bg: #f8f9fa;
+    --card-bg: #ffffff;
+    --modal-bg: #ffffff;
+    --input-bg: #ffffff;
+    --input-border: #ced4da;
+    --table-bg: #ffffff;
+    --table-striped: rgba(0, 0, 0, 0.05);
+}
+
+/* 深色模式 */
+[data-bs-theme="dark"] {
+    --bs-body-bg: #121212;
+    --bs-body-color: #e9ecef;
+    --bs-primary: #6ea8fe;
+    --bs-secondary: #6c757d;
+    --bs-success: #75b798;
+    --bs-info: #6edff6;
+    --bs-warning: #ffda6a;
+    --bs-danger: #ea868f;
+    --bs-light: #343a40;
+    --bs-dark: #e9ecef;
+    
+    /* 自定義深色變量 */
+    --surface-color: #1e1e1e;
+    --surface-variant: #2d2d2d;
+    --border-color: #404040;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+    --text-muted: #adb5bd;
+    --navbar-bg: #1e1e1e;
+    --sidebar-bg: #2d2d2d;
+    --card-bg: #1e1e1e;
+    --modal-bg: #2d2d2d;
+    --input-bg: #2d2d2d;
+    --input-border: #404040;
+    --table-bg: #1e1e1e;
+    --table-striped: rgba(255, 255, 255, 0.05);
+}
+
 html {
   font-size: 14px;
 }
@@ -130,5 +189,322 @@ body {
     .recommendation-card {
         background: linear-gradient(145deg, #343a40, #495057);
         color: #fff;
+    }
+}
+
+/* === 深色模式完整適配 === */
+
+/* 主題切換過渡效果 */
+* {
+    transition: background-color 0.3s ease, 
+                color 0.3s ease, 
+                border-color 0.3s ease,
+                box-shadow 0.3s ease !important;
+}
+
+/* 特殊元件需要排除過渡 */
+.no-transition,
+.no-transition * {
+    transition: none !important;
+}
+
+/* 主題切換按鈕動畫 */
+#themeDropdown {
+    position: relative;
+    overflow: hidden;
+}
+
+#themeDropdown::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+#themeDropdown:hover::before {
+    left: 100%;
+}
+
+/* 載入動畫 */
+.theme-loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.1);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.theme-loading .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--bs-primary);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Bootstrap 組件深色適配 */
+[data-bs-theme="dark"] .navbar {
+    background-color: var(--navbar-bg) !important;
+    border-color: var(--border-color);
+}
+
+[data-bs-theme="dark"] .navbar-brand,
+[data-bs-theme="dark"] .nav-link {
+    color: var(--bs-body-color) !important;
+}
+
+[data-bs-theme="dark"] .nav-link:hover {
+    color: var(--bs-primary) !important;
+}
+
+[data-bs-theme="dark"] .dropdown-menu {
+    background-color: var(--surface-variant);
+    border-color: var(--border-color);
+}
+
+[data-bs-theme="dark"] .dropdown-item {
+    color: var(--bs-body-color);
+}
+
+[data-bs-theme="dark"] .dropdown-item:hover,
+[data-bs-theme="dark"] .dropdown-item:focus {
+    background-color: var(--bs-primary);
+    color: white;
+}
+
+[data-bs-theme="dark"] .dropdown-item.active {
+    background-color: var(--bs-primary);
+    color: white;
+}
+
+/* 卡片元件 */
+[data-bs-theme="dark"] .card {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+    box-shadow: 0 4px 16px var(--shadow-color);
+}
+
+[data-bs-theme="dark"] .card-header {
+    background-color: var(--surface-variant);
+    border-color: var(--border-color);
+}
+
+/* 表格元件 */
+[data-bs-theme="dark"] .table {
+    --bs-table-bg: var(--table-bg);
+    --bs-table-striped-bg: var(--table-striped);
+    --bs-table-border-color: var(--border-color);
+    color: var(--bs-body-color);
+}
+
+[data-bs-theme="dark"] .table-hover tbody tr:hover {
+    background-color: var(--surface-variant);
+}
+
+/* 模態框 */
+[data-bs-theme="dark"] .modal-content {
+    background-color: var(--modal-bg);
+    border-color: var(--border-color);
+}
+
+[data-bs-theme="dark"] .modal-header {
+    border-color: var(--border-color);
+}
+
+[data-bs-theme="dark"] .modal-footer {
+    border-color: var(--border-color);
+}
+
+/* 表單控制項 */
+[data-bs-theme="dark"] .form-control {
+    background-color: var(--input-bg);
+    border-color: var(--input-border);
+    color: var(--bs-body-color);
+}
+
+[data-bs-theme="dark"] .form-control:focus {
+    background-color: var(--input-bg);
+    border-color: var(--bs-primary);
+    color: var(--bs-body-color);
+    box-shadow: 0 0 0 0.25rem rgba(110, 168, 254, 0.25);
+}
+
+[data-bs-theme="dark"] .form-select {
+    background-color: var(--input-bg);
+    border-color: var(--input-border);
+    color: var(--bs-body-color);
+}
+
+[data-bs-theme="dark"] .form-check-input {
+    background-color: var(--input-bg);
+    border-color: var(--input-border);
+}
+
+[data-bs-theme="dark"] .form-check-input:checked {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+/* 按鈕適配 */
+[data-bs-theme="dark"] .btn-outline-secondary {
+    color: var(--bs-body-color);
+    border-color: var(--border-color);
+}
+
+[data-bs-theme="dark"] .btn-outline-secondary:hover {
+    background-color: var(--bs-secondary);
+    border-color: var(--bs-secondary);
+    color: white;
+}
+
+/* 分頁元件 */
+[data-bs-theme="dark"] .pagination .page-link {
+    background-color: var(--surface-variant);
+    border-color: var(--border-color);
+    color: var(--bs-body-color);
+}
+
+[data-bs-theme="dark"] .pagination .page-item.active .page-link {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+[data-bs-theme="dark"] .pagination .page-link:hover {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+    color: white;
+}
+
+/* 警告框 */
+[data-bs-theme="dark"] .alert {
+    border-width: 1px;
+    background-color: var(--surface-variant);
+}
+
+[data-bs-theme="dark"] .alert-primary {
+    background-color: rgba(110, 168, 254, 0.1);
+    border-color: rgba(110, 168, 254, 0.2);
+    color: var(--bs-primary);
+}
+
+[data-bs-theme="dark"] .alert-success {
+    background-color: rgba(117, 183, 152, 0.1);
+    border-color: rgba(117, 183, 152, 0.2);
+    color: var(--bs-success);
+}
+
+[data-bs-theme="dark"] .alert-danger {
+    background-color: rgba(234, 134, 143, 0.1);
+    border-color: rgba(234, 134, 143, 0.2);
+    color: var(--bs-danger);
+}
+
+[data-bs-theme="dark"] .alert-warning {
+    background-color: rgba(255, 218, 106, 0.1);
+    border-color: rgba(255, 218, 106, 0.2);
+    color: var(--bs-warning);
+}
+
+/* 進度條 */
+[data-bs-theme="dark"] .progress {
+    background-color: var(--surface-variant);
+}
+
+/* 麵包屑 */
+[data-bs-theme="dark"] .breadcrumb {
+    background-color: var(--surface-variant);
+}
+
+[data-bs-theme="dark"] .breadcrumb-item + .breadcrumb-item::before {
+    color: var(--text-muted);
+}
+
+/* 邊框 */
+[data-bs-theme="dark"] .border {
+    border-color: var(--border-color) !important;
+}
+
+[data-bs-theme="dark"] .border-top {
+    border-top-color: var(--border-color) !important;
+}
+
+[data-bs-theme="dark"] .border-bottom {
+    border-bottom-color: var(--border-color) !important;
+}
+
+/* 文字顏色 */
+[data-bs-theme="dark"] .text-muted {
+    color: var(--text-muted) !important;
+}
+
+[data-bs-theme="dark"] .text-dark {
+    color: var(--bs-body-color) !important;
+}
+
+/* 財務 AI 分析深色模式適配 */
+[data-bs-theme="dark"] .health-score-card {
+    background: linear-gradient(135deg, #4c6ef5 0%, #7c3aed 100%);
+    box-shadow: 0 10px 30px var(--shadow-color);
+}
+
+[data-bs-theme="dark"] .health-metric {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+[data-bs-theme="dark"] .insight-card {
+    background: var(--card-bg) !important;
+    color: var(--bs-body-color) !important;
+    border: 1px solid var(--border-color);
+}
+
+[data-bs-theme="dark"] .insight-card:hover {
+    box-shadow: 0 8px 24px var(--shadow-color);
+}
+
+[data-bs-theme="dark"] .recommendation-card {
+    background: linear-gradient(145deg, var(--surface-variant), var(--surface-color)) !important;
+    color: var(--bs-body-color) !important;
+    border: 1px solid var(--border-color);
+}
+
+[data-bs-theme="dark"] .recommendation-card:hover {
+    box-shadow: 0 8px 25px var(--shadow-color);
+}
+
+/* 使用 CSS 變數的通用組件 */
+.theme-aware-component {
+    background-color: var(--surface-color);
+    color: var(--bs-body-color);
+    border-color: var(--border-color);
+    box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+/* 減少重繪，使用 transform 而不是改變 position */
+.theme-transition {
+    transform: translateZ(0); /* 觸發硬體加速 */
+    will-change: background-color, color;
+}
+
+/* 高對比度模式支援 */
+@media (prefers-contrast: high) {
+    [data-bs-theme="dark"] {
+        --bs-body-color: #ffffff;
+        --text-muted: #cccccc;
+        --border-color: #666666;
     }
 }

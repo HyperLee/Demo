@@ -48,6 +48,80 @@
     .calendar-cell:hover {
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
+
+    /* === 月曆深色模式樣式 === */
+    [data-bs-theme="dark"] .calendar-container {
+        background-color: var(--surface-color);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    [data-bs-theme="dark"] .calendar-header {
+        background: linear-gradient(135deg, var(--bs-primary) 0%, var(--bs-info) 100%) !important;
+        color: white;
+    }
+
+    [data-bs-theme="dark"] .calendar-cell {
+        background-color: var(--surface-variant);
+        border-color: var(--border-color);
+        color: var(--bs-body-color);
+    }
+
+    [data-bs-theme="dark"] .calendar-cell:hover {
+        background-color: var(--bs-primary) !important;
+        color: white;
+        transform: scale(1.05);
+    }
+
+    [data-bs-theme="dark"] .calendar-cell.other-month {
+        color: var(--text-muted);
+        opacity: 0.6;
+    }
+
+    [data-bs-theme="dark"] .note-badge {
+        background-color: var(--bs-warning);
+        color: var(--bs-dark);
+    }
+
+    [data-bs-theme="dark"] .note-date {
+        animation: noteGlow 3s ease-in-out infinite;
+        box-shadow: 0 6px 20px rgba(255, 218, 106, 0.4);
+    }
+
+    [data-bs-theme="dark"] .card {
+        background-color: var(--card-bg);
+        border-color: var(--border-color);
+    }
+
+    [data-bs-theme="dark"] .card[style*="linear-gradient"] {
+        background: linear-gradient(135deg, #4c6ef5 0%, #7c3aed 100%) !important;
+    }
+
+    [data-bs-theme="dark"] .form-select,
+    [data-bs-theme="dark"] .form-control {
+        background-color: var(--input-bg);
+        border-color: var(--input-border);
+        color: var(--bs-body-color);
+    }
+
+    [data-bs-theme="dark"] .btn-outline-light {
+        border-color: rgba(255, 255, 255, 0.5);
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    [data-bs-theme="dark"] .btn-outline-light:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.8);
+        color: white;
+    }
+
+    [data-bs-theme="dark"] .text-secondary {
+        color: var(--text-muted) !important;
+    }
+
+    [data-bs-theme="dark"] .text-primary {
+        color: var(--bs-primary) !important;
+    }
 </style>
 
 <div class="container py-3">

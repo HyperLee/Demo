@@ -4,6 +4,104 @@
     ViewData["Title"] = "多時區電子時鐘 - P2增強版";
 }
 
+<style>
+    /* === 多時區時鐘深色模式樣式 === */
+    [data-bs-theme="dark"] .top-toolbar {
+        background-color: var(--navbar-bg);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    [data-bs-theme="dark"] .app-title {
+        color: var(--bs-body-color);
+    }
+
+    [data-bs-theme="dark"] .timezone-dropdown {
+        background-color: var(--input-bg);
+        border-color: var(--input-border);
+        color: var(--bs-body-color);
+    }
+
+    [data-bs-theme="dark"] .control-btn {
+        background-color: var(--surface-variant);
+        border-color: var(--border-color);
+        color: var(--bs-body-color);
+    }
+
+    [data-bs-theme="dark"] .control-btn:hover {
+        background-color: var(--bs-primary);
+        color: white;
+    }
+
+    [data-bs-theme="dark"] .settings-panel {
+        background-color: var(--modal-bg);
+        border: 1px solid var(--border-color);
+        box-shadow: 0 8px 32px var(--shadow-color);
+    }
+
+    [data-bs-theme="dark"] .settings-header {
+        background-color: var(--surface-variant);
+        border-bottom: 1px solid var(--border-color);
+        color: var(--bs-body-color);
+    }
+
+    [data-bs-theme="dark"] .settings-close {
+        color: var(--bs-body-color);
+    }
+
+    [data-bs-theme="dark"] .settings-close:hover {
+        color: var(--bs-danger);
+    }
+
+    [data-bs-theme="dark"] .digital-display {
+        background-color: var(--surface-color);
+        border: 1px solid var(--border-color);
+        color: var(--bs-primary);
+        text-shadow: 0 0 20px rgba(110, 168, 254, 0.5);
+    }
+
+    [data-bs-theme="dark"] .timezone-clock {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 16px var(--shadow-color);
+    }
+
+    [data-bs-theme="dark"] .timezone-clock:hover {
+        box-shadow: 0 8px 24px var(--shadow-color);
+        transform: translateY(-2px);
+    }
+
+    [data-bs-theme="dark"] .timezone-label {
+        color: var(--text-muted);
+    }
+
+    [data-bs-theme="dark"] .timezone-time {
+        color: var(--bs-body-color);
+    }
+
+    [data-bs-theme="dark"] .analog-clock-face {
+        background: radial-gradient(circle, var(--surface-variant) 0%, var(--surface-color) 100%);
+        border: 3px solid var(--border-color);
+    }
+
+    [data-bs-theme="dark"] .hour-hand,
+    [data-bs-theme="dark"] .minute-hand {
+        background: var(--bs-body-color);
+    }
+
+    [data-bs-theme="dark"] .second-hand {
+        background: var(--bs-primary);
+    }
+
+    [data-bs-theme="dark"] .clock-numbers {
+        color: var(--bs-body-color);
+    }
+
+    [data-bs-theme="dark"] .clock-center {
+        background: var(--bs-primary);
+        box-shadow: 0 0 10px rgba(110, 168, 254, 0.7);
+    }
+</style>
+
 <!-- 頂部工具列 -->
 <div class="top-toolbar">
     <div class="toolbar-left">

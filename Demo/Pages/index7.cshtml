@@ -4,6 +4,99 @@
     ViewData["Title"] = $"記帳系統 - {Model.ViewYear}年{Model.ViewMonth}月";
 }
 
+<style>
+    /* === 記帳系統深色模式樣式 === */
+    [data-bs-theme="dark"] .card {
+        background-color: var(--card-bg);
+        border-color: var(--border-color);
+        box-shadow: 0 4px 16px var(--shadow-color);
+    }
+
+    [data-bs-theme="dark"] .table {
+        --bs-table-bg: var(--table-bg);
+        --bs-table-striped-bg: var(--table-striped);
+        --bs-table-border-color: var(--border-color);
+    }
+
+    [data-bs-theme="dark"] .modal-content {
+        background-color: var(--modal-bg);
+        border-color: var(--border-color);
+    }
+
+    [data-bs-theme="dark"] .form-control {
+        background-color: var(--input-bg);
+        border-color: var(--input-border);
+        color: var(--bs-body-color);
+    }
+
+    [data-bs-theme="dark"] .form-control:focus {
+        background-color: var(--input-bg);
+        border-color: var(--bs-primary);
+        color: var(--bs-body-color);
+        box-shadow: 0 0 0 0.25rem rgba(110, 168, 254, 0.25);
+    }
+
+    [data-bs-theme="dark"] .form-select {
+        background-color: var(--input-bg);
+        border-color: var(--input-border);
+        color: var(--bs-body-color);
+    }
+
+    [data-bs-theme="dark"] .btn-outline-secondary {
+        color: var(--bs-body-color);
+        border-color: var(--border-color);
+    }
+
+    [data-bs-theme="dark"] .btn-outline-secondary:hover {
+        background-color: var(--bs-secondary);
+        color: white;
+    }
+
+    [data-bs-theme="dark"] .text-success {
+        color: var(--bs-success) !important;
+    }
+
+    [data-bs-theme="dark"] .text-danger {
+        color: var(--bs-danger) !important;
+    }
+
+    [data-bs-theme="dark"] .text-warning {
+        color: var(--bs-warning) !important;
+    }
+
+    [data-bs-theme="dark"] .text-info {
+        color: var(--bs-info) !important;
+    }
+
+    [data-bs-theme="dark"] .text-muted {
+        color: var(--text-muted) !important;
+    }
+
+    [data-bs-theme="dark"] .border-success {
+        border-color: var(--bs-success) !important;
+    }
+
+    [data-bs-theme="dark"] .border-danger {
+        border-color: var(--bs-danger) !important;
+    }
+
+    [data-bs-theme="dark"] .border-warning {
+        border-color: var(--bs-warning) !important;
+    }
+
+    [data-bs-theme="dark"] .border-info {
+        border-color: var(--bs-info) !important;
+    }
+
+    [data-bs-theme="dark"] .income-row {
+        background-color: rgba(117, 183, 152, 0.1);
+    }
+
+    [data-bs-theme="dark"] .expense-row {
+        background-color: rgba(234, 134, 143, 0.1);
+    }
+</style>
+
 <!-- 防偽權杖 -->
 <form id="hiddenTokenForm" style="display: none;">
     @Html.AntiForgeryToken()

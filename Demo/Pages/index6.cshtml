@@ -4,6 +4,106 @@
     ViewData["Title"] = "台幣與外幣匯率計算器";
 }
 
+<style>
+    /* === 匯率計算器深色模式樣式 === */
+    [data-bs-theme="dark"] .card {
+        background-color: var(--card-bg);
+        border-color: var(--border-color);
+        box-shadow: 0 4px 16px var(--shadow-color);
+    }
+
+    [data-bs-theme="dark"] .bg-light {
+        background-color: var(--surface-variant) !important;
+    }
+
+    [data-bs-theme="dark"] .border-info {
+        border-color: var(--bs-info) !important;
+    }
+
+    [data-bs-theme="dark"] .text-primary {
+        color: var(--bs-primary) !important;
+    }
+
+    [data-bs-theme="dark"] .text-success {
+        color: var(--bs-success) !important;
+    }
+
+    [data-bs-theme="dark"] .text-warning {
+        color: var(--bs-warning) !important;
+    }
+
+    [data-bs-theme="dark"] .text-danger {
+        color: var(--bs-danger) !important;
+    }
+
+    [data-bs-theme="dark"] .form-control {
+        background-color: var(--input-bg);
+        border-color: var(--input-border);
+        color: var(--bs-body-color);
+    }
+
+    [data-bs-theme="dark"] .form-select {
+        background-color: var(--input-bg);
+        border-color: var(--input-border);
+        color: var(--bs-body-color);
+    }
+
+    [data-bs-theme="dark"] .badge {
+        color: var(--bs-dark);
+    }
+
+    [data-bs-theme="dark"] .bg-warning {
+        background-color: var(--bs-warning) !important;
+        color: var(--bs-dark) !important;
+    }
+
+    [data-bs-theme="dark"] .alert-warning {
+        background-color: rgba(255, 218, 106, 0.1);
+        border-color: rgba(255, 218, 106, 0.2);
+        color: var(--bs-warning);
+    }
+
+    [data-bs-theme="dark"] .alert-info {
+        background-color: rgba(110, 239, 246, 0.1);
+        border-color: rgba(110, 239, 246, 0.2);
+        color: var(--bs-info);
+    }
+
+    [data-bs-theme="dark"] .btn-outline-success {
+        color: var(--bs-success);
+        border-color: var(--bs-success);
+    }
+
+    [data-bs-theme="dark"] .btn-outline-success:hover {
+        background-color: var(--bs-success);
+        border-color: var(--bs-success);
+        color: white;
+    }
+
+    [data-bs-theme="dark"] .btn-outline-info {
+        color: var(--bs-info);
+        border-color: var(--bs-info);
+    }
+
+    [data-bs-theme="dark"] .btn-outline-info:hover {
+        background-color: var(--bs-info);
+        border-color: var(--bs-info);
+        color: white;
+    }
+
+    [data-bs-theme="dark"] .table {
+        --bs-table-bg: var(--table-bg);
+        --bs-table-striped-bg: var(--table-striped);
+        --bs-table-border-color: var(--border-color);
+    }
+
+    [data-bs-theme="dark"] .result-highlight {
+        background-color: rgba(110, 168, 254, 0.1);
+        border: 1px solid rgba(110, 168, 254, 0.3);
+        color: var(--bs-primary);
+    }
+</style>
+
 <div class="container mt-4">
     <!-- 頁面標題 -->
     <div class="row">

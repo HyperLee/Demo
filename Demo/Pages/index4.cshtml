@@ -4,6 +4,89 @@
     ViewData["Title"] = "備忘錄列表";
 }
 
+<style>
+    /* === 備忘錄系統深色模式樣式 === */
+    [data-bs-theme="dark"] .search-container .form-control {
+        background-color: var(--input-bg);
+        border-color: var(--input-border);
+        color: var(--bs-body-color);
+    }
+
+    [data-bs-theme="dark"] .memo-card {
+        background-color: var(--card-bg);
+        border-color: var(--border-color);
+        transition: all 0.3s ease;
+    }
+
+    [data-bs-theme="dark"] .memo-card:hover {
+        box-shadow: 0 8px 24px var(--shadow-color);
+        transform: translateY(-2px);
+    }
+
+    [data-bs-theme="dark"] .tag-badge {
+        background-color: var(--surface-variant);
+        color: var(--bs-body-color);
+        border: 1px solid var(--border-color);
+    }
+
+    [data-bs-theme="dark"] .priority-high {
+        background-color: rgba(234, 134, 143, 0.2);
+        color: var(--bs-danger);
+    }
+
+    [data-bs-theme="dark"] .priority-medium {
+        background-color: rgba(255, 218, 106, 0.2);
+        color: var(--bs-warning);
+    }
+
+    [data-bs-theme="dark"] .priority-low {
+        background-color: rgba(117, 183, 152, 0.2);
+        color: var(--bs-success);
+    }
+
+    [data-bs-theme="dark"] .form-select,
+    [data-bs-theme="dark"] .form-control {
+        background-color: var(--input-bg);
+        border-color: var(--input-border);
+        color: var(--bs-body-color);
+    }
+
+    [data-bs-theme="dark"] .collapse .card-body {
+        background-color: var(--surface-variant);
+        border-color: var(--border-color);
+    }
+
+    [data-bs-theme="dark"] .btn-outline-secondary {
+        color: var(--bs-body-color);
+        border-color: var(--border-color);
+    }
+
+    [data-bs-theme="dark"] .btn-outline-secondary:hover {
+        background-color: var(--bs-secondary);
+        color: white;
+    }
+
+    [data-bs-theme="dark"] .memo-title {
+        color: var(--bs-body-color);
+    }
+
+    [data-bs-theme="dark"] .memo-content {
+        color: var(--text-muted);
+    }
+
+    [data-bs-theme="dark"] .memo-meta {
+        color: var(--text-muted);
+    }
+
+    [data-bs-theme="dark"] .text-muted {
+        color: var(--text-muted) !important;
+    }
+
+    [data-bs-theme="dark"] .border-start {
+        border-left-color: var(--border-color) !important;
+    }
+</style>
+
 <div class="container-fluid">
     <!-- 搜尋區域 -->
     <div class="row mb-4">

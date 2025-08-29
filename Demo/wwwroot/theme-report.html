@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>深色模式實作完成報告</title>
+    <link rel="stylesheet" href="/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="/css/site.css" />
+</head>
+<body>
+    <!-- 導航列 -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-moon me-2"></i>深色模式實作報告
+            </a>
+            
+            <!-- 主題切換按鈕 -->
+            <div class="navbar-nav ms-auto">
+                <div class="nav-item dropdown">
+                    <button class="btn btn-link nav-link dropdown-toggle" type="button" 
+                            data-bs-toggle="dropdown" aria-expanded="false" id="themeDropdown">
+                        <i class="fas fa-palette" id="themeIcon"></i>
+                        <span class="d-none d-md-inline ms-1" id="themeLabel">主題</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <button class="dropdown-item" type="button" data-bs-theme-value="light">
+                                <i class="fas fa-sun me-2"></i>淺色模式
+                            </button>
+                        </li>
+                        <li>
+                            <button class="dropdown-item" type="button" data-bs-theme-value="dark">
+                                <i class="fas fa-moon me-2"></i>深色模式
+                            </button>
+                        </li>
+                        <li>
+                            <button class="dropdown-item" type="button" data-bs-theme-value="auto">
+                                <i class="fas fa-desktop me-2"></i>跟隨系統
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- 完成狀態 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert alert-success d-flex align-items-center">
+                    <i class="fas fa-check-circle fa-2x me-3"></i>
+                    <div>
+                        <h4 class="alert-heading mb-1">深色模式實作完成！</h4>
+                        <p class="mb-0">已成功為整個系統實施統一的深色模式支援，提升用戶視覺體驗。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 實作摘要 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-clipboard-list me-2"></i>實作摘要</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-primary">✅ 已完成功能</h6>
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-check text-success me-2"></i>主題系統架構</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>CSS 變量系統</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>JavaScript 主題管理器</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>主題切換按鈕</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>自動系統主題偵測</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>用戶偏好持久化</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>平滑過渡動畫</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-primary">🎨 適配頁面</h6>
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-check text-success me-2"></i>主頁面 (時鐘)</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>多時區時鐘 (Index2)</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>月曆系統 (Index3)</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>備忘錄系統 (Index4)</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>匯率計算器 (Index6)</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>記帳系統 (Index7)</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Layout 模板</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 技術實作詳情 -->
+        <div class="row mb-4">
+            <div class="col-lg-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-cogs fa-3x text-primary mb-3"></i>
+                        <h5>架構設計</h5>
+                        <p class="text-muted">基於 CSS Custom Properties 的主題變量系統，支援動態切換</p>
+                        <div class="badge bg-success">Bootstrap 5 兼容</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-mobile-alt fa-3x text-primary mb-3"></i>
+                        <h5>響應式設計</h5>
+                        <p class="text-muted">完全響應式設計，在不同裝置上都有良好的深色模式體驗</p>
+                        <div class="badge bg-info">移動優先</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-magic fa-3x text-primary mb-3"></i>
+                        <h5>用戶體驗</h5>
+                        <p class="text-muted">平滑的主題切換動畫，系統偏好自動偵測，設定持久化</p>
+                        <div class="badge bg-warning">無縫體驗</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 文件結構 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-folder-tree me-2"></i>新增檔案結構</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>📁 JavaScript 檔案</h6>
+                                <ul class="list-unstyled font-monospace small">
+                                    <li>└── wwwroot/js/theme-manager.js</li>
+                                </ul>
+                                
+                                <h6 class="mt-3">📁 CSS 檔案</h6>
+                                <ul class="list-unstyled font-monospace small">
+                                    <li>└── wwwroot/css/site.css (更新)</li>
+                                    <li>└── wwwroot/css/clock.css (更新)</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>📁 測試檔案</h6>
+                                <ul class="list-unstyled font-monospace small">
+                                    <li>└── wwwroot/theme-test.html</li>
+                                    <li>└── wwwroot/theme-report.html</li>
+                                </ul>
+                                
+                                <h6 class="mt-3">📁 頁面更新</h6>
+                                <ul class="list-unstyled font-monospace small">
+                                    <li>└── Pages/Shared/_Layout.cshtml</li>
+                                    <li>└── Pages/index2.cshtml</li>
+                                    <li>└── Pages/index3.cshtml</li>
+                                    <li>└── Pages/index4.cshtml</li>
+                                    <li>└── Pages/index6.cshtml</li>
+                                    <li>└── Pages/index7.cshtml</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 功能測試 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-vial me-2"></i>功能測試區域</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>🔧 主題控制測試</h6>
+                                <div class="btn-group mb-3" role="group">
+                                    <button type="button" class="btn btn-outline-primary" onclick="testSetTheme('light')">
+                                        <i class="fas fa-sun me-1"></i>測試淺色
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary" onclick="testSetTheme('dark')">
+                                        <i class="fas fa-moon me-1"></i>測試深色
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary" onclick="testSetTheme('auto')">
+                                        <i class="fas fa-desktop me-1"></i>測試自動
+                                    </button>
+                                </div>
+                                
+                                <h6>📊 主題狀態</h6>
+                                <div class="alert alert-light">
+                                    <small>
+                                        <strong>目前主題:</strong> <span id="currentThemeStatus">檢測中...</span><br>
+                                        <strong>用戶偏好:</strong> <span id="userPreferenceStatus">檢測中...</span><br>
+                                        <strong>系統主題:</strong> <span id="systemThemeStatus">檢測中...</span>
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>🎨 元件預覽</h6>
+                                <div class="mb-3">
+                                    <input type="text" class="form-control" placeholder="輸入框測試">
+                                </div>
+                                <div class="mb-3">
+                                    <select class="form-select">
+                                        <option>下拉選單測試</option>
+                                        <option>選項 1</option>
+                                        <option>選項 2</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="checkTest">
+                                        <label class="form-check-label" for="checkTest">
+                                            核取方塊測試
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar" role="progressbar" style="width: 60%">60%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 頁面連結 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-external-link-alt me-2"></i>系統頁面快速導航</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 mb-2">
+                                <a href="/" class="btn btn-outline-primary w-100">
+                                    <i class="fas fa-clock me-1"></i>主時鐘
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <a href="/Index2" class="btn btn-outline-primary w-100">
+                                    <i class="fas fa-globe me-1"></i>多時區時鐘
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <a href="/index3" class="btn btn-outline-primary w-100">
+                                    <i class="fas fa-calendar me-1"></i>日曆系統
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <a href="/index4" class="btn btn-outline-primary w-100">
+                                    <i class="fas fa-sticky-note me-1"></i>備忘錄
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <a href="/index6" class="btn btn-outline-primary w-100">
+                                    <i class="fas fa-exchange-alt me-1"></i>匯率計算器
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <a href="/index7" class="btn btn-outline-primary w-100">
+                                    <i class="fas fa-book me-1"></i>記帳系統
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <a href="/theme-test.html" class="btn btn-outline-success w-100">
+                                    <i class="fas fa-vial me-1"></i>測試頁面
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <button class="btn btn-outline-info w-100" onclick="window.location.reload()">
+                                    <i class="fas fa-sync me-1"></i>重新整理
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 下一階段規劃 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-road me-2"></i>後續開發規劃</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <h6 class="text-success">🥇 第二階段功能</h6>
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-square text-muted me-2"></i>待辦清單系統</li>
+                                    <li><i class="fas fa-square text-muted me-2"></i>財務儀表板</li>
+                                    <li><i class="fas fa-square text-muted me-2"></i>習慣追蹤器</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-4">
+                                <h6 class="text-info">🥈 視覺增強</h6>
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-square text-muted me-2"></i>更多主題選擇</li>
+                                    <li><i class="fas fa-square text-muted me-2"></i>個性化色彩</li>
+                                    <li><i class="fas fa-square text-muted me-2"></i>動畫效果優化</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-4">
+                                <h6 class="text-warning">🥉 進階功能</h6>
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-square text-muted me-2"></i>高對比度模式</li>
+                                    <li><i class="fas fa-square text-muted me-2"></i>無障礙優化</li>
+                                    <li><i class="fas fa-square text-muted me-2"></i>主題排程</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="border-top text-muted mt-5 py-4">
+        <div class="container text-center">
+            <p class="mb-0">深色模式實作完成 - Demo 個人管理系統 © 2025</p>
+        </div>
+    </footer>
+
+    <script src="/lib/jquery/dist/jquery.min.js"></script>
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/theme-manager.js"></script>
+
+    <script>
+        // 測試主題切換功能
+        function testSetTheme(theme) {
+            if (window.themeManager) {
+                window.themeManager.setTheme(theme);
+            } else {
+                // 備用方法
+                document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? 
+                    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme);
+                localStorage.setItem('preferred-theme', theme);
+            }
+            updateThemeStatus();
+        }
+
+        // 更新主題狀態顯示
+        function updateThemeStatus() {
+            const currentTheme = document.documentElement.getAttribute('data-bs-theme') || 'light';
+            const userPreference = localStorage.getItem('preferred-theme') || 'auto';
+            const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            
+            document.getElementById('currentThemeStatus').textContent = 
+                currentTheme === 'dark' ? '深色模式' : '淺色模式';
+            document.getElementById('userPreferenceStatus').textContent = 
+                userPreference === 'dark' ? '深色模式' : 
+                userPreference === 'light' ? '淺色模式' : '跟隨系統';
+            document.getElementById('systemThemeStatus').textContent = 
+                systemTheme === 'dark' ? '深色模式' : '淺色模式';
+        }
+
+        // 監聽主題變更
+        document.addEventListener('themeChanged', updateThemeStatus);
+        
+        // 監聽系統主題變化
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateThemeStatus);
+        
+        // 頁面載入完成後更新狀態
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(updateThemeStatus, 500);
+        });
+    </script>
+</body>
+</html>
