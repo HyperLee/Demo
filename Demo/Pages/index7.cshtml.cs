@@ -16,12 +16,14 @@ public class index7 : PageModel
     private readonly ILogger<index7> _logger;
     private readonly IAccountingService _accountingService;
     private readonly IStatisticsService _statisticsService;
+    private readonly IStatisticsExportService _statisticsExportService;
 
-    public index7(ILogger<index7> logger, IAccountingService accountingService, IStatisticsService statisticsService)
+    public index7(ILogger<index7> logger, IAccountingService accountingService, IStatisticsService statisticsService, IStatisticsExportService statisticsExportService)
     {
         _logger = logger;
         _accountingService = accountingService;
         _statisticsService = statisticsService;
+        _statisticsExportService = statisticsExportService;
     }
 
     #region 屬性
@@ -195,6 +197,182 @@ public class index7 : PageModel
         {
             _logger.LogError(ex, "載入統計分析資料時發生錯誤");
             return new JsonResult(new { success = false, message = "載入統計資料時發生錯誤，請稍後再試" });
+        }
+    }
+
+    /// <summary>
+    /// 取得收入分類分析
+    /// </summary>
+    public async Task<IActionResult> OnGetIncomeCategoryAnalysisAsync(DateTime startDate, DateTime endDate)
+    {
+        try
+        {
+            if (startDate > endDate)
+            {
+                return new JsonResult(new { success = false, message = "開始日期不能晚於結束日期" });
+            }
+
+            var incomeCategories = await _statisticsService.GetIncomeCategoryAnalysisAsync(startDate, endDate);
+            
+            return new JsonResult(new
+            {
+                success = true,
+                data = incomeCategories
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "取得收入分類分析時發生錯誤");
+            return new JsonResult(new { success = false, message = "取得收入分類分析時發生錯誤" });
+        }
+    }
+
+    /// <summary>
+    /// 取得分類排行榜
+    /// </summary>
+    public async Task<IActionResult> OnGetCategoryRankingAsync(DateTime startDate, DateTime endDate, string type, int topCount = 10)
+    {
+        try
+        {
+            if (startDate > endDate)
+            {
+                return new JsonResult(new { success = false, message = "開始日期不能晚於結束日期" });
+            }
+
+            if (!new[] { "income", "expense" }.Contains(type.ToLower()))
+            {
+                return new JsonResult(new { success = false, message = "無效的排行榜類型" });
+            }
+
+            var ranking = await _statisticsService.GetCategoryRankingAsync(startDate, endDate, 
+                type.Substring(0, 1).ToUpper() + type.Substring(1).ToLower(), topCount);
+            
+            return new JsonResult(new
+            {
+                success = true,
+                data = ranking
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "取得分類排行榜時發生錯誤");
+            return new JsonResult(new { success = false, message = "取得分類排行榜時發生錯誤" });
+        }
+    }
+
+    /// <summary>
+    /// 取得時間模式分析
+    /// </summary>
+    public async Task<IActionResult> OnGetTimePatternAnalysisAsync(DateTime startDate, DateTime endDate)
+    {
+        try
+        {
+            if (startDate > endDate)
+            {
+                return new JsonResult(new { success = false, message = "開始日期不能晚於結束日期" });
+            }
+
+            var timePattern = await _statisticsService.GetTimePatternAnalysisAsync(startDate, endDate);
+            
+            return new JsonResult(new
+            {
+                success = true,
+                data = timePattern
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "取得時間模式分析時發生錯誤");
+            return new JsonResult(new { success = false, message = "取得時間模式分析時發生錯誤" });
+        }
+    }
+
+    /// <summary>
+    /// 取得比較分析
+    /// </summary>
+    public async Task<IActionResult> OnGetComparisonAnalysisAsync(DateTime currentStart, DateTime currentEnd, DateTime previousStart, DateTime previousEnd)
+    {
+        try
+        {
+            if (currentStart > currentEnd || previousStart > previousEnd)
+            {
+                return new JsonResult(new { success = false, message = "日期範圍無效" });
+            }
+
+            var comparison = await _statisticsService.GetComparisonAnalysisAsync(currentStart, currentEnd, previousStart, previousEnd);
+            
+            return new JsonResult(new
+            {
+                success = true,
+                data = comparison
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "取得比較分析時發生錯誤");
+            return new JsonResult(new { success = false, message = "取得比較分析時發生錯誤" });
+        }
+    }
+
+    /// <summary>
+    /// 匯出統計資料
+    /// </summary>
+    public async Task<IActionResult> OnPostExportStatisticsAsync([FromForm] StatisticsExportFormModel model)
+    {
+        try
+        {
+            if (!DateTime.TryParse(model.StartDate, out var startDate) || 
+                !DateTime.TryParse(model.EndDate, out var endDate))
+            {
+                return BadRequest("日期格式無效");
+            }
+
+            if (startDate > endDate)
+            {
+                return BadRequest("開始日期不能晚於結束日期");
+            }
+
+            var request = new StatisticsExportRequest
+            {
+                StartDate = startDate,
+                EndDate = endDate,
+                Format = model.Format,
+                IncludeCharts = model.IncludeCharts,
+                IncludeSummary = model.IncludeSummary,
+                IncludeDetailedRecords = model.IncludeDetailedRecords,
+                IncludeAnalysis = model.IncludeAnalysis ?? new List<string>()
+            };
+
+            byte[] fileData;
+            string fileName;
+            string contentType;
+
+            if (request.Format.ToLower() == "excel")
+            {
+                fileData = await _statisticsExportService.ExportToExcelAsync(request);
+                fileName = $"統計分析報告_{startDate:yyyyMMdd}-{endDate:yyyyMMdd}.xlsx";
+                contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+            }
+            else if (request.Format.ToLower() == "pdf")
+            {
+                fileData = await _statisticsExportService.ExportToPdfAsync(request);
+                fileName = $"統計分析報告_{startDate:yyyyMMdd}-{endDate:yyyyMMdd}.pdf";
+                contentType = "application/pdf";
+            }
+            else
+            {
+                return BadRequest("不支援的匯出格式");
+            }
+
+            _logger.LogInformation("成功匯出統計報告，格式：{Format}，期間：{StartDate} ~ {EndDate}", 
+                request.Format, startDate, endDate);
+
+            return File(fileData, contentType, fileName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "匯出統計報告時發生錯誤");
+            return BadRequest("匯出統計報告時發生錯誤，請稍後再試");
         }
     }
 
@@ -811,4 +989,45 @@ public class index7 : PageModel
 public class DeleteRecordRequest
 {
     public int Id { get; set; }
+}
+
+/// <summary>
+/// 統計匯出表單模型
+/// </summary>
+public class StatisticsExportFormModel
+{
+    /// <summary>
+    /// 開始日期
+    /// </summary>
+    public string StartDate { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// 結束日期
+    /// </summary>
+    public string EndDate { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// 匯出格式
+    /// </summary>
+    public string Format { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// 是否包含圖表
+    /// </summary>
+    public bool IncludeCharts { get; set; }
+    
+    /// <summary>
+    /// 是否包含摘要
+    /// </summary>
+    public bool IncludeSummary { get; set; }
+    
+    /// <summary>
+    /// 是否包含詳細記錄
+    /// </summary>
+    public bool IncludeDetailedRecords { get; set; }
+    
+    /// <summary>
+    /// 包含的分析類型
+    /// </summary>
+    public List<string>? IncludeAnalysis { get; set; }
 }

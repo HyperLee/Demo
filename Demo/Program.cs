@@ -24,6 +24,7 @@ public class Program
         
         // 註冊統計服務
         builder.Services.AddScoped<IStatisticsService, StatisticsService>();
+        builder.Services.AddScoped<IStatisticsExportService, StatisticsExportService>();
 
         var app = builder.Build();
 

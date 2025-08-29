@@ -4,6 +4,11 @@
     ViewData["Title"] = $"記帳系統 - {Model.ViewYear}年{Model.ViewMonth}月";
 }
 
+<!-- 防偽權杖 -->
+<form id="hiddenTokenForm" style="display: none;">
+    @Html.AntiForgeryToken()
+</form>
+
 <div class="container-fluid">
     <!-- 頁面標題和統計區域 -->
     <div class="row mb-4">
@@ -409,7 +414,7 @@
 
 <!-- 統計分析對話框 -->
 <div class="modal fade" id="statisticsModal" tabindex="-1" aria-labelledby="statisticsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
+    <div class="modal-dialog modal-fullscreen-lg-down modal-xl">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="statisticsModalLabel">
@@ -417,7 +422,7 @@
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body p-0">
                 <!-- Loading 動畫 -->
                 <div id="statisticsLoading" class="text-center py-5">
                     <div class="spinner-border text-primary" role="status">
@@ -428,57 +433,243 @@
                 
                 <!-- 統計內容 -->
                 <div id="statisticsContent" style="display: none;">
-                    <!-- 時間範圍選擇 -->
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <label for="statsStartDate" class="form-label">開始日期</label>
-                            <input type="date" class="form-control" id="statsStartDate">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="statsEndDate" class="form-label">結束日期</label>
-                            <input type="date" class="form-control" id="statsEndDate">
-                        </div>
-                    </div>
-                    
-                    <!-- 統計摘要 -->
-                    <div class="row mb-4" id="statisticsSummary">
-                        <!-- 動態生成摘要卡片 -->
-                    </div>
-                    
-                    <!-- 圖表區域 -->
-                    <div class="row">
-                        <div class="col-md-8">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h6 class="mb-0">
-                                        <i class="fas fa-chart-line"></i> 月度收支趨勢
-                                    </h6>
-                                </div>
-                                <div class="card-body" style="height: 400px;">
-                                    <canvas id="monthlyTrendChart"></canvas>
+                    <!-- 時間範圍選擇器 -->
+                    <div class="bg-light p-3 border-bottom">
+                        <div class="row align-items-end">
+                            <div class="col-md-4">
+                                <label for="statsStartDate" class="form-label fw-bold">開始日期</label>
+                                <input type="date" class="form-control" id="statsStartDate">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="statsEndDate" class="form-label fw-bold">結束日期</label>
+                                <input type="date" class="form-control" id="statsEndDate">
+                            </div>
+                            <div class="col-md-4">
+                                <button type="button" class="btn btn-primary" onclick="refreshStatistics()">
+                                    <i class="fas fa-sync-alt"></i> 更新分析
+                                </button>
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-outline-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-download"></i> 匯出
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#" onclick="exportStatistics('excel')">
+                                            <i class="fas fa-file-excel text-success"></i> Excel 報告
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="exportStatistics('pdf')">
+                                            <i class="fas fa-file-pdf text-danger"></i> PDF 報告
+                                        </a></li>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h6 class="mb-0">
-                                        <i class="fas fa-chart-pie"></i> 支出分類分析
-                                    </h6>
+                    </div>
+
+                    <!-- 分頁標籤 -->
+                    <div class="bg-white border-bottom">
+                        <ul class="nav nav-tabs nav-fill" id="statisticsTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">
+                                    <i class="fas fa-chart-line"></i> 概覽
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="category-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#category" type="button" role="tab" aria-controls="category" aria-selected="false">
+                                    <i class="fas fa-chart-pie"></i> 分類分析
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="pattern-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#pattern" type="button" role="tab" aria-controls="pattern" aria-selected="false">
+                                    <i class="fas fa-clock"></i> 時間模式
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="ranking-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#ranking" type="button" role="tab" aria-controls="ranking" aria-selected="false">
+                                    <i class="fas fa-trophy"></i> 排行榜
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- 分頁內容 -->
+                    <div class="tab-content p-4" id="statisticsTabsContent" style="max-height: 70vh; overflow-y: auto;">
+                        <!-- 概覽分頁 -->
+                        <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+                            <!-- 統計摘要卡片 -->
+                            <div class="row mb-4" id="statisticsSummary">
+                                <!-- 動態生成摘要卡片 -->
+                            </div>
+                            
+                            <!-- 圖表區域 -->
+                            <div class="row">
+                                <div class="col-lg-8 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-header bg-primary text-white">
+                                            <h6 class="mb-0">
+                                                <i class="fas fa-chart-line"></i> 月度收支趨勢
+                                            </h6>
+                                        </div>
+                                        <div class="card-body" style="height: 400px;">
+                                            <canvas id="monthlyTrendChart"></canvas>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="card-body" style="height: 400px;">
-                                    <canvas id="expenseCategoryChart"></canvas>
+                                <div class="col-lg-4 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-header bg-danger text-white">
+                                            <h6 class="mb-0">
+                                                <i class="fas fa-chart-pie"></i> 支出分類
+                                            </h6>
+                                        </div>
+                                        <div class="card-body" style="height: 400px;">
+                                            <canvas id="expenseCategoryChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 分類分析分頁 -->
+                        <div class="tab-pane fade" id="category" role="tabpanel" aria-labelledby="category-tab">
+                            <div class="row">
+                                <div class="col-lg-6 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-header bg-success text-white">
+                                            <h6 class="mb-0">
+                                                <i class="fas fa-arrow-up"></i> 收入分類分析
+                                            </h6>
+                                        </div>
+                                        <div class="card-body" style="height: 400px;">
+                                            <canvas id="incomeCategoryChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-header bg-danger text-white">
+                                            <h6 class="mb-0">
+                                                <i class="fas fa-arrow-down"></i> 支出分類分析
+                                            </h6>
+                                        </div>
+                                        <div class="card-body" style="height: 400px;">
+                                            <canvas id="expenseCategoryDetailChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 分類詳細表格 -->
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h6 class="mb-0">
+                                                <i class="fas fa-table"></i> 分類詳細資料
+                                            </h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="categoryDetailTable"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 時間模式分頁 -->
+                        <div class="tab-pane fade" id="pattern" role="tabpanel" aria-labelledby="pattern-tab">
+                            <div class="row mb-4">
+                                <div class="col-lg-6 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-header bg-info text-white">
+                                            <h6 class="mb-0">
+                                                <i class="fas fa-calendar-week"></i> 週日消費模式
+                                            </h6>
+                                        </div>
+                                        <div class="card-body" style="height: 350px;">
+                                            <canvas id="weekdayPatternChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-header bg-warning text-white">
+                                            <h6 class="mb-0">
+                                                <i class="fas fa-calendar-day"></i> 月內消費模式
+                                            </h6>
+                                        </div>
+                                        <div class="card-body" style="height: 350px;">
+                                            <canvas id="monthlyPatternChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 時間模式摘要 -->
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h6 class="mb-0">
+                                                <i class="fas fa-lightbulb"></i> 消費習慣洞察
+                                            </h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="patternInsights"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 排行榜分頁 -->
+                        <div class="tab-pane fade" id="ranking" role="tabpanel" aria-labelledby="ranking-tab">
+                            <div class="row">
+                                <div class="col-lg-6 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0">
+                                                <i class="fas fa-trophy"></i> 收入分類排行榜
+                                            </h6>
+                                            <small class="badge bg-light text-dark">TOP 10</small>
+                                        </div>
+                                        <div class="card-body p-0" style="max-height: 500px; overflow-y: auto;">
+                                            <div id="incomeRankingTable"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0">
+                                                <i class="fas fa-trophy"></i> 支出分類排行榜
+                                            </h6>
+                                            <small class="badge bg-light text-dark">TOP 10</small>
+                                        </div>
+                                        <div class="card-body p-0" style="max-height: 500px; overflow-y: auto;">
+                                            <div id="expenseRankingTable"></div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
-                <button type="button" class="btn btn-primary" onclick="refreshStatistics()">
-                    <i class="fas fa-refresh"></i> 重新整理
-                </button>
+            <div class="modal-footer border-top">
+                <div class="d-flex justify-content-between w-100">
+                    <small class="text-muted align-self-center">
+                        <i class="fas fa-info-circle"></i> 提示：點擊圖表可查看詳細資料
+                    </small>
+                    <div>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times"></i> 關閉
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -487,8 +678,8 @@
 @section Scripts {
     <!-- Chart.js 函式庫 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- 統計分析 JavaScript -->
-    <script src="~/js/statistics.js"></script>
+    <!-- 進階統計分析 JavaScript -->
+    <script src="~/js/statistics-advanced.js"></script>
     
     <script>
         let deleteRecordId = 0;
