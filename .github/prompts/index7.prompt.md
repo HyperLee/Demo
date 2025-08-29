@@ -561,7 +561,489 @@ public async Task<IActionResult> OnGetAsync(int year = 0, int month = 0)
 - 錯誤日誌記錄
 - 使用者回饋收集
 
-## 開發時程規劃
+### 10. 報表匯出功能
+
+### 10.1 匯出按鈕設計
+參考現有備忘錄系統的匯出功能實作，在記帳系統中提供類似的匯出選項：
+
+```html
+<button type="button" class="btn btn-outline-success btn-sm" onclick="batchExport()">
+    <i class="fas fa-download"></i> 匯出報表
+</button>
+```
+
+### 10.2 支援的匯出格式
+
+#### 10.2.1 PDF 報表
+- **套件依賴**: `itext7` (版本 8.0.5), `itext7.pdfhtml` (版本 5.0.5), `itext7.bouncy-castle-adapter` (版本 8.0.5)
+- **功能特點**:
+  - 支援中文字型顯示 (微軟正黑體、微軟雅黑、宋體等)
+  - A4 格式，適合列印
+  - 包含統計資料和詳細記錄
+  - 自動分頁和頁首頁尾
+- **檔案命名**: `記帳報表_{yyyy MM dd_HHmmss}.pdf`
+- **內容類型**: `application/pdf`
+
+#### 10.2.2 Excel 試算表
+- **套件依賴**: `ClosedXML` (版本 0.104.1)
+- **功能特點**:
+  - 標準 .xlsx 格式
+  - 包含標題列和資料格式化
+  - 自動調整欄寬
+  - 支援公式計算 (總收入、總支出、淨收支)
+  - 適合進一步資料分析
+- **檔案命名**: `記帳報表_{yyyyMMdd_HHmmss}.xlsx`
+- **內容類型**: `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
+
+#### 10.2.3 CSV 文件
+- **套件依賴**: 無 (使用內建 `System.Text` 處理)
+- **功能特點**:
+  - 純文字格式，通用性高
+  - 可由各種試算表軟體開啟
+  - UTF-8 編碼支援中文
+  - 檔案大小最小
+- **檔案命名**: `記帳報表_{yyyyMMdd_HHmmss}.csv`
+- **內容類型**: `text/csv`
+
+### 10.3 匯出對話框設計
+
+```html
+<!-- 匯出格式選擇對話框 -->
+<div class="modal fade" id="exportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">匯出記帳報表</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>選擇要匯出的報表格式：</p>
+                
+                <div class="row text-center">
+                    <div class="col-md-4 mb-3">
+                        <button type="button" class="btn btn-outline-danger w-100" 
+                                onclick="executeExport('pdf')">
+                            <i class="fas fa-file-pdf fa-2x d-block mb-2"></i>
+                            <strong>PDF 報表</strong>
+                            <small class="d-block text-muted">適合列印和正式報表</small>
+                        </button>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <button type="button" class="btn btn-outline-success w-100" 
+                                onclick="executeExport('excel')">
+                            <i class="fas fa-file-excel fa-2x d-block mb-2"></i>
+                            <strong>Excel 試算表</strong>
+                            <small class="d-block text-muted">適合資料分析</small>
+                        </button>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <button type="button" class="btn btn-outline-info w-100" 
+                                onclick="executeExport('csv')">
+                            <i class="fas fa-file-csv fa-2x d-block mb-2"></i>
+                            <strong>CSV 文件</strong>
+                            <small class="d-block text-muted">適合資料交換</small>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 匯出選項 -->
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <label class="form-label">匯出期間</label>
+                        <select class="form-control" id="exportPeriod">
+                            <option value="current_month">當月</option>
+                            <option value="last_month">上月</option>
+                            <option value="current_year">當年</option>
+                            <option value="custom">自訂期間</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">匯出內容</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="includeIncome" checked>
+                            <label class="form-check-label">收入記錄</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="includeExpense" checked>
+                            <label class="form-check-label">支出記錄</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 自訂日期範圍 -->
+                <div class="row mt-3" id="customDateRange" style="display: none;">
+                    <div class="col-md-6">
+                        <label class="form-label">開始日期</label>
+                        <input type="date" class="form-control" id="exportStartDate">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">結束日期</label>
+                        <input type="date" class="form-control" id="exportEndDate">
+                    </div>
+                </div>
+                
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>提示：</strong>匯出的報表將包含統計摘要、詳細記錄和分類分析。
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+            </div>
+        </div>
+    </div>
+</div>
+```
+
+### 10.4 匯出功能技術實作
+
+#### 10.4.1 後端服務介面
+```csharp
+/// <summary>
+/// 記帳匯出服務
+/// </summary>
+public interface IAccountingExportService
+{
+    Task<byte[]> ExportToPdfAsync(List<AccountingRecord> records, ExportOptions options);
+    Task<byte[]> ExportToExcelAsync(List<AccountingRecord> records, ExportOptions options);
+    Task<byte[]> ExportToCsvAsync(List<AccountingRecord> records, ExportOptions options);
+}
+
+/// <summary>
+/// 匯出選項
+/// </summary>
+public class ExportOptions
+{
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public bool IncludeIncome { get; set; } = true;
+    public bool IncludeExpense { get; set; } = true;
+    public bool IncludeSummary { get; set; } = true;
+    public bool IncludeCategoryAnalysis { get; set; } = true;
+    public string Title { get; set; } = "記帳報表";
+}
+```
+
+#### 10.4.2 PDF 匯出實作
+```csharp
+public async Task<byte[]> ExportToPdfAsync(List<AccountingRecord> records, ExportOptions options)
+{
+    try
+    {
+        var htmlReport = GenerateHtmlReport(records, options);
+        var pdfBytes = PdfExportUtility.ConvertHtmlToPdfWithChineseSupport(htmlReport, _logger);
+        return pdfBytes;
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "PDF 匯出失敗");
+        throw new ExportException("PDF 匯出失敗，請稍後再試", ex);
+    }
+}
+
+private string GenerateHtmlReport(List<AccountingRecord> records, ExportOptions options)
+{
+    var totalIncome = records.Where(r => r.Type == "Income").Sum(r => r.Amount);
+    var totalExpense = records.Where(r => r.Type == "Expense").Sum(r => r.Amount);
+    var netIncome = totalIncome - totalExpense;
+    
+    var css = PdfExportUtility.GetChineseSupportedCss();
+    
+    var html = $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <title>{options.Title}</title>
+    <style>{css}</style>
+</head>
+<body>
+    <div class='header'>
+        <h1>{options.Title}</h1>
+        <p>報表期間：{options.StartDate:yyyy-MM-dd} ~ {options.EndDate:yyyy-MM-dd}</p>
+        <p>匯出時間：{DateTime.Now:yyyy-MM-dd HH:mm:ss}</p>
+    </div>
+    
+    <!-- 統計摘要 -->
+    <div class='summary'>
+        <h2>統計摘要</h2>
+        <table border='1'>
+            <tr><td>總收入</td><td>NT$ {totalIncome:N0}</td></tr>
+            <tr><td>總支出</td><td>NT$ {totalExpense:N0}</td></tr>
+            <tr><td>淨收支</td><td>NT$ {netIncome:N0}</td></tr>
+            <tr><td>記錄總數</td><td>{records.Count} 筆</td></tr>
+        </table>
+    </div>
+    
+    <!-- 詳細記錄 -->
+    <div class='details'>
+        <h2>詳細記錄</h2>
+        <table border='1'>
+            <tr>
+                <th>日期</th>
+                <th>類型</th>
+                <th>大分類</th>
+                <th>細分類</th>
+                <th>金額</th>
+                <th>付款方式</th>
+                <th>備註</th>
+            </tr>";
+    
+    foreach (var record in records.OrderBy(r => r.Date))
+    {
+        html += $@"
+            <tr>
+                <td>{record.Date:yyyy-MM-dd}</td>
+                <td>{(record.Type == "Income" ? "收入" : "支出")}</td>
+                <td>{record.Category}</td>
+                <td>{record.SubCategory}</td>
+                <td class='{(record.Type == "Income" ? "income" : "expense")}'>
+                    NT$ {record.Amount:N0}
+                </td>
+                <td>{record.PaymentMethod}</td>
+                <td>{record.Note}</td>
+            </tr>";
+    }
+    
+    html += @"
+        </table>
+    </div>
+</body>
+</html>";
+    
+    return html;
+}
+```
+
+#### 10.4.3 Excel 匯出實作
+```csharp
+public async Task<byte[]> ExportToExcelAsync(List<AccountingRecord> records, ExportOptions options)
+{
+    try
+    {
+        using (var workbook = new XLWorkbook())
+        {
+            // 建立摘要工作表
+            var summarySheet = workbook.Worksheets.Add("統計摘要");
+            CreateSummarySheet(summarySheet, records, options);
+            
+            // 建立詳細記錄工作表
+            var detailSheet = workbook.Worksheets.Add("詳細記錄");
+            CreateDetailSheet(detailSheet, records);
+            
+            // 建立分類分析工作表
+            var analysisSheet = workbook.Worksheets.Add("分類分析");
+            CreateAnalysisSheet(analysisSheet, records);
+            
+            using (var stream = new MemoryStream())
+            {
+                workbook.SaveAs(stream);
+                return stream.ToArray();
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Excel 匯出失敗");
+        // 回退到 CSV 格式
+        return await ExportToCsvAsync(records, options);
+    }
+}
+
+private void CreateDetailSheet(IXLWorksheet sheet, List<AccountingRecord> records)
+{
+    var headers = new[] { "日期", "類型", "大分類", "細分類", "金額", "付款方式", "備註" };
+    
+    // 設定標題列
+    for (int i = 0; i < headers.Length; i++)
+    {
+        var cell = sheet.Cell(1, i + 1);
+        cell.Value = headers[i];
+        cell.Style.Font.Bold = true;
+        cell.Style.Fill.BackgroundColor = XLColor.LightBlue;
+        cell.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+    }
+    
+    // 填入資料
+    for (int i = 0; i < records.Count; i++)
+    {
+        var record = records[i];
+        var row = i + 2;
+        
+        sheet.Cell(row, 1).Value = record.Date.ToString("yyyy-MM-dd");
+        sheet.Cell(row, 2).Value = record.Type == "Income" ? "收入" : "支出";
+        sheet.Cell(row, 3).Value = record.Category;
+        sheet.Cell(row, 4).Value = record.SubCategory;
+        sheet.Cell(row, 5).Value = record.Amount;
+        sheet.Cell(row, 6).Value = record.PaymentMethod;
+        sheet.Cell(row, 7).Value = record.Note;
+        
+        // 設定金額格式
+        sheet.Cell(row, 5).Style.NumberFormat.Format = "#,##0";
+        if (record.Type == "Income")
+        {
+            sheet.Cell(row, 5).Style.Font.FontColor = XLColor.Green;
+        }
+        else
+        {
+            sheet.Cell(row, 5).Style.Font.FontColor = XLColor.Red;
+        }
+    }
+    
+    // 調整欄寬
+    sheet.Columns().AdjustToContents();
+}
+```
+
+#### 10.4.4 CSV 匯出實作
+```csharp
+public async Task<byte[]> ExportToCsvAsync(List<AccountingRecord> records, ExportOptions options)
+{
+    var sb = new StringBuilder();
+    
+    // CSV 標題列
+    sb.AppendLine("日期,類型,大分類,細分類,金額,付款方式,備註");
+    
+    // 資料列
+    foreach (var record in records.OrderBy(r => r.Date))
+    {
+        sb.AppendLine($"{record.Date:yyyy-MM-dd}," +
+                     $"{(record.Type == "Income" ? "收入" : "支出")}," +
+                     $"\"{record.Category}\"," +
+                     $"\"{record.SubCategory}\"," +
+                     $"{record.Amount}," +
+                     $"\"{record.PaymentMethod}\"," +
+                     $"\"{record.Note}\"");
+    }
+    
+    return Encoding.UTF8.GetBytes(sb.ToString());
+}
+```
+
+### 10.5 匯出按鈕 JavaScript 實作
+
+```javascript
+// 顯示匯出對話框
+function showExportModal() {
+    var modal = new bootstrap.Modal(document.getElementById('exportModal'));
+    modal.show();
+}
+
+// 執行匯出
+function executeExport(format) {
+    const exportOptions = {
+        period: document.getElementById('exportPeriod').value,
+        includeIncome: document.getElementById('includeIncome').checked,
+        includeExpense: document.getElementById('includeExpense').checked,
+        startDate: document.getElementById('exportStartDate').value,
+        endDate: document.getElementById('exportEndDate').value
+    };
+    
+    // 建立下載表單
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/index7?handler=Export&format=${format}`;
+    form.style.display = 'none';
+    
+    // CSRF Token
+    const token = document.querySelector('input[name="__RequestVerificationToken"]');
+    if (token) {
+        const tokenInput = document.createElement('input');
+        tokenInput.type = 'hidden';
+        tokenInput.name = '__RequestVerificationToken';
+        tokenInput.value = token.value;
+        form.appendChild(tokenInput);
+    }
+    
+    // 匯出選項
+    Object.keys(exportOptions).forEach(key => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = exportOptions[key];
+        form.appendChild(input);
+    });
+    
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+    
+    // 關閉對話框
+    var modal = bootstrap.Modal.getInstance(document.getElementById('exportModal'));
+    modal.hide();
+    
+    // 顯示提示訊息
+    alert(`正在匯出記帳報表為 ${format.toUpperCase()} 格式...`);
+}
+
+// 期間選擇變更事件
+document.getElementById('exportPeriod').addEventListener('change', function() {
+    const customRange = document.getElementById('customDateRange');
+    if (this.value === 'custom') {
+        customRange.style.display = 'block';
+    } else {
+        customRange.style.display = 'none';
+        // 根據選擇自動設定日期
+        setDateRangeByPeriod(this.value);
+    }
+});
+
+// 根據期間設定日期範圍
+function setDateRangeByPeriod(period) {
+    const now = new Date();
+    let startDate, endDate;
+    
+    switch (period) {
+        case 'current_month':
+            startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+            endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            break;
+        case 'last_month':
+            startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            endDate = new Date(now.getFullYear(), now.getMonth(), 0);
+            break;
+        case 'current_year':
+            startDate = new Date(now.getFullYear(), 0, 1);
+            endDate = new Date(now.getFullYear(), 11, 31);
+            break;
+    }
+    
+    if (startDate && endDate) {
+        document.getElementById('exportStartDate').value = startDate.toISOString().split('T')[0];
+        document.getElementById('exportEndDate').value = endDate.toISOString().split('T')[0];
+    }
+}
+```
+
+### 10.6 套件安裝指令
+
+在 `Demo.csproj` 中加入以下套件參考：
+
+```xml
+<PackageReference Include="ClosedXML" Version="0.104.1" />
+<PackageReference Include="itext7" Version="8.0.5" />
+<PackageReference Include="itext7.pdfhtml" Version="5.0.5" />
+<PackageReference Include="itext7.bouncy-castle-adapter" Version="8.0.5" />
+```
+
+或使用 Package Manager Console：
+```powershell
+Install-Package ClosedXML -Version 0.104.1
+Install-Package itext7 -Version 8.0.5
+Install-Package itext7.pdfhtml -Version 5.0.5
+Install-Package itext7.bouncy-castle-adapter -Version 8.0.5
+```
+
+### 10.7 匯出功能注意事項
+
+1. **效能考量**: 大量資料匯出時使用分批處理和進度顯示
+2. **記憶體管理**: 使用 `using` 語句確保資源正確釋放
+3. **錯誤處理**: PDF 失敗時回退到 HTML，Excel 失敗時回退到 CSV
+4. **中文支援**: PDF 需要正確的中文字型設定
+5. **檔案命名**: 使用時間戳記避免檔名衝突
+6. **安全性**: 驗證匯出權限和資料範圍限制
 
 ### Phase 1: 基礎架構 (3天)
 - 專案環境設定
@@ -578,17 +1060,24 @@ public async Task<IActionResult> OnGetAsync(int year = 0, int month = 0)
 - 驗證邏輯開發
 - 分類系統實作
 
-### Phase 4: 整合測試 (3天)
+### Phase 4: 報表匯出功能 (4天)
+- PDF 匯出實作 (中文字型支援)
+- Excel 匯出實作 (多工作表設計)
+- CSV 匯出實作
+- 匯出對話框和 JavaScript 整合
+
+### Phase 5: 整合測試 (3天)
 - 功能整合測試
+- 匯出功能測試
 - 效能調校
 - Bug 修復
 
-### Phase 5: 部署上線 (2天)
+### Phase 6: 部署上線 (2天)
 - 生產環境部署
 - 使用者驗收測試
 - 文件整理
 
-**總預估開發時間**: 20個工作天
+**總預估開發時間**: 24個工作天
 
 ## 注意事項
 1. 金額欄位使用 `long` 型別避免溢位，支援大額記錄
@@ -597,3 +1086,6 @@ public async Task<IActionResult> OnGetAsync(int year = 0, int month = 0)
 4. 分類系統設計需具備擴充性
 5. 使用者介面需支援響應式設計
 6. 實作適當的錯誤處理和日誌記錄機制
+7. 匯出功能需要正確的 NuGet 套件依賴
+8. PDF 匯出需要系統中文字型支援
+9. 大量資料匯出時需考慮記憶體管理和效能最佳化
