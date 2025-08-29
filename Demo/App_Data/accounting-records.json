@@ -1,0 +1,14 @@
+[
+  {
+    "Id": 1,
+    "Date": "2025-08-29T00:00:00",
+    "Type": "Expense",
+    "Amount": 115,
+    "Category": "餐飲食品",
+    "SubCategory": "午餐",
+    "PaymentMethod": "現金",
+    "Note": "五花馬水餃酸辣湯 - 台元科技園區餐廳",
+    "CreatedDate": "2025-08-29T13:53:36.7961005+08:00",
+    "ModifiedDate": "2025-08-29T13:53:36.7961629+08:00"
+  }
+]

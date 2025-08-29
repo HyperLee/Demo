@@ -1,11 +1,546 @@
 @page
 @model Demo.Pages.index8
 @{
-    ViewData["Title"] = "index8";
+    ViewData["Title"] = Model.PageTitle;
 }
 
-<h1>@ViewData["Title"]</h1>
+<div class="container">
+    <!-- 頁面標題 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h2 mb-0">
+                    <i class="fas fa-@(Model.IsEditMode ? "edit" : "plus") text-primary"></i>
+                    @Model.PageTitle
+                </h1>
+                <a asp-page="index7" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> 返回列表
+                </a>
+            </div>
+            @if (Model.IsEditMode)
+            {
+                <p class="text-muted mt-2">記錄 ID: @Model.Record.Id</p>
+            }
+        </div>
+    </div>
 
-<div>
-    
+    <!-- 表單區域 -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-alt"></i> 
+                        記錄詳細資訊
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="recordForm" novalidate>
+                        <input type="hidden" asp-for="Record.Id" />
+                        
+                        <!-- 基本資訊區塊 -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="border-bottom pb-2 mb-3">
+                                    <i class="fas fa-info-circle text-info"></i> 基本資訊
+                                </h6>
+                            </div>
+                            
+                            <!-- 日期欄位 -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Record.Date" class="form-label">
+                                    <i class="fas fa-calendar"></i> 日期 <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="Record.Date" type="date" class="form-control" 
+                                       max="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                                <span asp-validation-for="Record.Date" class="text-danger"></span>
+                            </div>
+                            
+                            <!-- 收支類型 -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-exchange-alt"></i> 收支類型 <span class="text-danger">*</span>
+                                </label>
+                                <div class="btn-group w-100" role="group" aria-label="收支類型">
+                                    <input type="radio" asp-for="Record.Type" value="Expense" id="typeExpense" class="btn-check" checked />
+                                    <label class="btn btn-outline-danger" for="typeExpense">
+                                        <i class="fas fa-minus-circle"></i> 支出
+                                    </label>
+                                    
+                                    <input type="radio" asp-for="Record.Type" value="Income" id="typeIncome" class="btn-check" />
+                                    <label class="btn btn-outline-success" for="typeIncome">
+                                        <i class="fas fa-plus-circle"></i> 收入
+                                    </label>
+                                </div>
+                                <span asp-validation-for="Record.Type" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- 金額與付款方式區塊 -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="border-bottom pb-2 mb-3">
+                                    <i class="fas fa-dollar-sign text-success"></i> 金額資訊
+                                </h6>
+                            </div>
+                            
+                            <!-- 金額欄位 -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Record.Amount" class="form-label">
+                                    <i class="fas fa-coins"></i> 金額 <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">NT$</span>
+                                    <input asp-for="Record.Amount" type="number" class="form-control money-input" 
+                                           placeholder="0" min="0" max="999999999" step="1" required />
+                                </div>
+                                <span asp-validation-for="Record.Amount" class="text-danger"></span>
+                                <div class="form-text">僅允許輸入整數，最大 999,999,999</div>
+                            </div>
+                            
+                            <!-- 付款方式 -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Record.PaymentMethod" class="form-label">
+                                    <i class="fas fa-credit-card"></i> 付款方式
+                                </label>
+                                <select asp-for="Record.PaymentMethod" 
+                                        asp-items="Model.PaymentMethodOptions" 
+                                        class="form-select">
+                                    <option value="">請選擇付款方式</option>
+                                </select>
+                                <span asp-validation-for="Record.PaymentMethod" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- 分類區塊 -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="border-bottom pb-2 mb-3">
+                                    <i class="fas fa-tags text-warning"></i> 分類資訊
+                                </h6>
+                            </div>
+                            
+                            <!-- 大分類 -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Record.Category" class="form-label">
+                                    <i class="fas fa-folder"></i> 大分類 <span class="text-danger">*</span>
+                                </label>
+                                <select asp-for="Record.Category" id="categorySelect" class="form-select" required>
+                                    <option value="">請選擇大分類</option>
+                                </select>
+                                <span asp-validation-for="Record.Category" class="text-danger"></span>
+                            </div>
+                            
+                            <!-- 細分類 -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Record.SubCategory" class="form-label">
+                                    <i class="fas fa-tag"></i> 細分類
+                                </label>
+                                <select asp-for="Record.SubCategory" id="subCategorySelect" class="form-select">
+                                    <option value="">請選擇細分類</option>
+                                </select>
+                                <span asp-validation-for="Record.SubCategory" class="text-danger"></span>
+                                <div class="form-text">請先選擇大分類</div>
+                            </div>
+                        </div>
+
+                        <!-- 備註區塊 -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="border-bottom pb-2 mb-3">
+                                    <i class="fas fa-sticky-note text-info"></i> 其他資訊
+                                </h6>
+                            </div>
+                            
+                            <div class="col-12 mb-3">
+                                <label asp-for="Record.Note" class="form-label">
+                                    <i class="fas fa-comment"></i> 備註
+                                </label>
+                                <textarea asp-for="Record.Note" class="form-control" rows="4" 
+                                          placeholder="輸入備註資訊（選填）" maxlength="500"></textarea>
+                                <span asp-validation-for="Record.Note" class="text-danger"></span>
+                                <div class="form-text">
+                                    <span id="noteCount">0</span> / 500 字元
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 操作按鈕 -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <a asp-page="index7" class="btn btn-outline-secondary btn-lg">
+                                        <i class="fas fa-times"></i> 取消
+                                    </a>
+                                    
+                                    <div>
+                                        @if (Model.IsEditMode)
+                                        {
+                                            <button type="button" class="btn btn-outline-danger me-2" onclick="confirmDelete()">
+                                                <i class="fas fa-trash"></i> 刪除
+                                            </button>
+                                        }
+                                        <button type="submit" class="btn btn-success btn-lg">
+                                            <i class="fas fa-save"></i> 
+                                            @(Model.IsEditMode ? "更新記錄" : "新增記錄")
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- 刪除確認對話框 -->
+@if (Model.IsEditMode)
+{
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteConfirmModalLabel">確認刪除記錄</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-3">
+                        <i class="fas fa-exclamation-triangle fa-3x text-warning"></i>
+                    </div>
+                    <p class="text-center">您確定要刪除這筆記錄嗎？</p>
+                    <div class="alert alert-info">
+                        <strong>日期：</strong>@Model.Record.Date.ToString("yyyy-MM-dd")<br>
+                        <strong>類型：</strong>@(Model.Record.Type == "Income" ? "收入" : "支出")<br>
+                        <strong>分類：</strong>@Model.Record.Category<br>
+                        <strong>金額：</strong>NT$ @Model.Record.Amount.ToString("N0")
+                    </div>
+                    <p class="text-danger text-center"><small><i class="fas fa-exclamation-triangle"></i> 此操作無法復原！</small></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> 取消
+                    </button>
+                    <form method="post" asp-page="index7" asp-page-handler="Delete" style="display: inline;">
+                        <input type="hidden" name="id" value="@Model.Record.Id" />
+                        <input type="hidden" name="year" value="@Model.Record.Date.Year" />
+                        <input type="hidden" name="month" value="@Model.Record.Date.Month" />
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> 確認刪除
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化
+            updateCategoryOptions();
+            updateAmountDisplay();
+            updateNoteCount();
+            
+            // 如果是編輯模式且有選擇的大分類，載入子分類
+            const categorySelect = document.getElementById('categorySelect');
+            if (categorySelect.value && '@Model.Record.Category' !== '') {
+                loadSubCategories('@Model.Record.Category', '@Model.Record.Type');
+            }
+
+            // 收支類型變更事件
+            document.querySelectorAll('input[name="Record.Type"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    updateCategoryOptions();
+                    // 清空分類選擇
+                    categorySelect.value = '';
+                    document.getElementById('subCategorySelect').innerHTML = '<option value="">請選擇細分類</option>';
+                });
+            });
+
+            // 大分類變更事件
+            categorySelect.addEventListener('change', function() {
+                const type = document.querySelector('input[name="Record.Type"]:checked').value;
+                loadSubCategories(this.value, type);
+            });
+
+            // 金額輸入格式化
+            const amountInput = document.querySelector('.money-input');
+            amountInput.addEventListener('input', function() {
+                updateAmountDisplay();
+                validateAmount();
+            });
+
+            // 備註字數統計
+            const noteTextarea = document.querySelector('textarea[name="Record.Note"]');
+            noteTextarea.addEventListener('input', updateNoteCount);
+
+            // 表單提交驗證
+            document.getElementById('recordForm').addEventListener('submit', function(e) {
+                if (!validateForm()) {
+                    e.preventDefault();
+                }
+            });
+        });
+
+        // 更新分類選項
+        function updateCategoryOptions() {
+            const type = document.querySelector('input[name="Record.Type"]:checked')?.value;
+            const categorySelect = document.getElementById('categorySelect');
+            
+            // 清空現有選項
+            categorySelect.innerHTML = '<option value="">請選擇大分類</option>';
+            
+            const options = type === 'Income' ? @Html.Raw(Json.Serialize(Model.IncomeCategoryOptions)) : @Html.Raw(Json.Serialize(Model.ExpenseCategoryOptions));
+            
+            options.forEach(option => {
+                const optionElement = document.createElement('option');
+                optionElement.value = option.value;
+                optionElement.textContent = option.text;
+                
+                // 如果是編輯模式且匹配當前記錄的分類，設為選中
+                if ('@Model.Record.Category' === option.value) {
+                    optionElement.selected = true;
+                }
+                
+                categorySelect.appendChild(optionElement);
+            });
+        }
+
+        // 載入子分類
+        async function loadSubCategories(category, type) {
+            const subCategorySelect = document.getElementById('subCategorySelect');
+            
+            if (!category) {
+                subCategorySelect.innerHTML = '<option value="">請選擇細分類</option>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/index8?handler=SubCategories&category=${encodeURIComponent(category)}&type=${encodeURIComponent(type)}`);
+                const subCategories = await response.json();
+                
+                subCategorySelect.innerHTML = '<option value="">請選擇細分類</option>';
+                
+                subCategories.forEach(sub => {
+                    const option = document.createElement('option');
+                    option.value = sub.value;
+                    option.textContent = sub.text;
+                    
+                    // 如果是編輯模式且匹配當前記錄的子分類，設為選中
+                    if ('@Model.Record.SubCategory' === sub.value) {
+                        option.selected = true;
+                    }
+                    
+                    subCategorySelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('載入子分類時發生錯誤:', error);
+                subCategorySelect.innerHTML = '<option value="">載入失敗</option>';
+            }
+        }
+
+        // 更新金額顯示
+        function updateAmountDisplay() {
+            const amountInput = document.querySelector('.money-input');
+            const value = amountInput.value;
+            
+            if (value && !isNaN(value) && value !== '') {
+                // 移除非數字字元
+                const numericValue = parseInt(value.replace(/[^\d]/g, ''));
+                if (!isNaN(numericValue)) {
+                    amountInput.value = numericValue;
+                }
+            }
+        }
+
+        // 驗證金額
+        async function validateAmount() {
+            const amountInput = document.querySelector('.money-input');
+            const amount = parseFloat(amountInput.value);
+            
+            if (!amount || amount <= 0) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/index8?handler=ValidateAmount', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({ amount: amount })
+                });
+                
+                const result = await response.json();
+                
+                // 清除先前的驗證訊息
+                const existingMessage = amountInput.parentElement.parentElement.querySelector('.amount-validation-message');
+                if (existingMessage) {
+                    existingMessage.remove();
+                }
+                
+                if (!result.valid) {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'text-danger amount-validation-message';
+                    messageDiv.textContent = result.message;
+                    amountInput.parentElement.parentElement.appendChild(messageDiv);
+                }
+            } catch (error) {
+                console.error('驗證金額時發生錯誤:', error);
+            }
+        }
+
+        // 更新備註字數
+        function updateNoteCount() {
+            const noteTextarea = document.querySelector('textarea[name="Record.Note"]');
+            const noteCount = document.getElementById('noteCount');
+            const currentLength = noteTextarea.value.length;
+            noteCount.textContent = currentLength;
+            
+            if (currentLength > 500) {
+                noteCount.className = 'text-danger';
+                noteTextarea.value = noteTextarea.value.substring(0, 500);
+                noteCount.textContent = '500';
+            } else if (currentLength > 400) {
+                noteCount.className = 'text-warning';
+            } else {
+                noteCount.className = 'text-muted';
+            }
+        }
+
+        // 表單驗證
+        function validateForm() {
+            let isValid = true;
+            const form = document.getElementById('recordForm');
+            
+            // 清除先前的驗證樣式
+            form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            
+            // 驗證日期
+            const dateInput = document.querySelector('input[name="Record.Date"]');
+            if (!dateInput.value) {
+                dateInput.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                const selectedDate = new Date(dateInput.value);
+                const today = new Date();
+                today.setHours(23, 59, 59, 999); // 設為當天的最後一刻
+                
+                if (selectedDate > today) {
+                    dateInput.classList.add('is-invalid');
+                    alert('記錄日期不可為未來日期');
+                    isValid = false;
+                }
+            }
+            
+            // 驗證收支類型
+            const typeChecked = document.querySelector('input[name="Record.Type"]:checked');
+            if (!typeChecked) {
+                alert('請選擇收支類型');
+                isValid = false;
+            }
+            
+            // 驗證金額
+            const amountInput = document.querySelector('.money-input');
+            const amount = parseFloat(amountInput.value);
+            if (!amount || amount <= 0) {
+                amountInput.classList.add('is-invalid');
+                alert('請輸入有效的金額');
+                isValid = false;
+            }
+            
+            // 驗證大分類
+            const categorySelect = document.getElementById('categorySelect');
+            if (!categorySelect.value) {
+                categorySelect.classList.add('is-invalid');
+                alert('請選擇大分類');
+                isValid = false;
+            }
+            
+            return isValid;
+        }
+
+        // 確認刪除
+        function confirmDelete() {
+            const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+            modal.show();
+        }
+    </script>
+    
+    <!-- 表單驗證 -->
+    <partial name="_ValidationScriptsPartial" />
+}
+
+@section Styles {
+    <style>
+        .card {
+            border: none;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        
+        .card-header {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .btn-check:checked + .btn-outline-success,
+        .btn-check:checked + .btn-outline-danger {
+            transform: scale(1.02);
+            box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+        }
+        
+        .money-input:focus {
+            border-color: #28a745;
+            box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+        }
+        
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        }
+        
+        .is-invalid {
+            border-color: #dc3545 !important;
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+        }
+        
+        .border-bottom {
+            border-color: #dee2e6 !important;
+        }
+        
+        .text-danger.amount-validation-message {
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+        
+        textarea.form-control {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        @@media (max-width: 576px) {
+            .container {
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+            
+            .card-body {
+                padding: 1rem;
+            }
+            
+            .btn-lg {
+                font-size: 1rem;
+                padding: 0.5rem 1rem;
+            }
+        }
+    </style>
+}

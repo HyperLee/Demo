@@ -1,11 +1,602 @@
 @page
 @model Demo.Pages.index7
 @{
-    ViewData["Title"] = "index7";
+    ViewData["Title"] = $"記帳系統 - {Model.ViewYear}年{Model.ViewMonth}月";
 }
 
-<h1>@ViewData["Title"]</h1>
+<div class="container-fluid">
+    <!-- 頁面標題和統計區域 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1 class="h2 mb-0">
+                    <i class="fas fa-chart-line text-primary"></i>
+                    記帳系統
+                </h1>
+                <a asp-page="index8" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus"></i> 新增記錄
+                </a>
+            </div>
+            
+            <!-- 統計摘要卡片 -->
+            <div class="row">
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card border-success shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="card-title text-success mb-1">總收入</h6>
+                                    <h4 class="text-success mb-0">NT$ @Model.MonthlySummary.TotalIncome.ToString("N0")</h4>
+                                    <small class="text-muted">@Model.MonthlySummary.IncomeRecords 筆記錄</small>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-arrow-up fa-2x text-success"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card border-danger shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="card-title text-danger mb-1">總支出</h6>
+                                    <h4 class="text-danger mb-0">NT$ @Model.MonthlySummary.TotalExpense.ToString("N0")</h4>
+                                    <small class="text-muted">@Model.MonthlySummary.ExpenseRecords 筆記錄</small>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-arrow-down fa-2x text-danger"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card border-@(Model.MonthlySummary.NetIncome >= 0 ? "info" : "warning") shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="card-title text-@(Model.MonthlySummary.NetIncome >= 0 ? "info" : "warning") mb-1">淨收支</h6>
+                                    <h4 class="text-@(Model.MonthlySummary.NetIncome >= 0 ? "info" : "warning") mb-0">NT$ @Model.MonthlySummary.NetIncome.ToString("N0")</h4>
+                                    <small class="text-muted">@Model.MonthlySummary.TotalRecords 筆記錄</small>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-@(Model.MonthlySummary.NetIncome >= 0 ? "chart-line" : "exclamation-triangle") fa-2x text-@(Model.MonthlySummary.NetIncome >= 0 ? "info" : "warning")"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card border-secondary shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <button type="button" class="btn btn-outline-success btn-sm w-100" onclick="showExportModal()">
+                                        <i class="fas fa-download"></i> 匯出報表
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary btn-sm w-100 mt-1" onclick="showStatisticsModal()">
+                                        <i class="fas fa-chart-pie"></i> 統計分析
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<div>
-    
+    <!-- 月份導航 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body py-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <a asp-page="index7" 
+                               asp-route-year="@(Model.ViewMonth == 1 ? Model.ViewYear - 1 : Model.ViewYear)" 
+                               asp-route-month="@(Model.ViewMonth == 1 ? 12 : Model.ViewMonth - 1)" 
+                               class="btn btn-outline-secondary">
+                                <i class="fas fa-chevron-left"></i> 上月
+                            </a>
+                        </div>
+                        
+                        <div class="text-center">
+                            <h4 class="mb-0">@Model.ViewYear 年 @Model.ViewMonth 月</h4>
+                            @if (Model.HasFilter)
+                            {
+                                <small class="text-muted">
+                                    <a asp-page="index7" class="text-decoration-none">回到本月</a>
+                                </small>
+                            }
+                        </div>
+                        
+                        <div>
+                            <a asp-page="index7" 
+                               asp-route-year="@(Model.ViewMonth == 12 ? Model.ViewYear + 1 : Model.ViewYear)" 
+                               asp-route-month="@(Model.ViewMonth == 12 ? 1 : Model.ViewMonth + 1)" 
+                               class="btn btn-outline-secondary">
+                                下月 <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 成功/錯誤訊息 -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["InfoMessage"] != null)
+    {
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="fas fa-info-circle"></i> @TempData["InfoMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- 月曆檢視 -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-alt"></i> 
+                        @Model.ViewYear 年 @Model.ViewMonth 月記帳記錄
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered calendar-table mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="text-center">週日</th>
+                                    <th class="text-center">週一</th>
+                                    <th class="text-center">週二</th>
+                                    <th class="text-center">週三</th>
+                                    <th class="text-center">週四</th>
+                                    <th class="text-center">週五</th>
+                                    <th class="text-center">週六</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    var weeks = Model.CalendarDays.Chunk(7).ToArray();
+                                }
+                                @foreach (var week in weeks)
+                                {
+                                    <tr>
+                                        @foreach (var day in week)
+                                        {
+                                            <td class="calendar-day @(!day.IsCurrentMonth ? "other-month" : "") @(day.IsToday ? "today" : "")" 
+                                                style="width: 14.28%; height: 120px; vertical-align: top;">
+                                                
+                                                <!-- 日期標題 -->
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <span class="day-number @(!day.IsCurrentMonth ? "text-muted" : "") @(day.IsToday ? "bg-primary text-white rounded px-2" : "")">
+                                                        @day.Date.Day
+                                                    </span>
+                                                    @if (day.IsCurrentMonth && day.Records.Any())
+                                                    {
+                                                        <small class="badge bg-secondary">@day.Records.Count</small>
+                                                    }
+                                                </div>
+
+                                                <!-- 日期記錄 -->
+                                                @if (day.IsCurrentMonth && day.Records.Any())
+                                                {
+                                                    <div class="day-records">
+                                                        <!-- 收入記錄 -->
+                                                        @if (day.DailyIncome > 0)
+                                                        {
+                                                            <div class="record-item income mb-1">
+                                                                <small class="text-success">
+                                                                    <i class="fas fa-plus-circle"></i>
+                                                                    NT$ @day.DailyIncome.ToString("N0")
+                                                                </small>
+                                                            </div>
+                                                        }
+                                                        
+                                                        <!-- 支出記錄 -->
+                                                        @if (day.DailyExpense > 0)
+                                                        {
+                                                            <div class="record-item expense mb-1">
+                                                                <small class="text-danger">
+                                                                    <i class="fas fa-minus-circle"></i>
+                                                                    NT$ @day.DailyExpense.ToString("N0")
+                                                                </small>
+                                                            </div>
+                                                        }
+                                                        
+                                                        <!-- 記錄列表 -->
+                                                        @foreach (var record in day.Records.Take(2))
+                                                        {
+                                                            <div class="record-detail mb-1">
+                                                                <div class="d-flex justify-content-between">
+                                                                    <small class="text-truncate" title="@record.Category @(!string.IsNullOrEmpty(record.SubCategory) ? $"- {record.SubCategory}" : "")">
+                                                                        @record.Category
+                                                                    </small>
+                                                                    <div class="btn-group btn-group-sm" role="group">
+                                                                        <a asp-page="index8" 
+                                                                           asp-route-id="@record.Id" 
+                                                                           class="btn btn-outline-primary btn-sm p-0 px-1" 
+                                                                           title="編輯">
+                                                                            <i class="fas fa-edit" style="font-size: 0.7em;"></i>
+                                                                        </a>
+                                                                        <button type="button" 
+                                                                                class="btn btn-outline-danger btn-sm p-0 px-1" 
+                                                                                onclick="confirmDelete(@record.Id, '@record.Category', @record.Amount)"
+                                                                                title="刪除">
+                                                                            <i class="fas fa-trash" style="font-size: 0.7em;"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        }
+                                                        
+                                                        @if (day.Records.Count > 2)
+                                                        {
+                                                            <small class="text-muted">...還有 @(day.Records.Count - 2) 筆</small>
+                                                        }
+                                                    </div>
+                                                }
+                                                @if (day.IsCurrentMonth && !day.Records.Any())
+                                                {
+                                                    <div class="text-center mt-3">
+                                                        <a asp-page="index8" asp-route-date="@day.Date.ToString("yyyy-MM-dd")" 
+                                                           class="btn btn-outline-primary btn-sm">
+                                                            <i class="fas fa-plus"></i>
+                                                        </a>
+                                                    </div>
+                                                }
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- 刪除確認對話框 -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteConfirmModalLabel">確認刪除記錄</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <i class="fas fa-exclamation-triangle fa-3x text-warning"></i>
+                </div>
+                <p class="text-center">您確定要刪除這筆記錄嗎？</p>
+                <div class="alert alert-info">
+                    <strong>分類：</strong><span id="deleteRecordCategory"></span><br>
+                    <strong>金額：</strong>NT$ <span id="deleteRecordAmount"></span>
+                </div>
+                <p class="text-danger text-center"><small><i class="fas fa-exclamation-triangle"></i> 此操作無法復原！</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> 取消
+                </button>
+                <button type="button" class="btn btn-danger" onclick="executeDelete()" id="confirmDeleteBtn">
+                    <i class="fas fa-trash"></i> 確認刪除
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 匯出對話框 -->
+<div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exportModalLabel">
+                    <i class="fas fa-download"></i> 匯出記帳報表
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" asp-page-handler="Export">
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <label class="form-label">匯出格式</label>
+                            <div class="row text-center">
+                                <div class="col-md-4 mb-2">
+                                    <input type="radio" class="btn-check" name="format" id="formatCsv" value="csv" checked>
+                                    <label class="btn btn-outline-info w-100" for="formatCsv">
+                                        <i class="fas fa-file-csv fa-2x d-block mb-1"></i>
+                                        <strong>CSV</strong>
+                                        <small class="d-block">通用格式</small>
+                                    </label>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <input type="radio" class="btn-check" name="format" id="formatExcel" value="excel">
+                                    <label class="btn btn-outline-success w-100" for="formatExcel">
+                                        <i class="fas fa-file-excel fa-2x d-block mb-1"></i>
+                                        <strong>Excel</strong>
+                                        <small class="d-block">開發中</small>
+                                    </label>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <input type="radio" class="btn-check" name="format" id="formatPdf" value="pdf">
+                                    <label class="btn btn-outline-danger w-100" for="formatPdf">
+                                        <i class="fas fa-file-pdf fa-2x d-block mb-1"></i>
+                                        <strong>PDF</strong>
+                                        <small class="d-block">開發中</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="exportPeriod" class="form-label">匯出期間</label>
+                            <select class="form-select" id="exportPeriod" name="period">
+                                <option value="current_month" selected>當月</option>
+                                <option value="last_month">上月</option>
+                                <option value="current_year">當年</option>
+                                <option value="custom">自訂期間</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">匯出內容</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="includeIncome" name="includeIncome" value="true" checked>
+                                <label class="form-check-label" for="includeIncome">包含收入記錄</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="includeExpense" name="includeExpense" value="true" checked>
+                                <label class="form-check-label" for="includeExpense">包含支出記錄</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3" id="customDateRange" style="display: none;">
+                        <div class="col-md-6">
+                            <label for="exportStartDate" class="form-label">開始日期</label>
+                            <input type="date" class="form-control" id="exportStartDate" name="startDate">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="exportEndDate" class="form-label">結束日期</label>
+                            <input type="date" class="form-control" id="exportEndDate" name="endDate">
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>提示：</strong>匯出的報表將包含統計摘要和詳細記錄。
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-download"></i> 開始匯出
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let deleteRecordId = 0;
+
+        // 確認刪除對話框
+        function confirmDelete(id, category, amount) {
+            deleteRecordId = id;
+            document.getElementById('deleteRecordCategory').textContent = category;
+            document.getElementById('deleteRecordAmount').textContent = amount.toLocaleString();
+            
+            var modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+            modal.show();
+        }
+
+        // 執行刪除
+        async function executeDelete() {
+            const confirmBtn = document.getElementById('confirmDeleteBtn');
+            const originalText = confirmBtn.innerHTML;
+            
+            try {
+                confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 刪除中...';
+                confirmBtn.disabled = true;
+                
+                const response = await fetch('/index7?handler=DeleteRecord', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({ id: deleteRecordId })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // 關閉對話框並重新載入頁面
+                    bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal')).hide();
+                    location.reload();
+                } else {
+                    alert('刪除失敗：' + result.message);
+                }
+            } catch (error) {
+                console.error('刪除記錄時發生錯誤:', error);
+                alert('刪除記錄時發生錯誤，請稍後再試');
+            } finally {
+                confirmBtn.innerHTML = originalText;
+                confirmBtn.disabled = false;
+            }
+        }
+
+        // 顯示匯出對話框
+        function showExportModal() {
+            var modal = new bootstrap.Modal(document.getElementById('exportModal'));
+            modal.show();
+        }
+
+        // 期間選擇變更事件
+        document.getElementById('exportPeriod').addEventListener('change', function() {
+            const customRange = document.getElementById('customDateRange');
+            if (this.value === 'custom') {
+                customRange.style.display = 'block';
+            } else {
+                customRange.style.display = 'none';
+                setDateRangeByPeriod(this.value);
+            }
+        });
+
+        // 根據期間設定日期範圍
+        function setDateRangeByPeriod(period) {
+            const now = new Date();
+            let startDate, endDate;
+            
+            switch (period) {
+                case 'current_month':
+                    startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                    endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                    break;
+                case 'last_month':
+                    startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                    endDate = new Date(now.getFullYear(), now.getMonth(), 0);
+                    break;
+                case 'current_year':
+                    startDate = new Date(now.getFullYear(), 0, 1);
+                    endDate = new Date(now.getFullYear(), 11, 31);
+                    break;
+            }
+            
+            if (startDate && endDate) {
+                document.getElementById('exportStartDate').value = startDate.toISOString().split('T')[0];
+                document.getElementById('exportEndDate').value = endDate.toISOString().split('T')[0];
+            }
+        }
+
+        // 統計分析 (未來功能)
+        function showStatisticsModal() {
+            alert('統計分析功能開發中，敬請期待！');
+        }
+
+        // 初始化日期範圍
+        document.addEventListener('DOMContentLoaded', function() {
+            setDateRangeByPeriod('current_month');
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .calendar-table {
+            font-size: 0.85rem;
+        }
+        
+        .calendar-day {
+            position: relative;
+            padding: 8px;
+            border: 1px solid #dee2e6 !important;
+            background-color: white;
+        }
+        
+        .calendar-day.other-month {
+            background-color: #f8f9fa;
+            color: #6c757d;
+        }
+        
+        .calendar-day.today {
+            background-color: #e3f2fd;
+            border-color: #2196f3 !important;
+        }
+        
+        .day-number {
+            font-weight: bold;
+            font-size: 1em;
+        }
+        
+        .record-item {
+            font-size: 0.75rem;
+            padding: 1px 0;
+        }
+        
+        .record-detail {
+            font-size: 0.7rem;
+            background: rgba(0,0,0,0.05);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        .income {
+            color: #28a745 !important;
+        }
+        
+        .expense {
+            color: #dc3545 !important;
+        }
+        
+        .btn-group-sm .btn {
+            font-size: 0.7rem !important;
+            padding: 0.1rem 0.3rem !important;
+        }
+        
+        @@media (max-width: 768px) {
+            .calendar-table {
+                font-size: 0.7rem;
+            }
+            
+            .calendar-day {
+                padding: 4px;
+                height: 80px !important;
+            }
+            
+            .record-item {
+                font-size: 0.65rem;
+            }
+            
+            .record-detail {
+                font-size: 0.6rem;
+            }
+        }
+        
+        .card {
+            transition: box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1) !important;
+        }
+        
+        .btn-check:checked + .btn-outline-info,
+        .btn-check:checked + .btn-outline-success,
+        .btn-check:checked + .btn-outline-danger {
+            transform: scale(1.02);
+            box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+        }
+    </style>
+}

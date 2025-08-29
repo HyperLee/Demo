@@ -1,0 +1,242 @@
+[
+  {
+    "Id": 1,
+    "Name": "餐飲食品",
+    "Type": "Expense",
+    "Icon": "fas fa-utensils",
+    "SubCategories": [
+      {
+        "Id": 101,
+        "Name": "早餐"
+      },
+      {
+        "Id": 102,
+        "Name": "午餐"
+      },
+      {
+        "Id": 103,
+        "Name": "晚餐"
+      },
+      {
+        "Id": 104,
+        "Name": "零食"
+      },
+      {
+        "Id": 105,
+        "Name": "飲料"
+      }
+    ]
+  },
+  {
+    "Id": 2,
+    "Name": "服飾美容",
+    "Type": "Expense",
+    "Icon": "fas fa-tshirt",
+    "SubCategories": [
+      {
+        "Id": 201,
+        "Name": "上衣"
+      },
+      {
+        "Id": 202,
+        "Name": "褲子"
+      },
+      {
+        "Id": 203,
+        "Name": "外套"
+      },
+      {
+        "Id": 204,
+        "Name": "鞋子"
+      },
+      {
+        "Id": 205,
+        "Name": "包包"
+      },
+      {
+        "Id": 206,
+        "Name": "配件"
+      },
+      {
+        "Id": 207,
+        "Name": "美容保養"
+      }
+    ]
+  },
+  {
+    "Id": 3,
+    "Name": "居家生活",
+    "Type": "Expense",
+    "Icon": "fas fa-home",
+    "SubCategories": [
+      {
+        "Id": 301,
+        "Name": "家電用品"
+      },
+      {
+        "Id": 302,
+        "Name": "房租"
+      },
+      {
+        "Id": 303,
+        "Name": "管理費"
+      },
+      {
+        "Id": 304,
+        "Name": "水電費"
+      },
+      {
+        "Id": 305,
+        "Name": "瓦斯費"
+      },
+      {
+        "Id": 306,
+        "Name": "網路費"
+      },
+      {
+        "Id": 307,
+        "Name": "日用品"
+      }
+    ]
+  },
+  {
+    "Id": 4,
+    "Name": "運輸交通",
+    "Type": "Expense",
+    "Icon": "fas fa-car",
+    "SubCategories": [
+      {
+        "Id": 401,
+        "Name": "公共交通"
+      },
+      {
+        "Id": 402,
+        "Name": "計程車"
+      },
+      {
+        "Id": 403,
+        "Name": "共享運具"
+      }
+    ]
+  },
+  {
+    "Id": 5,
+    "Name": "醫療保健",
+    "Type": "Expense",
+    "Icon": "fas fa-medkit",
+    "SubCategories": [
+      {
+        "Id": 501,
+        "Name": "診所就醫"
+      },
+      {
+        "Id": 502,
+        "Name": "健康檢查"
+      },
+      {
+        "Id": 503,
+        "Name": "勞健保"
+      },
+      {
+        "Id": 504,
+        "Name": "保健食品"
+      },
+      {
+        "Id": 505,
+        "Name": "藥品"
+      }
+    ]
+  },
+  {
+    "Id": 13,
+    "Name": "薪資收入",
+    "Type": "Income",
+    "Icon": "fas fa-money-bill-wave",
+    "SubCategories": [
+      {
+        "Id": 1301,
+        "Name": "每月薪資"
+      },
+      {
+        "Id": 1302,
+        "Name": "加班費"
+      },
+      {
+        "Id": 1303,
+        "Name": "績效獎金"
+      }
+    ]
+  },
+  {
+    "Id": 14,
+    "Name": "獎金收入",
+    "Type": "Income",
+    "Icon": "fas fa-trophy",
+    "SubCategories": [
+      {
+        "Id": 1401,
+        "Name": "年終獎金"
+      },
+      {
+        "Id": 1402,
+        "Name": "三節獎金"
+      },
+      {
+        "Id": 1403,
+        "Name": "分紅"
+      },
+      {
+        "Id": 1404,
+        "Name": "業績獎金"
+      }
+    ]
+  },
+  {
+    "Id": 15,
+    "Name": "投資收益",
+    "Type": "Income",
+    "Icon": "fas fa-piggy-bank",
+    "SubCategories": [
+      {
+        "Id": 1501,
+        "Name": "股利"
+      },
+      {
+        "Id": 1502,
+        "Name": "利息"
+      },
+      {
+        "Id": 1503,
+        "Name": "資本利得"
+      },
+      {
+        "Id": 1504,
+        "Name": "租金收入"
+      }
+    ]
+  },
+  {
+    "Id": 16,
+    "Name": "其他收入",
+    "Type": "Income",
+    "Icon": "fas fa-plus-circle",
+    "SubCategories": [
+      {
+        "Id": 1601,
+        "Name": "兼職收入"
+      },
+      {
+        "Id": 1602,
+        "Name": "禮金"
+      },
+      {
+        "Id": 1603,
+        "Name": "退稅"
+      },
+      {
+        "Id": 1604,
+        "Name": "中獎"
+      }
+    ]
+  }
+]

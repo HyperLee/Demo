@@ -18,6 +18,9 @@ public class Program
         // 註冊匯率服務
         builder.Services.AddHttpClient<ExchangeRateService>();
         builder.Services.AddScoped<ExchangeRateService>();
+        
+        // 註冊會計服務
+        builder.Services.AddScoped<IAccountingService, AccountingService>();
 
         var app = builder.Build();
 
