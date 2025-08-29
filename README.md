@@ -39,6 +39,22 @@
     - [🔧 技術架構亮點](#-技術架構亮點-1)
     - [📊 匯率計算邏輯](#-匯率計算邏輯)
     - [🛡️ 可靠性設計](#️-可靠性設計)
+  - [個人記帳系統（index7.cshtml \& index8.cshtml）](#個人記帳系統index7cshtml--index8cshtml)
+    - [💰 系統特色](#-系統特色)
+    - [📊 記帳列表頁面（index7）](#-記帳列表頁面index7)
+      - [核心功能](#核心功能)
+      - [月份導航系統](#月份導航系統)
+    - [✏️ 記帳編輯頁面（index8）](#️-記帳編輯頁面index8)
+      - [表單設計特色](#表單設計特色)
+      - [資料處理流程](#資料處理流程)
+    - [📄 多格式匯出功能](#-多格式匯出功能)
+      - [CSV 匯出 - 中文編碼最佳化](#csv-匯出---中文編碼最佳化)
+      - [Excel 匯出 - 多工作表設計](#excel-匯出---多工作表設計)
+      - [PDF 匯出 - 中文字型支援](#pdf-匯出---中文字型支援)
+    - [🔧 技術架構](#-技術架構)
+      - [後端服務層](#後端服務層)
+      - [前端技術棧](#前端技術棧)
+      - [資料持久化](#資料持久化)
   - [設定說明](#設定說明)
     - [📝 註記功能設定](#-註記功能設定)
     - [🗂️ 備忘錄系統設定](#️-備忘錄系統設定)
@@ -64,6 +80,7 @@
 - **🗂️ 進階備忘錄管理系統**，支援標籤分類、批次操作、搜尋篩選和匯出功能
 - **✏️ 智慧備忘錄編輯器**，具備標籤管理、分類整合、字元計數和自動保存提醒
 - **🏦 台幣外幣匯率計算器**，整合台灣銀行官方 API，支援即時匯率查詢與雙向精確計算
+- **💰 個人記帳系統**，月曆檢視記帳記錄、收支統計分析、多格式報表匯出（CSV/Excel/PDF）
 - **JSON 檔案儲存**，支援個人化資料持久化，無需資料庫設定
 
 ## 快速開始
@@ -86,6 +103,8 @@ $ dotnet run --project Demo/Demo.csproj
 # 備忘錄列表: http://localhost:5000/index4
 # 備忘錄編輯: http://localhost:5000/index5
 # 匯率計算器: http://localhost:5000/index6
+# 記帳系統列表: http://localhost:5000/index7
+# 記帳記錄編輯: http://localhost:5000/index8
 ```
 
 > [!TIP]
@@ -100,9 +119,11 @@ $ dotnet run --project Demo/Demo.csproj
 Demo/
 ├── Services/             # 業務服務層
 │   ├── NoteService.cs    # 註記功能服務（JSON 檔案 I/O）+ 備忘錄管理服務
-│   └── ExchangeRateService.cs # 匯率資料服務（台銀 API 整合）
+│   ├── ExchangeRateService.cs # 匯率資料服務（台銀 API 整合）
+│   └── AccountingService.cs # 記帳資料服務（JSON 檔案 I/O）
 ├── Models/               # 資料模型
-│   └── ExchangeRate.cs   # 匯率資料模型
+│   ├── ExchangeRate.cs   # 匯率資料模型
+│   └── AccountingModels.cs # 記帳資料模型
 ├── Utilities/            # 工具類別
 │   ├── DataFixUtility.cs # 資料修正工具
 │   └── PdfExportUtility.cs # PDF 匯出工具
@@ -119,6 +140,10 @@ Demo/
 │   ├── index5.cshtml.cs  # index5 頁面 Model（編輯邏輯、標籤分類管理）
 │   ├── index6.cshtml     # 🏦 台幣外幣匯率計算器頁面
 │   ├── index6.cshtml.cs  # index6 頁面 Model（匯率計算、API 整合）
+│   ├── index7.cshtml     # 💰 記帳系統列表頁面（月曆檢視）
+│   ├── index7.cshtml.cs  # index7 頁面 Model（記帳列表、統計、匯出）
+│   ├── index8.cshtml     # ✏️ 記帳記錄編輯頁面
+│   ├── index8.cshtml.cs  # index8 頁面 Model（記錄新增修改、驗證）
 │   └── ...
 ├── wwwroot/              # 靜態資源 (CSS, JS, 圖片)
 ├── App_Data/             # 應用程式資料檔案
@@ -126,7 +151,9 @@ Demo/
 │   ├── memo-notes.json   # 🗂️ 備忘錄資料儲存檔案（重要備份目標）
 │   ├── exchange_rates.json # 🏦 匯率快取檔案（重要備份目標）
 │   ├── tags.json         # 🏷️ 標籤資料儲存檔案
-│   └── categories.json   # 📁 分類資料儲存檔案
+│   ├── categories.json   # 📁 分類資料儲存檔案
+│   └── accounting-records.json # 💰 記帳記錄檔案（重要備份目標）
+│   └── accounting-categories.json # 💰 記帳分類檔案（重要備份目標）
 ├── appsettings.json      # 全域設定檔
 ├── appsettings.Development.json # 開發環境設定
 ├── Program.cs            # 進入點與服務設定
@@ -523,6 +550,185 @@ Demo/
 - `Services/ExchangeRateService.cs`：匯率資料服務核心
 - `Models/ExchangeRate.cs`：匯率資料模型
 - `App_Data/exchange_rates.json`：匯率快取檔案 🔴
+
+---
+
+## 個人記帳系統（index7.cshtml & index8.cshtml）
+
+個人記帳系統提供完整的收支管理解決方案，採用月曆檢視設計，支援記錄新增修改、統計分析、以及多格式報表匯出功能。系統設計注重使用者體驗和資料可視化，適合個人財務管理使用。
+
+### 💰 系統特色
+
+- **月曆檢視界面**：直觀顯示每日收支狀況，支援月份導航
+- **收支分類管理**：二階分類系統（大分類 > 細分類），支援動態載入
+- **即時統計分析**：自動計算月度收入、支出、淨收支和記錄筆數
+- **多格式匯出**：CSV、Excel、PDF 三種格式，含中文編碼最佳化
+- **金額格式化**：支援大金額（最高 9.99 億）和千分位顯示
+- **響應式設計**：Bootstrap 5 框架，完美適配桌面和行動裝置
+
+### 📊 記帳列表頁面（index7）
+
+#### 核心功能
+
+**月曆檢視特色**：
+- 標準月曆格局 (7x6)，支援跨月份瀏覽
+- 每日收支統計：收入（綠色）、支出（紅色）即時顯示
+- 記錄數量徽章：顯示當日記錄筆數
+- 今日標記：特殊背景色標識當前日期
+
+**統計卡片系統**：
+- 月度統計摘要：總收入、總支出、淨收支、記錄數量
+- 視覺化指標：收入用綠色、支出用紅色、淨收支動態顏色
+- 即時更新：新增或修改記錄後自動重新計算
+
+**記錄管理操作**：
+- 快速編輯：直接從月曆格子點擊編輯記錄
+- 刪除確認：安全的刪除操作流程
+- 批次操作：支援多筆記錄同時處理
+
+#### 月份導航系統
+- 上月/下月快速切換按鈕
+- 年月下拉選擇器
+- 一鍵回到當月功能
+- URL 參數記憶：支援書籤和分享
+
+### ✏️ 記帳編輯頁面（index8）
+
+#### 表單設計特色
+
+**收支類型選擇**：
+- 大按鈕設計：收入（綠色）、支出（紅色）
+- 視覺化反饋：選中狀態有縮放動畫效果
+- 類型切換時自動更新分類選項
+
+**動態分類系統**：
+- 大分類下拉選單：根據收支類型動態載入
+- 子分類 AJAX 載入：選擇大分類後自動載入對應子分類
+- 分類資料持久化：JSON 檔案儲存分類結構
+
+**金額輸入增強**：
+- 即時格式化：自動添加千分位逗號
+- 範圍驗證：支援 0.01 到 999,999,999
+- 伺服器端驗證：雙重檢查確保資料正確性
+
+**智能表單驗證**：
+- 客戶端即時驗證：輸入時立即檢查
+- 日期限制：不允許未來日期
+- 必填欄位檢查：視覺化錯誤提示
+
+#### 資料處理流程
+1. 載入現有記錄（編輯模式）或設定預設值（新增模式）
+2. 動態載入分類選項和付款方式
+3. 表單驗證和資料檢查
+4. 儲存到 JSON 檔案
+5. 重導向回列表頁面並顯示成功訊息
+
+### 📄 多格式匯出功能
+
+#### CSV 匯出 - 中文編碼最佳化
+```csharp
+// 使用 UTF-8 with BOM 解決中文亂碼問題
+var encoding = new UTF8Encoding(true);
+return encoding.GetBytes(csv.ToString());
+```
+
+**特色**：
+- 支援 Excel 直接開啟無亂碼
+- 特殊字元跳脫處理
+- 千分位金額格式
+
+#### Excel 匯出 - 多工作表設計
+**包含工作表**：
+1. **統計摘要**：報表期間、財務統計、匯出時間
+2. **詳細記錄**：完整記錄列表，含篩選功能
+3. **分類分析**：收入和支出分類統計，含占比分析
+
+**技術特色**：
+- ClosedXML 函式庫支援複雜格式
+- 自動欄寬調整
+- 收入支出顏色區分
+- 數字格式化 (#,##0)
+
+#### PDF 匯出 - 中文字型支援
+```csharp
+// 使用專門的中文字型提供者
+var pdfBytes = PdfExportUtility.ConvertHtmlToPdfWithChineseSupport(htmlReport, _logger);
+```
+
+**內容包括**：
+- 財務摘要表格
+- 收入支出分類分析（含占比）
+- 詳細記錄列表
+- 自動分頁和頁碼
+
+### 🔧 技術架構
+
+#### 後端服務層
+**AccountingService.cs**：
+- 記錄 CRUD 操作
+- 月度統計計算
+- 月曆資料產生
+- 分類管理功能
+
+**資料模型設計**：
+```csharp
+public class AccountingRecord
+{
+    public int Id { get; set; }
+    public DateTime Date { get; set; }
+    public string Type { get; set; } // "Income" or "Expense"
+    public decimal Amount { get; set; }
+    public string Category { get; set; }
+    public string SubCategory { get; set; }
+    public string PaymentMethod { get; set; }
+    public string Note { get; set; }
+}
+```
+
+#### 前端技術棧
+- **Bootstrap 5**：響應式網格系統和元件
+- **Font Awesome**：圖標系統
+- **JavaScript ES6+**：AJAX 互動和表單處理
+- **CSS3**：動畫效果和視覺增強
+
+#### 資料持久化
+**檔案位置**：
+- `App_Data/accounting-records.json`：記帳記錄資料 🔴
+- `App_Data/accounting-categories.json`：分類結構資料 🔴
+
+**資料格式範例**：
+```json
+{
+  "records": [
+    {
+      "id": 1,
+      "date": "2025-08-29",
+      "type": "Expense",
+      "amount": 150,
+      "category": "餐飲",
+      "subCategory": "午餐",
+      "paymentMethod": "現金",
+      "note": "便當"
+    }
+  ]
+}
+```
+
+**⚠️ 重要提醒**：
+- **定期備份**：`App_Data/accounting-*.json` 檔案是重要資料
+- **檔案權限**：確保應用程式對 App_Data 資料夾有讀寫權限
+- **大金額處理**：系統支援最高 999,999,999 的金額輸入
+- **日期限制**：不允許輸入未來日期的記錄
+
+**相關檔案**：
+- `Pages/index7.cshtml`：記帳列表頁面和月曆檢視
+- `Pages/index7.cshtml.cs`：列表邏輯、統計計算、匯出功能
+- `Pages/index8.cshtml`：記帳編輯頁面和表單驗證
+- `Pages/index8.cshtml.cs`：編輯邏輯、分類載入、資料驗證
+- `Services/AccountingService.cs`：記帳資料服務核心
+- `Models/AccountingModels.cs`：記帳資料模型定義
+- `App_Data/accounting-records.json`：記帳記錄檔案 🔴
+- `App_Data/accounting-categories.json`：分類結構檔案 🔴
 
 ---
 
