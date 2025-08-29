@@ -15,11 +15,13 @@ public class index7 : PageModel
 {
     private readonly ILogger<index7> _logger;
     private readonly IAccountingService _accountingService;
+    private readonly IStatisticsService _statisticsService;
 
-    public index7(ILogger<index7> logger, IAccountingService accountingService)
+    public index7(ILogger<index7> logger, IAccountingService accountingService, IStatisticsService statisticsService)
     {
         _logger = logger;
         _accountingService = accountingService;
+        _statisticsService = statisticsService;
     }
 
     #region 屬性
@@ -146,6 +148,53 @@ public class index7 : PageModel
         {
             _logger.LogError(ex, "刪除記帳記錄 {Id} 時發生錯誤", request.Id);
             return new JsonResult(new { success = false, message = "刪除記錄時發生錯誤" });
+        }
+    }
+
+    /// <summary>
+    /// 取得統計分析資料
+    /// </summary>
+    /// <param name="startDate">開始日期</param>
+    /// <param name="endDate">結束日期</param>
+    /// <returns>統計分析資料</returns>
+    public async Task<IActionResult> OnGetStatisticsAsync(DateTime? startDate = null, DateTime? endDate = null)
+    {
+        try
+        {
+            // 預設為最近 6 個月
+            var end = endDate ?? DateTime.Today;
+            var start = startDate ?? DateTime.Today.AddMonths(-6);
+            
+            // 驗證日期範圍
+            if (start > end)
+            {
+                return new JsonResult(new { success = false, message = "開始日期不能晚於結束日期" });
+            }
+            
+            // 限制最大查詢範圍為 2 年
+            var maxDays = 730;
+            var daysDiff = (end - start).TotalDays;
+            if (daysDiff > maxDays)
+            {
+                return new JsonResult(new { success = false, message = "日期範圍不能超過 2 年" });
+            }
+            
+            var viewModel = new StatisticsViewModel
+            {
+                StartDate = start,
+                EndDate = end,
+                MonthlyTrend = await _statisticsService.GetMonthlyTrendAsync(6),
+                ExpenseCategories = await _statisticsService.GetExpenseCategoryAnalysisAsync(start, end),
+                Summary = await _statisticsService.GetStatisticsSummaryAsync(start, end)
+            };
+            
+            _logger.LogInformation("成功載入統計分析資料，期間：{StartDate} ~ {EndDate}", start, end);
+            return new JsonResult(viewModel);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "載入統計分析資料時發生錯誤");
+            return new JsonResult(new { success = false, message = "載入統計資料時發生錯誤，請稍後再試" });
         }
     }
 

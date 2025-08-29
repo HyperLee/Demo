@@ -21,6 +21,9 @@ public class Program
         
         // 註冊會計服務
         builder.Services.AddScoped<IAccountingService, AccountingService>();
+        
+        // 註冊統計服務
+        builder.Services.AddScoped<IStatisticsService, StatisticsService>();
 
         var app = builder.Build();
 
