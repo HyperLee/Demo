@@ -1,0 +1,91 @@
+{
+  "spendingPatterns": {
+    "weeklyPatterns": {
+      "monday": { "coefficient": 0.8, "categories": ["食物", "交通"] },
+      "tuesday": { "coefficient": 0.9, "categories": ["食物", "交通", "購物"] },
+      "wednesday": { "coefficient": 1.0, "categories": ["食物", "交通"] },
+      "thursday": { "coefficient": 1.1, "categories": ["食物", "交通", "娛樂"] },
+      "friday": { "coefficient": 1.3, "categories": ["食物", "交通", "娛樂", "購物"] },
+      "saturday": { "coefficient": 1.5, "categories": ["娛樂", "購物", "食物"] },
+      "sunday": { "coefficient": 1.2, "categories": ["娛樂", "食物", "其他"] }
+    },
+    "monthlyPatterns": {
+      "payDay": {
+        "day": 25,
+        "spendingIncrease": 1.4,
+        "categories": ["購物", "娛樂", "其他"]
+      },
+      "monthEnd": {
+        "lastWeek": {
+          "spendingDecrease": 0.7,
+          "primaryCategories": ["食物", "交通"]
+        }
+      }
+    },
+    "seasonalPatterns": {
+      "spring": { "coefficient": 1.0, "peakCategories": ["娛樂", "購物"] },
+      "summer": { "coefficient": 1.2, "peakCategories": ["娛樂", "交通", "食物"] },
+      "autumn": { "coefficient": 1.1, "peakCategories": ["購物", "食物"] },
+      "winter": { "coefficient": 1.3, "peakCategories": ["購物", "娛樂", "其他"] }
+    }
+  },
+  "anomalyThresholds": {
+    "zScoreThreshold": 2.0,
+    "frequencyChangeThreshold": 0.5,
+    "amountChangeThreshold": 0.3,
+    "minimumTransactionsForAnalysis": 5
+  },
+  "predictiveModels": {
+    "linearRegression": {
+      "enabled": true,
+      "lookbackMonths": 12,
+      "minimumDataPoints": 30
+    },
+    "seasonalAdjustment": {
+      "enabled": true,
+      "seasonalFactors": {
+        "1": 1.1,
+        "2": 0.9,
+        "3": 1.0,
+        "4": 1.0,
+        "5": 1.1,
+        "6": 1.2,
+        "7": 1.3,
+        "8": 1.2,
+        "9": 1.0,
+        "10": 1.1,
+        "11": 1.2,
+        "12": 1.4
+      }
+    },
+    "movingAverage": {
+      "enabled": true,
+      "windowSize": 7,
+      "smoothingFactor": 0.3
+    }
+  },
+  "insightGeneration": {
+    "categories": {
+      "spending_trend": {
+        "enabled": true,
+        "threshold": 0.1,
+        "lookbackDays": 30
+      },
+      "budget_deviation": {
+        "enabled": true,
+        "threshold": 0.15,
+        "alertLevel": "medium"
+      },
+      "unusual_spending": {
+        "enabled": true,
+        "zScoreThreshold": 1.5,
+        "frequencyCheck": true
+      },
+      "saving_opportunity": {
+        "enabled": true,
+        "minimumSavings": 1000,
+        "categoryFocus": true
+      }
+    }
+  }
+}

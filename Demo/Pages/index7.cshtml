@@ -492,6 +492,12 @@
                                     <i class="fas fa-trophy"></i> 排行榜
                                 </button>
                             </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="ai-insights-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#ai-insights" type="button" role="tab" aria-controls="ai-insights" aria-selected="false">
+                                    <i class="fas fa-brain"></i> AI 智慧分析
+                                </button>
+                            </li>
                         </ul>
                     </div>
 
@@ -656,6 +662,163 @@
                                 </div>
                             </div>
                         </div>
+                        
+                        <!-- AI 智慧分析分頁 -->
+                        <div class="tab-pane fade" id="ai-insights" role="tabpanel" aria-labelledby="ai-insights-tab">
+                            <!-- 財務健康度儀錶板 -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <div class="card border-primary shadow-lg">
+                                        <div class="card-header bg-gradient bg-primary text-white">
+                                            <h5 class="mb-0">
+                                                <i class="fas fa-heart text-danger"></i> 財務健康度評分
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row text-center">
+                                                <div class="col-lg-3 col-md-6 mb-3">
+                                                    <div class="health-score-card">
+                                                        <div id="overall-health-score" class="health-score-number">--</div>
+                                                        <div class="health-score-label">整體評分</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-3 col-md-6 mb-3">
+                                                    <div class="health-metric">
+                                                        <i class="fas fa-piggy-bank text-success fa-2x mb-2"></i>
+                                                        <div id="savings-score" class="metric-value">--</div>
+                                                        <div class="metric-label">儲蓄能力</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-3 col-md-6 mb-3">
+                                                    <div class="health-metric">
+                                                        <i class="fas fa-balance-scale text-info fa-2x mb-2"></i>
+                                                        <div id="balance-score" class="metric-value">--</div>
+                                                        <div class="metric-label">收支平衡</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-3 col-md-6 mb-3">
+                                                    <div class="health-metric">
+                                                        <i class="fas fa-chart-line text-warning fa-2x mb-2"></i>
+                                                        <div id="growth-score" class="metric-value">--</div>
+                                                        <div class="metric-label">成長趨勢</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 智慧洞察和建議 -->
+                            <div class="row mb-4">
+                                <div class="col-lg-6 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-header bg-info text-white">
+                                            <h6 class="mb-0">
+                                                <i class="fas fa-lightbulb"></i> 智慧洞察
+                                            </h6>
+                                        </div>
+                                        <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                                            <div id="smart-insights-container">
+                                                <div class="text-center text-muted p-4">
+                                                    <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                                                    <p>載入智慧洞察中...</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-lg-6 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-header bg-warning text-dark">
+                                            <h6 class="mb-0">
+                                                <i class="fas fa-exclamation-triangle"></i> 異常警報
+                                            </h6>
+                                        </div>
+                                        <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                                            <div id="anomaly-alerts-container">
+                                                <div class="text-center text-muted p-4">
+                                                    <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                                                    <p>分析異常模式中...</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 預測分析 -->
+                            <div class="row mb-4">
+                                <div class="col-lg-8 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-header bg-dark text-white">
+                                            <h6 class="mb-0">
+                                                <i class="fas fa-crystal-ball"></i> 支出預測分析
+                                            </h6>
+                                        </div>
+                                        <div class="card-body" style="height: 400px;">
+                                            <canvas id="expense-forecast-chart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-lg-4 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-header bg-success text-white">
+                                            <h6 class="mb-0">
+                                                <i class="fas fa-hand-holding-usd"></i> 節約建議
+                                            </h6>
+                                        </div>
+                                        <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                                            <div id="savings-opportunities-container">
+                                                <div class="text-center text-muted p-4">
+                                                    <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                                                    <p>尋找節約機會中...</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 現金流預測 -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header bg-secondary text-white">
+                                            <h6 class="mb-0">
+                                                <i class="fas fa-water"></i> 現金流預測
+                                            </h6>
+                                        </div>
+                                        <div class="card-body" style="height: 300px;">
+                                            <canvas id="cash-flow-chart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 個人化建議 -->
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header bg-gradient bg-purple text-white">
+                                            <h6 class="mb-0">
+                                                <i class="fas fa-user-check"></i> 個人化建議
+                                            </h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="personalized-recommendations-container">
+                                                <div class="text-center text-muted p-4">
+                                                    <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                                                    <p>產生個人化建議中...</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -680,6 +843,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- 進階統計分析 JavaScript -->
     <script src="~/js/statistics-advanced.js"></script>
+    <!-- 財務 AI 分析 JavaScript -->
+    <script src="~/js/financial-ai.js"></script>
     
     <script>
         let deleteRecordId = 0;

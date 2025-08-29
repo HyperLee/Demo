@@ -65,6 +65,64 @@ public interface IStatisticsService
     /// <param name="previousEnd">前期期間結束日期</param>
     /// <returns>比較分析資料</returns>
     Task<ComparisonAnalysisData> GetComparisonAnalysisAsync(DateTime currentStart, DateTime currentEnd, DateTime previousStart, DateTime previousEnd);
+
+    // Phase 3: AI 智能分析功能
+
+    /// <summary>
+    /// 取得財務健康分數
+    /// </summary>
+    /// <returns>財務健康分數</returns>
+    Task<FinancialHealthScore> GetFinancialHealthScoreAsync();
+
+    /// <summary>
+    /// 取得智能洞察
+    /// </summary>
+    /// <param name="startDate">開始日期</param>
+    /// <param name="endDate">結束日期</param>
+    /// <returns>智能洞察列表</returns>
+    Task<List<SmartInsight>> GetSmartInsightsAsync(DateTime startDate, DateTime endDate);
+
+    /// <summary>
+    /// 取得個人化建議
+    /// </summary>
+    /// <returns>個人化建議列表</returns>
+    Task<List<PersonalizedRecommendation>> GetPersonalizedRecommendationsAsync();
+
+    /// <summary>
+    /// 取得異常警報
+    /// </summary>
+    /// <param name="startDate">開始日期</param>
+    /// <param name="endDate">結束日期</param>
+    /// <returns>異常警報列表</returns>
+    Task<List<AnomalyAlert>> GetAnomalyAlertsAsync(DateTime startDate, DateTime endDate);
+
+    /// <summary>
+    /// 取得支出預測
+    /// </summary>
+    /// <param name="monthsAhead">預測月數</param>
+    /// <returns>支出預測列表</returns>
+    Task<List<ExpenseForecast>> GetExpenseForecastAsync(int monthsAhead = 6);
+
+    /// <summary>
+    /// 取得現金流預測
+    /// </summary>
+    /// <param name="monthsAhead">預測月數</param>
+    /// <returns>現金流預測</returns>
+    Task<CashFlowProjection> GetCashFlowProjectionAsync(int monthsAhead = 12);
+
+    /// <summary>
+    /// 取得預算建議
+    /// </summary>
+    /// <param name="totalBudget">總預算</param>
+    /// <param name="priorityCategories">優先分類</param>
+    /// <returns>預算建議</returns>
+    Task<List<BudgetSuggestion>> GetBudgetSuggestionsAsync(decimal totalBudget, List<string> priorityCategories);
+
+    /// <summary>
+    /// 取得節省機會
+    /// </summary>
+    /// <returns>節省機會列表</returns>
+    Task<List<SavingsOpportunity>> GetSavingsOpportunitiesAsync();
 }
 
 /// <summary>
@@ -74,6 +132,10 @@ public class StatisticsService : IStatisticsService
 {
     private readonly IAccountingService _accountingService;
     private readonly ILogger<StatisticsService> _logger;
+    private readonly AnomalyDetectionService _anomalyDetectionService;
+    private readonly BudgetManagementService _budgetManagementService;
+    private readonly FinancialInsightsService _financialInsightsService;
+    private readonly PredictiveAnalysisService _predictiveAnalysisService;
     
     /// <summary>
     /// 預設圖表顏色清單
@@ -84,10 +146,20 @@ public class StatisticsService : IStatisticsService
         "#FFEAA7", "#DDA0DD", "#98D8C8", "#F7DC6F", "#BB8FCE"
     };
     
-    public StatisticsService(IAccountingService accountingService, ILogger<StatisticsService> logger)
+    public StatisticsService(
+        IAccountingService accountingService, 
+        ILogger<StatisticsService> logger,
+        AnomalyDetectionService anomalyDetectionService,
+        BudgetManagementService budgetManagementService,
+        FinancialInsightsService financialInsightsService,
+        PredictiveAnalysisService predictiveAnalysisService)
     {
         _accountingService = accountingService;
         _logger = logger;
+        _anomalyDetectionService = anomalyDetectionService;
+        _budgetManagementService = budgetManagementService;
+        _financialInsightsService = financialInsightsService;
+        _predictiveAnalysisService = predictiveAnalysisService;
     }
     
     /// <summary>
@@ -554,4 +626,144 @@ public class StatisticsService : IStatisticsService
             Percentage = totalRecords > 0 ? (decimal)periodRecords.Count / totalRecords * 100 : 0
         };
     }
+
+    #region Phase 3: AI 智能分析功能
+
+    /// <summary>
+    /// 取得財務健康分數
+    /// </summary>
+    public async Task<FinancialHealthScore> GetFinancialHealthScoreAsync()
+    {
+        try
+        {
+            return await _financialInsightsService.CalculateFinancialHealthAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "取得財務健康分數時發生錯誤");
+            return new FinancialHealthScore { OverallScore = 50, HealthLevel = "fair" };
+        }
+    }
+
+    /// <summary>
+    /// 取得智能洞察
+    /// </summary>
+    public async Task<List<SmartInsight>> GetSmartInsightsAsync(DateTime startDate, DateTime endDate)
+    {
+        try
+        {
+            return await _financialInsightsService.GenerateSmartInsightsAsync(startDate, endDate);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "取得智能洞察時發生錯誤");
+            return new List<SmartInsight>();
+        }
+    }
+
+    /// <summary>
+    /// 取得個人化建議
+    /// </summary>
+    public async Task<List<PersonalizedRecommendation>> GetPersonalizedRecommendationsAsync()
+    {
+        try
+        {
+            return await _financialInsightsService.GetPersonalizedRecommendationsAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "取得個人化建議時發生錯誤");
+            return new List<PersonalizedRecommendation>();
+        }
+    }
+
+    /// <summary>
+    /// 取得異常警報
+    /// </summary>
+    public async Task<List<AnomalyAlert>> GetAnomalyAlertsAsync(DateTime startDate, DateTime endDate)
+    {
+        try
+        {
+            return await _anomalyDetectionService.DetectSpendingAnomaliesAsync(startDate, endDate);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "取得異常警報時發生錯誤");
+            return new List<AnomalyAlert>();
+        }
+    }
+
+    /// <summary>
+    /// 取得支出預測
+    /// </summary>
+    public async Task<List<ExpenseForecast>> GetExpenseForecastAsync(int monthsAhead = 6)
+    {
+        try
+        {
+            return await _predictiveAnalysisService.ForecastExpensesAsync(monthsAhead);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "取得支出預測時發生錯誤");
+            return new List<ExpenseForecast>();
+        }
+    }
+
+    /// <summary>
+    /// 取得現金流預測
+    /// </summary>
+    public async Task<CashFlowProjection> GetCashFlowProjectionAsync(int monthsAhead = 12)
+    {
+        try
+        {
+            return await _predictiveAnalysisService.ProjectCashFlowAsync(monthsAhead);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "取得現金流預測時發生錯誤");
+            return new CashFlowProjection
+            {
+                PeriodStart = DateTime.Now,
+                PeriodEnd = DateTime.Now.AddMonths(monthsAhead),
+                DataPoints = new List<CashFlowDataPoint>(),
+                Warnings = new List<string> { "無法取得現金流預測" }
+            };
+        }
+    }
+
+    /// <summary>
+    /// 取得預算建議
+    /// </summary>
+    public async Task<List<BudgetSuggestion>> GetBudgetSuggestionsAsync(decimal totalBudget, List<string> priorityCategories)
+    {
+        try
+        {
+            var endDate = DateTime.Now;
+            var startDate = endDate.AddMonths(-1);
+            return await _budgetManagementService.GenerateBudgetSuggestionsAsync(startDate, endDate);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "取得預算建議時發生錯誤");
+            return new List<BudgetSuggestion>();
+        }
+    }
+
+    /// <summary>
+    /// 取得節省機會
+    /// </summary>
+    public async Task<List<SavingsOpportunity>> GetSavingsOpportunitiesAsync()
+    {
+        try
+        {
+            return await _financialInsightsService.IdentifySavingsOpportunitiesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "取得節省機會時發生錯誤");
+            return new List<SavingsOpportunity>();
+        }
+    }
+
+    #endregion
 }

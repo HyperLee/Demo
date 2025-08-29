@@ -1,0 +1,32 @@
+{
+  "defaultBudgetSettings": {
+    "monthlyBudget": 50000,
+    "categoryAllocations": {
+      "食物": 15000,
+      "交通": 8000,
+      "娛樂": 5000,
+      "購物": 8000,
+      "住宿": 12000,
+      "其他": 2000
+    },
+    "savingsGoal": 0.2,
+    "emergencyFundTarget": 6
+  },
+  "budgetAlerts": {
+    "enableOverspendingAlert": true,
+    "overspendingThreshold": 0.9,
+    "enableGoalReminder": true,
+    "reminderFrequency": "weekly"
+  },
+  "aiPreferences": {
+    "analysisFrequency": "daily",
+    "insightTypes": [
+      "spending_patterns",
+      "saving_opportunities", 
+      "budget_optimization",
+      "anomaly_detection"
+    ],
+    "predictionMonths": 6,
+    "confidenceLevel": 0.8
+  }
+}

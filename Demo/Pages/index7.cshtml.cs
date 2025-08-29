@@ -471,6 +471,151 @@ public class index7 : PageModel
         }
     }
 
+    /// <summary>
+    /// 取得財務健康度評分
+    /// </summary>
+    public async Task<IActionResult> OnGetFinancialHealthScoreAsync()
+    {
+        try
+        {
+            var healthScore = await _statisticsService.GetFinancialHealthScoreAsync();
+            return new JsonResult(new { success = true, data = healthScore });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "取得財務健康度評分時發生錯誤");
+            return new JsonResult(new { success = false, message = "無法載入財務健康度評分" });
+        }
+    }
+
+    /// <summary>
+    /// 取得智慧分析洞察
+    /// </summary>
+    public async Task<IActionResult> OnGetSmartInsightsAsync()
+    {
+        try
+        {
+            // 預設使用最近 30 天的資料
+            var endDate = DateTime.Now;
+            var startDate = endDate.AddDays(-30);
+            var insights = await _statisticsService.GetSmartInsightsAsync(startDate, endDate);
+            return new JsonResult(new { success = true, data = insights });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "取得智慧分析洞察時發生錯誤");
+            return new JsonResult(new { success = false, message = "無法載入智慧分析洞察" });
+        }
+    }
+
+    /// <summary>
+    /// 取得異常警報
+    /// </summary>
+    public async Task<IActionResult> OnGetAnomalyAlertsAsync()
+    {
+        try
+        {
+            // 預設使用最近 30 天的資料
+            var endDate = DateTime.Now;
+            var startDate = endDate.AddDays(-30);
+            var alerts = await _statisticsService.GetAnomalyAlertsAsync(startDate, endDate);
+            return new JsonResult(new { success = true, data = alerts });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "取得異常警報時發生錯誤");
+            return new JsonResult(new { success = false, message = "無法載入異常警報" });
+        }
+    }
+
+    /// <summary>
+    /// 取得支出預測
+    /// </summary>
+    public async Task<IActionResult> OnGetExpenseForecastAsync()
+    {
+        try
+        {
+            var forecast = await _statisticsService.GetExpenseForecastAsync();
+            return new JsonResult(new { success = true, data = forecast });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "取得支出預測時發生錯誤");
+            return new JsonResult(new { success = false, message = "無法載入支出預測" });
+        }
+    }
+
+    /// <summary>
+    /// 取得現金流預測
+    /// </summary>
+    public async Task<IActionResult> OnGetCashFlowProjectionAsync()
+    {
+        try
+        {
+            var projection = await _statisticsService.GetCashFlowProjectionAsync();
+            return new JsonResult(new { success = true, data = projection });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "取得現金流預測時發生錯誤");
+            return new JsonResult(new { success = false, message = "無法載入現金流預測" });
+        }
+    }
+
+    /// <summary>
+    /// 取得個人化建議
+    /// </summary>
+    public async Task<IActionResult> OnGetPersonalizedRecommendationsAsync()
+    {
+        try
+        {
+            var recommendations = await _statisticsService.GetPersonalizedRecommendationsAsync();
+            return new JsonResult(new { success = true, data = recommendations });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "取得個人化建議時發生錯誤");
+            return new JsonResult(new { success = false, message = "無法載入個人化建議" });
+        }
+    }
+
+    /// <summary>
+    /// 取得節約機會建議
+    /// </summary>
+    public async Task<IActionResult> OnGetSavingsOpportunitiesAsync()
+    {
+        try
+        {
+            var opportunities = await _statisticsService.GetSavingsOpportunitiesAsync();
+            return new JsonResult(new { success = true, data = opportunities });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "取得節約機會建議時發生錯誤");
+            return new JsonResult(new { success = false, message = "無法載入節約機會建議" });
+        }
+    }
+
+    /// <summary>
+    /// 取得預算建議
+    /// </summary>
+    public async Task<IActionResult> OnGetBudgetSuggestionsAsync(decimal totalBudget = 50000, string priorityCategories = "")
+    {
+        try
+        {
+            var categories = string.IsNullOrEmpty(priorityCategories) 
+                ? new List<string>() 
+                : priorityCategories.Split(',').Select(c => c.Trim()).ToList();
+            var suggestions = await _statisticsService.GetBudgetSuggestionsAsync(totalBudget, categories);
+            return new JsonResult(new { success = true, data = suggestions });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "取得預算建議時發生錯誤");
+            return new JsonResult(new { success = false, message = "無法載入預算建議" });
+        }
+    }
+
     #endregion
 
     #region 輔助方法

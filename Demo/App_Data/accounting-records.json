@@ -22,5 +22,41 @@
     "Note": "蛋餅",
     "CreatedDate": "2025-08-29T14:06:51.9998103+08:00",
     "ModifiedDate": "2025-08-29T14:06:51.9998121+08:00"
+  },
+  {
+    "Id": 3,
+    "Date": "2025-08-28T00:00:00",
+    "Type": "Expense",
+    "Amount": 115,
+    "Category": "餐飲食品",
+    "SubCategory": "午餐",
+    "PaymentMethod": "現金",
+    "Note": "subway",
+    "CreatedDate": "2025-08-29T15:51:35.1454547+08:00",
+    "ModifiedDate": "2025-08-29T15:51:35.1454554+08:00"
+  },
+  {
+    "Id": 4,
+    "Date": "2025-08-28T00:00:00",
+    "Type": "Expense",
+    "Amount": 110,
+    "Category": "餐飲食品",
+    "SubCategory": "晚餐",
+    "PaymentMethod": "現金",
+    "Note": "烤肉飯",
+    "CreatedDate": "2025-08-29T15:52:04.3863427+08:00",
+    "ModifiedDate": "2025-08-29T15:52:04.3863433+08:00"
+  },
+  {
+    "Id": 5,
+    "Date": "2025-08-29T00:00:00",
+    "Type": "Expense",
+    "Amount": 50,
+    "Category": "餐飲食品",
+    "SubCategory": "飲料",
+    "PaymentMethod": "現金",
+    "Note": "無糖豆漿",
+    "CreatedDate": "2025-08-29T15:52:22.8597098+08:00",
+    "ModifiedDate": "2025-08-29T15:52:22.8597102+08:00"
   }
 ]

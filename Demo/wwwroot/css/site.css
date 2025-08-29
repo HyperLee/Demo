@@ -20,3 +20,115 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+/* 財務 AI 分析樣式 */
+.health-score-card {
+    text-align: center;
+    padding: 20px;
+    border-radius: 15px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.health-score-number {
+    font-size: 3rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.health-score-label {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+.health-metric {
+    text-align: center;
+    padding: 15px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    transition: transform 0.3s ease;
+}
+
+.health-metric:hover {
+    transform: translateY(-5px);
+}
+
+.metric-value {
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 10px 0 5px 0;
+}
+
+.metric-label {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.insight-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 8px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.insight-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.savings-opportunity {
+    transition: transform 0.3s ease;
+}
+
+.savings-opportunity:hover {
+    transform: translateX(5px);
+}
+
+.recommendation-card {
+    background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+    transition: all 0.3s ease;
+}
+
+.recommendation-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    transform: translateY(-3px);
+}
+
+/* AI 分析動畫效果 */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.ai-loading {
+    animation: pulse 1.5s infinite;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .health-score-number {
+        font-size: 2.5rem;
+    }
+    
+    .metric-value {
+        font-size: 1.5rem;
+    }
+    
+    .health-metric {
+        margin-bottom: 15px;
+    }
+}
+
+/* 深色主題支持 */
+@media (prefers-color-scheme: dark) {
+    .insight-card {
+        background: rgba(33, 37, 41, 0.95);
+        color: #fff;
+    }
+    
+    .recommendation-card {
+        background: linear-gradient(145deg, #343a40, #495057);
+        color: #fff;
+    }
+}

@@ -22,6 +22,12 @@ public class Program
         // 註冊會計服務
         builder.Services.AddScoped<IAccountingService, AccountingService>();
         
+        // 註冊 AI 分析服務
+        builder.Services.AddScoped<AnomalyDetectionService>();
+        builder.Services.AddScoped<BudgetManagementService>();
+        builder.Services.AddScoped<FinancialInsightsService>();
+        builder.Services.AddScoped<PredictiveAnalysisService>();
+        
         // 註冊統計服務
         builder.Services.AddScoped<IStatisticsService, StatisticsService>();
         builder.Services.AddScoped<IStatisticsExportService, StatisticsExportService>();
