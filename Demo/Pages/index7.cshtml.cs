@@ -722,23 +722,35 @@ public class index7 : PageModel
         foreach (var record in records.OrderBy(r => r.Date))
         {
             var type = record.Type == "Income" ? "收入" : "支出";
-            var escapedCategory = (record.Category ?? "").Replace("\"", "\"\"");
-            var escapedSubCategory = (record.SubCategory ?? "").Replace("\"", "\"\"");
-            var escapedPaymentMethod = (record.PaymentMethod ?? "").Replace("\"", "\"\"");
-            var escapedNote = (record.Note ?? "").Replace("\"", "\"\"");
+            var escapedCategory = EscapeCsvField(record.Category ?? "");
+            var escapedSubCategory = EscapeCsvField(record.SubCategory ?? "");
+            var escapedPaymentMethod = EscapeCsvField(record.PaymentMethod ?? "");
+            var escapedNote = EscapeCsvField(record.Note ?? "");
             
             csv.AppendLine($"{record.Date:yyyy-MM-dd}," +
                           $"\"{type}\"," +
                           $"\"{escapedCategory}\"," +
                           $"\"{escapedSubCategory}\"," +
-                          $"{record.Amount:N0}," +
+                          $"{record.Amount}," +  // 移除千分位符號，避免Excel誤判
                           $"\"{escapedPaymentMethod}\"," +
                           $"\"{escapedNote}\"");
         }
         
-        // 產生 UTF-8 with BOM 編碼的位元組陣列，解決中文亂碼問題
-        var encoding = new System.Text.UTF8Encoding(true); // 包含 BOM
+        // 產生 UTF-8 with BOM 編碼的位元組陣列，確保Excel正確識別中文編碼
+        var encoding = new System.Text.UTF8Encoding(encoderShouldEmitUTF8Identifier: true);
         return encoding.GetBytes(csv.ToString());
+    }
+
+    /// <summary>
+    /// 處理 CSV 欄位中的特殊字元
+    /// </summary>
+    private static string EscapeCsvField(string field)
+    {
+        if (string.IsNullOrEmpty(field))
+            return string.Empty;
+            
+        // 處理引號：將 " 替換為 ""
+        return field.Replace("\"", "\"\"");
     }
 
     #endregion
