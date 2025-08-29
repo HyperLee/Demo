@@ -113,7 +113,7 @@
                         </div>
 
                         <!-- 分類區塊 -->
-                        <div class="row mb-4">
+                        <div class="row mb-5">
                             <div class="col-12">
                                 <h6 class="border-bottom pb-2 mb-3">
                                     <i class="fas fa-tags text-warning"></i> 分類資訊
@@ -121,24 +121,36 @@
                             </div>
                             
                             <!-- 大分類 -->
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-6 mb-4">
                                 <label asp-for="Record.Category" class="form-label">
                                     <i class="fas fa-folder"></i> 大分類 <span class="text-danger">*</span>
                                 </label>
-                                <select asp-for="Record.Category" id="categorySelect" class="form-select" required>
-                                    <option value="">請選擇大分類</option>
-                                </select>
+                                <div class="d-flex gap-2">
+                                    <select asp-for="Record.Category" id="categorySelect" class="form-select" required>
+                                        <option value="">請選擇大分類</option>
+                                    </select>
+                                    <button type="button" class="btn btn-outline-primary btn-sm flex-shrink-0" 
+                                            onclick="showAddCategoryModal()" title="新增大分類">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
                                 <span asp-validation-for="Record.Category" class="text-danger"></span>
                             </div>
                             
                             <!-- 細分類 -->
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-6 mb-4">
                                 <label asp-for="Record.SubCategory" class="form-label">
                                     <i class="fas fa-tag"></i> 細分類
                                 </label>
-                                <select asp-for="Record.SubCategory" id="subCategorySelect" class="form-select">
-                                    <option value="">請選擇細分類</option>
-                                </select>
+                                <div class="d-flex gap-2">
+                                    <select asp-for="Record.SubCategory" id="subCategorySelect" class="form-select">
+                                        <option value="">請選擇細分類</option>
+                                    </select>
+                                    <button type="button" class="btn btn-outline-primary btn-sm flex-shrink-0" 
+                                            onclick="showAddSubCategoryModal()" title="新增細分類" id="addSubCategoryBtn" disabled>
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
                                 <span asp-validation-for="Record.SubCategory" class="text-danger"></span>
                                 <div class="form-text">請先選擇大分類</div>
                             </div>
@@ -236,6 +248,99 @@
     </div>
 }
 
+<!-- 新增大分類對話框 -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addCategoryModalLabel">
+                    <i class="fas fa-folder-plus text-primary"></i> 新增大分類
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addCategoryForm">
+                    <div class="mb-3">
+                        <label for="newCategoryName" class="form-label">
+                            <i class="fas fa-folder"></i> 分類名稱 <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="newCategoryName" 
+                               placeholder="輸入分類名稱" maxlength="50" required>
+                        <div class="form-text">最多 50 個字元</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newCategoryIcon" class="form-label">
+                            <i class="fas fa-icons"></i> 圖示 (選填)
+                        </label>
+                        <select class="form-select" id="newCategoryIcon">
+                            <option value="fas fa-folder">📁 預設資料夾</option>
+                            <option value="fas fa-utensils">🍴 餐飲食品</option>
+                            <option value="fas fa-tshirt">👕 服飾美容</option>
+                            <option value="fas fa-home">🏠 居家生活</option>
+                            <option value="fas fa-car">🚗 運輸交通</option>
+                            <option value="fas fa-heartbeat">❤️ 醫療保健</option>
+                            <option value="fas fa-gamepad">🎮 娛樂休閒</option>
+                            <option value="fas fa-graduation-cap">🎓 教育學習</option>
+                            <option value="fas fa-briefcase">💼 工作收入</option>
+                            <option value="fas fa-gift">🎁 禮品捐贈</option>
+                        </select>
+                    </div>
+                    <div class="alert alert-info d-none" id="addCategoryMessage"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> 取消
+                </button>
+                <button type="button" class="btn btn-primary" onclick="createCategory()">
+                    <i class="fas fa-save"></i> 建立分類
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 新增子分類對話框 -->
+<div class="modal fade" id="addSubCategoryModal" tabindex="-1" aria-labelledby="addSubCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addSubCategoryModalLabel">
+                    <i class="fas fa-tag text-primary"></i> 新增細分類
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addSubCategoryForm">
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-folder"></i> 所屬大分類
+                        </label>
+                        <input type="text" class="form-control" id="selectedCategoryName" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newSubCategoryName" class="form-label">
+                            <i class="fas fa-tag"></i> 子分類名稱 <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="newSubCategoryName" 
+                               placeholder="輸入子分類名稱" maxlength="50" required>
+                        <div class="form-text">最多 50 個字元</div>
+                    </div>
+                    <div class="alert alert-info d-none" id="addSubCategoryMessage"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> 取消
+                </button>
+                <button type="button" class="btn btn-primary" onclick="createSubCategory()">
+                    <i class="fas fa-save"></i> 建立子分類
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -264,6 +369,10 @@
             categorySelect.addEventListener('change', function() {
                 const type = document.querySelector('input[name="Record.Type"]:checked').value;
                 loadSubCategories(this.value, type);
+                
+                // 更新新增子分類按鈕狀態
+                const addSubCategoryBtn = document.getElementById('addSubCategoryBtn');
+                addSubCategoryBtn.disabled = !this.value;
             });
 
             // 金額輸入格式化
@@ -286,27 +395,69 @@
         });
 
         // 更新分類選項
-        function updateCategoryOptions() {
+        async function updateCategoryOptions(forceReload = false) {
             const type = document.querySelector('input[name="Record.Type"]:checked')?.value;
             const categorySelect = document.getElementById('categorySelect');
+            const currentSelectedValue = categorySelect.value; // 保存當前選中值
             
-            // 清空現有選項
-            categorySelect.innerHTML = '<option value="">請選擇大分類</option>';
-            
-            const options = type === 'Income' ? @Html.Raw(Json.Serialize(Model.IncomeCategoryOptions)) : @Html.Raw(Json.Serialize(Model.ExpenseCategoryOptions));
-            
-            options.forEach(option => {
-                const optionElement = document.createElement('option');
-                optionElement.value = option.value;
-                optionElement.textContent = option.text;
+            try {
+                let options;
                 
-                // 如果是編輯模式且匹配當前記錄的分類，設為選中
-                if ('@Model.Record.Category' === option.value) {
-                    optionElement.selected = true;
+                if (forceReload) {
+                    // 從服務器重新取得分類資料
+                    const response = await fetch(`/index8?handler=Categories&type=${encodeURIComponent(type)}`);
+                    if (response.ok) {
+                        const categories = await response.json();
+                        options = categories.map(c => ({ value: c.name, text: c.name }));
+                    } else {
+                        // 如果請求失敗，使用現有資料
+                        options = type === 'Income' ? @Html.Raw(Json.Serialize(Model.IncomeCategoryOptions)) : @Html.Raw(Json.Serialize(Model.ExpenseCategoryOptions));
+                    }
+                } else {
+                    // 使用頁面載入時的資料
+                    options = type === 'Income' ? @Html.Raw(Json.Serialize(Model.IncomeCategoryOptions)) : @Html.Raw(Json.Serialize(Model.ExpenseCategoryOptions));
                 }
                 
-                categorySelect.appendChild(optionElement);
-            });
+                // 清空現有選項
+                categorySelect.innerHTML = '<option value="">請選擇大分類</option>';
+                
+                options.forEach(option => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option.value;
+                    optionElement.textContent = option.text;
+                    
+                    // 如果是編輯模式且匹配當前記錄的分類，設為選中
+                    if ('@Model.Record.Category' === option.value || currentSelectedValue === option.value) {
+                        optionElement.selected = true;
+                    }
+                    
+                    categorySelect.appendChild(optionElement);
+                });
+                
+                // 更新新增子分類按鈕狀態
+                const addSubCategoryBtn = document.getElementById('addSubCategoryBtn');
+                if (addSubCategoryBtn) {
+                    addSubCategoryBtn.disabled = !categorySelect.value;
+                }
+            } catch (error) {
+                console.error('更新分類選項時發生錯誤:', error);
+                // 發生錯誤時使用原有邏輯
+                const options = type === 'Income' ? @Html.Raw(Json.Serialize(Model.IncomeCategoryOptions)) : @Html.Raw(Json.Serialize(Model.ExpenseCategoryOptions));
+                
+                categorySelect.innerHTML = '<option value="">請選擇大分類</option>';
+                
+                options.forEach(option => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option.value;
+                    optionElement.textContent = option.text;
+                    
+                    if ('@Model.Record.Category' === option.value || currentSelectedValue === option.value) {
+                        optionElement.selected = true;
+                    }
+                    
+                    categorySelect.appendChild(optionElement);
+                });
+            }
         }
 
         // 載入子分類
@@ -317,6 +468,10 @@
                 subCategorySelect.innerHTML = '<option value="">請選擇細分類</option>';
                 return;
             }
+
+            // 顯示載入中狀態
+            subCategorySelect.innerHTML = '<option value="">載入中...</option>';
+            subCategorySelect.disabled = true;
 
             try {
                 const response = await fetch(`/index8?handler=SubCategories&category=${encodeURIComponent(category)}&type=${encodeURIComponent(type)}`);
@@ -336,9 +491,22 @@
                     
                     subCategorySelect.appendChild(option);
                 });
+                
+                // 重新啟用選單
+                subCategorySelect.disabled = false;
+                
+                // 觸發一次focus來確保z-index正確應用
+                setTimeout(() => {
+                    if (document.activeElement === subCategorySelect) {
+                        subCategorySelect.blur();
+                        subCategorySelect.focus();
+                    }
+                }, 100);
+                
             } catch (error) {
                 console.error('載入子分類時發生錯誤:', error);
                 subCategorySelect.innerHTML = '<option value="">載入失敗</option>';
+                subCategorySelect.disabled = false;
             }
         }
 
@@ -469,6 +637,186 @@
             const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
             modal.show();
         }
+
+        // 顯示新增大分類對話框
+        function showAddCategoryModal() {
+            // 清空表單
+            document.getElementById('newCategoryName').value = '';
+            document.getElementById('newCategoryIcon').value = 'fas fa-folder';
+            document.getElementById('addCategoryMessage').classList.add('d-none');
+            
+            const modal = new bootstrap.Modal(document.getElementById('addCategoryModal'));
+            modal.show();
+        }
+
+        // 顯示新增子分類對話框
+        function showAddSubCategoryModal() {
+            const categorySelect = document.getElementById('categorySelect');
+            if (!categorySelect.value) {
+                alert('請先選擇大分類');
+                return;
+            }
+
+            // 設定所屬大分類
+            document.getElementById('selectedCategoryName').value = categorySelect.options[categorySelect.selectedIndex].text;
+            
+            // 清空表單
+            document.getElementById('newSubCategoryName').value = '';
+            document.getElementById('addSubCategoryMessage').classList.add('d-none');
+            
+            const modal = new bootstrap.Modal(document.getElementById('addSubCategoryModal'));
+            modal.show();
+        }
+
+        // 建立新大分類
+        async function createCategory() {
+            const nameInput = document.getElementById('newCategoryName');
+            const iconSelect = document.getElementById('newCategoryIcon');
+            const messageDiv = document.getElementById('addCategoryMessage');
+            
+            const categoryName = nameInput.value.trim();
+            if (!categoryName) {
+                showMessage(messageDiv, '請輸入分類名稱', 'danger');
+                return;
+            }
+
+            const currentType = document.querySelector('input[name="Record.Type"]:checked').value;
+
+            try {
+                // 顯示載入狀態
+                const createBtn = event.target;
+                const originalText = createBtn.innerHTML;
+                createBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 建立中...';
+                createBtn.disabled = true;
+
+                const response = await fetch('/index8?handler=CreateCategory', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({
+                        name: categoryName,
+                        type: currentType,
+                        icon: iconSelect.value
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage(messageDiv, result.message, 'success');
+                    
+                    // 重新載入分類選項
+                    await updateCategoryOptions(true);
+                    
+                    // 設定新分類為選中
+                    setTimeout(() => {
+                        const categorySelect = document.getElementById('categorySelect');
+                        categorySelect.value = categoryName;
+                        
+                        // 更新新增子分類按鈕狀態
+                        const addSubCategoryBtn = document.getElementById('addSubCategoryBtn');
+                        addSubCategoryBtn.disabled = false;
+                        
+                        // 關閉對話框
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('addCategoryModal'));
+                        modal.hide();
+                    }, 1000);
+                } else {
+                    showMessage(messageDiv, result.message, 'danger');
+                }
+                
+                // 恢復按鈕狀態
+                createBtn.innerHTML = originalText;
+                createBtn.disabled = false;
+                
+            } catch (error) {
+                console.error('建立分類時發生錯誤:', error);
+                showMessage(messageDiv, '建立分類時發生錯誤', 'danger');
+                
+                // 恢復按鈕狀態
+                createBtn.innerHTML = originalText;
+                createBtn.disabled = false;
+            }
+        }
+
+        // 建立新子分類
+        async function createSubCategory() {
+            const nameInput = document.getElementById('newSubCategoryName');
+            const messageDiv = document.getElementById('addSubCategoryMessage');
+            const categorySelect = document.getElementById('categorySelect');
+            
+            const subCategoryName = nameInput.value.trim();
+            if (!subCategoryName) {
+                showMessage(messageDiv, '請輸入子分類名稱', 'danger');
+                return;
+            }
+
+            const currentType = document.querySelector('input[name="Record.Type"]:checked').value;
+            const categoryName = categorySelect.value;
+
+            try {
+                // 顯示載入狀態
+                const createBtn = event.target;
+                const originalText = createBtn.innerHTML;
+                createBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 建立中...';
+                createBtn.disabled = true;
+
+                const response = await fetch('/index8?handler=CreateSubCategory', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({
+                        categoryName: categoryName,
+                        subCategoryName: subCategoryName,
+                        type: currentType
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage(messageDiv, result.message, 'success');
+                    
+                    // 重新載入子分類
+                    await loadSubCategories(categoryName, currentType);
+                    
+                    // 設定新子分類為選中
+                    setTimeout(() => {
+                        const subCategorySelect = document.getElementById('subCategorySelect');
+                        subCategorySelect.value = subCategoryName;
+                        
+                        // 關閉對話框
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('addSubCategoryModal'));
+                        modal.hide();
+                    }, 1000);
+                } else {
+                    showMessage(messageDiv, result.message, 'danger');
+                }
+                
+                // 恢復按鈕狀態
+                createBtn.innerHTML = originalText;
+                createBtn.disabled = false;
+                
+            } catch (error) {
+                console.error('建立子分類時發生錯誤:', error);
+                showMessage(messageDiv, '建立子分類時發生錯誤', 'danger');
+                
+                // 恢復按鈕狀態
+                createBtn.innerHTML = originalText;
+                createBtn.disabled = false;
+            }
+        }
+
+        // 顯示訊息
+        function showMessage(messageDiv, message, type) {
+            messageDiv.className = `alert alert-${type}`;
+            messageDiv.textContent = message;
+            messageDiv.classList.remove('d-none');
+        }
     </script>
     
     <!-- 表單驗證 -->
@@ -527,19 +875,112 @@
             min-height: 100px;
         }
         
+        /* 修正下拉選單被截斷的問題 */
+        .form-select {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .form-select:focus,
+        .form-select:active {
+            z-index: 1000;
+        }
+        
+        /* 確保下拉選單容器有足夠空間 */
+        .card-body {
+            overflow: visible;
+            position: relative;
+        }
+        
+        .card {
+            overflow: visible;
+        }
+        
+        .container {
+            overflow: visible;
+        }
+        
+        /* 為分類選擇區域增加底部邊距，確保下拉選單有足夠顯示空間 */
+        .row.mb-4:has(select) {
+            margin-bottom: 3rem !important;
+        }
+        
+        /* 針對大分類和小分類的特殊處理 */
+        #categorySelect,
+        #subCategorySelect {
+            position: relative;
+            z-index: 10;
+        }
+        
+        #categorySelect:focus,
+        #categorySelect[aria-expanded="true"],
+        #subCategorySelect:focus,
+        #subCategorySelect[aria-expanded="true"] {
+            z-index: 1050;
+        }
+        
+        /* 確保選單選項完整顯示 */
+        .form-select option {
+            padding: 8px 12px;
+            line-height: 1.5;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+        
+        /* 新增分類按鈕樣式 */
+        .btn-sm.flex-shrink-0 {
+            min-width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .d-flex.gap-2 {
+            gap: 0.5rem !important;
+        }
+        
+        /* 對話框樣式增強 */
+        .modal-header {
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .modal-footer {
+            border-top: 1px solid #dee2e6;
+        }
+        
+        .alert {
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+        }
+        
+        /* 圖示選擇器樣式 */
+        #newCategoryIcon option {
+            padding: 8px;
+        }
+        
         @@media (max-width: 576px) {
             .container {
                 padding-left: 15px;
                 padding-right: 15px;
+                overflow: visible;
             }
             
             .card-body {
                 padding: 1rem;
+                overflow: visible;
             }
             
             .btn-lg {
                 font-size: 1rem;
                 padding: 0.5rem 1rem;
+            }
+            
+            /* 手機版本的下拉選單調整 */
+            .form-select {
+                font-size: 16px; /* 防止手機瀏覽器自動縮放 */
             }
         }
     </style>

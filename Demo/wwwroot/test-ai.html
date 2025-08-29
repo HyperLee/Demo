@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI 功能測試</title>
+</head>
+<body>
+    <h1>AI 智慧分析功能測試</h1>
+    <div id="results"></div>
+    
+    <script>
+        async function testAIFunctions() {
+            const resultsDiv = document.getElementById('results');
+            
+            try {
+                // 測試智慧洞察 API
+                console.log('測試智慧洞察 API...');
+                const insightsResponse = await fetch('/index7?handler=SmartInsights');
+                const insightsResult = await insightsResponse.json();
+                
+                resultsDiv.innerHTML += '<h2>智慧洞察結果:</h2>';
+                resultsDiv.innerHTML += '<pre>' + JSON.stringify(insightsResult, null, 2) + '</pre>';
+                
+                // 測試異常警報 API
+                console.log('測試異常警報 API...');
+                const alertsResponse = await fetch('/index7?handler=AnomalyAlerts');
+                const alertsResult = await alertsResponse.json();
+                
+                resultsDiv.innerHTML += '<h2>異常警報結果:</h2>';
+                resultsDiv.innerHTML += '<pre>' + JSON.stringify(alertsResult, null, 2) + '</pre>';
+                
+            } catch (error) {
+                console.error('測試失敗:', error);
+                resultsDiv.innerHTML += '<p style="color: red;">測試失敗: ' + error.message + '</p>';
+            }
+        }
+        
+        // 頁面載入後立即執行測試
+        window.onload = testAIFunctions;
+    </script>
+</body>
+</html>

@@ -32,7 +32,7 @@ public class AnomalyDetectionService
             
             var alerts = new List<AnomalyAlert>();
             var currentRecords = await _accountingService.GetRecordsAsync(startDate, endDate);
-            var expenseRecords = currentRecords.Where(r => r.Amount < 0).ToList();
+            var expenseRecords = currentRecords.Where(r => r.Type == "Expense").ToList();
 
             // 1. Z-Score 分析 - 偵測異常高額支出
             var zScoreAlerts = await DetectZScoreAnomaliesAsync(expenseRecords, startDate, endDate);
@@ -83,19 +83,19 @@ public class AnomalyDetectionService
 
             foreach (var category in categories)
             {
-                var currentAmount = Math.Abs(currentRecords
-                    .Where(r => r.Category == category.Name && r.Amount < 0)
-                    .Sum(r => r.Amount));
+                var currentAmount = currentRecords
+                    .Where(r => r.Category == category.Name && r.Type == "Expense")
+                    .Sum(r => r.Amount);
 
                 var historicalAmounts = new List<decimal>();
                 for (int i = 0; i < 6; i++)
                 {
                     var monthStart = startDate.AddMonths(-(i + 1));
                     var monthEnd = monthStart.AddMonths(1).AddDays(-1);
-                    var monthAmount = Math.Abs(historicalRecords
-                        .Where(r => r.Category == category.Name && r.Amount < 0 &&
+                    var monthAmount = historicalRecords
+                        .Where(r => r.Category == category.Name && r.Type == "Expense" &&
                                    r.Date >= monthStart && r.Date <= monthEnd)
-                        .Sum(r => r.Amount));
+                        .Sum(r => r.Amount);
                     historicalAmounts.Add(monthAmount);
                 }
 
@@ -315,16 +315,16 @@ public class AnomalyDetectionService
             var categoryRecords = records.Where(r => r.Category == category.Name).ToList();
             if (!categoryRecords.Any()) continue;
 
-            var amounts = categoryRecords.Select(r => Math.Abs(r.Amount)).ToList();
+            var amounts = categoryRecords.Select(r => r.Amount).ToList();
             var mean = amounts.Average();
             var stdDev = CalculateStandardDeviation(amounts);
 
             foreach (var record in categoryRecords)
             {
-                var absAmount = Math.Abs(record.Amount);
+                var amount = record.Amount;
                 if (stdDev > 0)
                 {
-                    var zScore = (double)((absAmount - mean) / stdDev);
+                    var zScore = (double)((amount - mean) / stdDev);
                     if (zScore > 2.5) // 超過2.5個標準差
                     {
                         alerts.Add(new AnomalyAlert
@@ -333,11 +333,11 @@ public class AnomalyDetectionService
                             AlertType = "amount",
                             Severity = zScore > 3.0 ? "critical" : "high",
                             Title = $"{category.Name} 異常高額支出",
-                            Description = $"在 {record.Date:yyyy/MM/dd} 的 {category.Name} 支出 NT${absAmount:N0} 超過正常範圍",
+                            Description = $"在 {record.Date:yyyy/MM/dd} 的 {category.Name} 支出 NT${amount:N0} 超過正常範圍",
                             Category = category.Name,
-                            Amount = absAmount,
+                            Amount = amount,
                             BaselineAmount = mean,
-                            DeviationPercentage = (absAmount - mean) / mean * 100,
+                            DeviationPercentage = (amount - mean) / mean * 100,
                             Recommendation = "建議檢視此筆支出是否為必要消費，並考慮未來預算調整"
                         });
                     }
@@ -366,7 +366,7 @@ public class AnomalyDetectionService
 
             if (categoryRecords.Count < 5) continue; // 需要足夠的資料點
 
-            var amounts = categoryRecords.Select(r => Math.Abs(r.Amount)).ToList();
+            var amounts = categoryRecords.Select(r => r.Amount).ToList();
             var movingAverages = CalculateMovingAverage(amounts, 5);
 
             for (int i = 5; i < amounts.Count; i++)

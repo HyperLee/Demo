@@ -309,10 +309,10 @@ public class FinancialInsightsService
         var insights = new List<SmartInsight>();
 
         // 分析支出集中度
-        var expenseRecords = records.Where(r => r.Amount < 0).ToList();
+        var expenseRecords = records.Where(r => r.Type == "Expense").ToList();
         var categoryTotals = expenseRecords
             .GroupBy(r => r.Category)
-            .Select(g => new { Category = g.Key, Total = Math.Abs(g.Sum(r => r.Amount)) })
+            .Select(g => new { Category = g.Key, Total = g.Sum(r => r.Amount) })
             .OrderByDescending(c => c.Total)
             .ToList();
 
@@ -348,10 +348,10 @@ public class FinancialInsightsService
         // 分析支出時間模式
         var weekdayExpense = expenseRecords
             .Where(r => r.Date.DayOfWeek >= DayOfWeek.Monday && r.Date.DayOfWeek <= DayOfWeek.Friday)
-            .Sum(r => Math.Abs(r.Amount));
+            .Sum(r => r.Amount);
         var weekendExpense = expenseRecords
             .Where(r => r.Date.DayOfWeek == DayOfWeek.Saturday || r.Date.DayOfWeek == DayOfWeek.Sunday)
-            .Sum(r => Math.Abs(r.Amount));
+            .Sum(r => r.Amount);
 
         var weekendRatio = (weekdayExpense + weekendExpense) > 0 
             ? weekendExpense / (weekdayExpense + weekendExpense) 
@@ -424,8 +424,8 @@ public class FinancialInsightsService
         var lastMonthEnd = lastMonthStart.AddMonths(1).AddDays(-1);
         var lastMonthRecords = await _accountingService.GetRecordsAsync(lastMonthStart, lastMonthEnd);
 
-        var currentExpense = Math.Abs(records.Where(r => r.Amount < 0).Sum(r => r.Amount));
-        var lastMonthExpense = Math.Abs(lastMonthRecords.Where(r => r.Amount < 0).Sum(r => r.Amount));
+        var currentExpense = records.Where(r => r.Type == "Expense").Sum(r => r.Amount);
+        var lastMonthExpense = lastMonthRecords.Where(r => r.Type == "Expense").Sum(r => r.Amount);
 
         if (lastMonthExpense > 0)
         {
@@ -511,20 +511,20 @@ public class FinancialInsightsService
     private async Task<PersonalizedRecommendation?> GenerateCategoryRecommendationAsync(
         string category, List<AccountingRecord> records, DateTime startDate, DateTime endDate)
     {
-        var categoryRecords = records.Where(r => r.Category == category && r.Amount < 0).ToList();
+        var categoryRecords = records.Where(r => r.Category == category && r.Type == "Expense").ToList();
         if (!categoryRecords.Any()) return null;
 
-        var currentAmount = Math.Abs(categoryRecords.Sum(r => r.Amount));
+        var currentAmount = categoryRecords.Sum(r => r.Amount);
 
         // 取得歷史資料比較
         var historicalStart = startDate.AddMonths(-3);
         var historicalRecords = await _accountingService.GetRecordsAsync(historicalStart, startDate);
-        var historicalAverage = Math.Abs(historicalRecords
-            .Where(r => r.Category == category && r.Amount < 0)
+        var historicalAverage = historicalRecords
+            .Where(r => r.Category == category && r.Type == "Expense")
             .GroupBy(r => new { r.Date.Year, r.Date.Month })
             .Select(g => g.Sum(r => r.Amount))
             .DefaultIfEmpty(0)
-            .Average());
+            .Average();
 
         if (currentAmount > historicalAverage * 1.2m) // 超過歷史平均20%
         {
@@ -579,8 +579,8 @@ public class FinancialInsightsService
     private static PersonalizedRecommendation? GenerateOverallRecommendation(
         List<AccountingRecord> records, DateTime startDate, DateTime endDate)
     {
-        var totalIncome = records.Where(r => r.Amount > 0).Sum(r => r.Amount);
-        var totalExpense = Math.Abs(records.Where(r => r.Amount < 0).Sum(r => r.Amount));
+        var totalIncome = records.Where(r => r.Type == "Income").Sum(r => r.Amount);
+        var totalExpense = records.Where(r => r.Type == "Expense").Sum(r => r.Amount);
         
         if (totalIncome == 0) return null;
 
@@ -617,8 +617,8 @@ public class FinancialInsightsService
     /// </summary>
     private static HealthMetric CalculateIncomeExpenseMetric(List<AccountingRecord> records)
     {
-        var totalIncome = records.Where(r => r.Amount > 0).Sum(r => r.Amount);
-        var totalExpense = Math.Abs(records.Where(r => r.Amount < 0).Sum(r => r.Amount));
+        var totalIncome = records.Where(r => r.Type == "Income").Sum(r => r.Amount);
+        var totalExpense = records.Where(r => r.Type == "Expense").Sum(r => r.Amount);
         
         var ratio = totalIncome > 0 ? totalExpense / totalIncome : 1;
         var score = ratio switch
@@ -672,7 +672,7 @@ public class FinancialInsightsService
     /// </summary>
     private static HealthMetric CalculateDiversityMetric(List<AccountingRecord> records)
     {
-        var expenseRecords = records.Where(r => r.Amount < 0).ToList();
+        var expenseRecords = records.Where(r => r.Type == "Expense").ToList();
         if (!expenseRecords.Any())
         {
             return new HealthMetric

@@ -17,6 +17,10 @@ public interface IAccountingService
     Task<MonthlySummary> GetMonthlySummaryAsync(int year, int month);
     Task<List<CalendarDay>> GetCalendarDataAsync(int year, int month);
     Task<List<string>> GetPaymentMethodsAsync();
+    Task<bool> CreateCategoryAsync(string name, string type, string icon = "fas fa-folder");
+    Task<bool> CreateSubCategoryAsync(string categoryName, string subCategoryName, string type);
+    Task<bool> DeleteCategoryAsync(int categoryId, string type);
+    Task<bool> DeleteSubCategoryAsync(int categoryId, int subCategoryId, string type);
 }
 
 /// <summary>
@@ -264,6 +268,161 @@ public class AccountingService : IAccountingService
             "銀行轉帳",
             "其他"
         };
+    }
+
+    public async Task<bool> CreateCategoryAsync(string name, string type, string icon = "fas fa-folder")
+    {
+        try
+        {
+            var categories = await LoadCategoriesAsync();
+            
+            // 檢查是否已存在相同名稱的分類
+            if (categories.Any(c => c.Name == name && c.Type == type))
+            {
+                _logger.LogWarning("分類 {Name} 已存在於 {Type} 類型中", name, type);
+                return false;
+            }
+
+            // 取得新的ID
+            var maxId = categories.Any() ? categories.Max(c => c.Id) : 0;
+            
+            var newCategory = new AccountingCategory
+            {
+                Id = maxId + 1,
+                Name = name,
+                Type = type,
+                Icon = icon,
+                SubCategories = new List<AccountingSubCategory>()
+            };
+
+            categories.Add(newCategory);
+            await SaveCategoriesAsync(categories);
+            
+            _logger.LogInformation("成功建立新分類 {Name} ({Type})", name, type);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "建立分類 {Name} 時發生錯誤", name);
+            return false;
+        }
+    }
+
+    public async Task<bool> CreateSubCategoryAsync(string categoryName, string subCategoryName, string type)
+    {
+        try
+        {
+            var categories = await LoadCategoriesAsync();
+            var category = categories.FirstOrDefault(c => c.Name == categoryName && c.Type == type);
+            
+            if (category == null)
+            {
+                _logger.LogWarning("找不到分類 {CategoryName} ({Type})", categoryName, type);
+                return false;
+            }
+
+            // 檢查是否已存在相同名稱的子分類
+            if (category.SubCategories.Any(sc => sc.Name == subCategoryName))
+            {
+                _logger.LogWarning("子分類 {SubCategoryName} 已存在於分類 {CategoryName} 中", subCategoryName, categoryName);
+                return false;
+            }
+
+            // 取得新的子分類ID
+            var maxSubId = category.SubCategories.Any() ? category.SubCategories.Max(sc => sc.Id) : 0;
+            
+            var newSubCategory = new AccountingSubCategory
+            {
+                Id = maxSubId + 1,
+                Name = subCategoryName
+            };
+
+            category.SubCategories.Add(newSubCategory);
+            await SaveCategoriesAsync(categories);
+            
+            _logger.LogInformation("成功建立新子分類 {SubCategoryName} 於分類 {CategoryName} ({Type})", subCategoryName, categoryName, type);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "建立子分類 {SubCategoryName} 時發生錯誤", subCategoryName);
+            return false;
+        }
+    }
+
+    public async Task<bool> DeleteCategoryAsync(int categoryId, string type)
+    {
+        try
+        {
+            var categories = await LoadCategoriesAsync();
+            var category = categories.FirstOrDefault(c => c.Id == categoryId && c.Type == type);
+            
+            if (category == null)
+            {
+                _logger.LogWarning("找不到要刪除的分類 ID: {CategoryId} ({Type})", categoryId, type);
+                return false;
+            }
+
+            // 檢查是否有記錄使用此分類
+            var records = await LoadRecordsAsync();
+            if (records.Any(r => r.Category == category.Name && r.Type == type))
+            {
+                _logger.LogWarning("無法刪除分類 {CategoryName}，仍有記錄使用此分類", category.Name);
+                return false;
+            }
+
+            categories.Remove(category);
+            await SaveCategoriesAsync(categories);
+            
+            _logger.LogInformation("成功刪除分類 {CategoryName} ({Type})", category.Name, type);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "刪除分類 ID: {CategoryId} 時發生錯誤", categoryId);
+            return false;
+        }
+    }
+
+    public async Task<bool> DeleteSubCategoryAsync(int categoryId, int subCategoryId, string type)
+    {
+        try
+        {
+            var categories = await LoadCategoriesAsync();
+            var category = categories.FirstOrDefault(c => c.Id == categoryId && c.Type == type);
+            
+            if (category == null)
+            {
+                _logger.LogWarning("找不到分類 ID: {CategoryId} ({Type})", categoryId, type);
+                return false;
+            }
+
+            var subCategory = category.SubCategories.FirstOrDefault(sc => sc.Id == subCategoryId);
+            if (subCategory == null)
+            {
+                _logger.LogWarning("找不到要刪除的子分類 ID: {SubCategoryId} 於分類 {CategoryName}", subCategoryId, category.Name);
+                return false;
+            }
+
+            // 檢查是否有記錄使用此子分類
+            var records = await LoadRecordsAsync();
+            if (records.Any(r => r.Category == category.Name && r.SubCategory == subCategory.Name && r.Type == type))
+            {
+                _logger.LogWarning("無法刪除子分類 {SubCategoryName}，仍有記錄使用此子分類", subCategory.Name);
+                return false;
+            }
+
+            category.SubCategories.Remove(subCategory);
+            await SaveCategoriesAsync(categories);
+            
+            _logger.LogInformation("成功刪除子分類 {SubCategoryName} 於分類 {CategoryName} ({Type})", subCategory.Name, category.Name, type);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "刪除子分類 ID: {SubCategoryId} 時發生錯誤", subCategoryId);
+            return false;
+        }
     }
 
     #region 私有方法

@@ -215,6 +215,24 @@ public class index8 : PageModel
     }
 
     /// <summary>
+    /// 取得分類 AJAX 處理
+    /// </summary>
+    public async Task<IActionResult> OnGetCategoriesAsync(string type)
+    {
+        try
+        {
+            var categories = await _accountingService.GetCategoriesAsync(type);
+            var result = categories.Select(c => new { name = c.Name, id = c.Id }).ToList();
+            return new JsonResult(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "取得分類時發生錯誤");
+            return new JsonResult(new { error = "取得分類時發生錯誤" });
+        }
+    }
+
+    /// <summary>
     /// 取得子分類 AJAX 處理
     /// </summary>
     public async Task<IActionResult> OnGetSubCategoriesAsync(string category, string type)
@@ -266,6 +284,83 @@ public class index8 : PageModel
         {
             _logger.LogError(ex, "驗證金額時發生錯誤");
             return new JsonResult(new { valid = false, message = "驗證時發生錯誤" });
+        }
+    }
+
+    /// <summary>
+    /// 新增大分類 AJAX 處理
+    /// </summary>
+    public async Task<IActionResult> OnPostCreateCategoryAsync([FromBody] CreateCategoryRequest request)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.Name))
+            {
+                return new JsonResult(new { success = false, message = "分類名稱不可為空" });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Type))
+            {
+                return new JsonResult(new { success = false, message = "分類類型不可為空" });
+            }
+
+            var success = await _accountingService.CreateCategoryAsync(request.Name, request.Type, request.Icon ?? "fas fa-folder");
+            
+            if (success)
+            {
+                _logger.LogInformation("成功建立新分類 {Name} ({Type})", request.Name, request.Type);
+                return new JsonResult(new { success = true, message = "分類建立成功" });
+            }
+            else
+            {
+                return new JsonResult(new { success = false, message = "分類建立失敗，可能已存在相同名稱的分類" });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "建立分類時發生錯誤");
+            return new JsonResult(new { success = false, message = "建立分類時發生錯誤" });
+        }
+    }
+
+    /// <summary>
+    /// 新增子分類 AJAX 處理
+    /// </summary>
+    public async Task<IActionResult> OnPostCreateSubCategoryAsync([FromBody] CreateSubCategoryRequest request)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.CategoryName))
+            {
+                return new JsonResult(new { success = false, message = "請選擇大分類" });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.SubCategoryName))
+            {
+                return new JsonResult(new { success = false, message = "子分類名稱不可為空" });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Type))
+            {
+                return new JsonResult(new { success = false, message = "分類類型不可為空" });
+            }
+
+            var success = await _accountingService.CreateSubCategoryAsync(request.CategoryName, request.SubCategoryName, request.Type);
+            
+            if (success)
+            {
+                _logger.LogInformation("成功建立新子分類 {SubCategoryName} 於分類 {CategoryName} ({Type})", request.SubCategoryName, request.CategoryName, request.Type);
+                return new JsonResult(new { success = true, message = "子分類建立成功" });
+            }
+            else
+            {
+                return new JsonResult(new { success = false, message = "子分類建立失敗，可能已存在相同名稱的子分類" });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "建立子分類時發生錯誤");
+            return new JsonResult(new { success = false, message = "建立子分類時發生錯誤" });
         }
     }
 
@@ -355,4 +450,24 @@ public class AccountingRecordViewModel
 public class ValidateAmountRequest
 {
     public decimal Amount { get; set; }
+}
+
+/// <summary>
+/// 建立分類請求模型
+/// </summary>
+public class CreateCategoryRequest
+{
+    public string Name { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
+    public string? Icon { get; set; }
+}
+
+/// <summary>
+/// 建立子分類請求模型
+/// </summary>
+public class CreateSubCategoryRequest
+{
+    public string CategoryName { get; set; } = string.Empty;
+    public string SubCategoryName { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
 }
