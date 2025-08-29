@@ -171,9 +171,9 @@ public class BudgetManagementService
 
             foreach (var budget in budgets)
             {
-                var actualAmount = Math.Abs(records
-                    .Where(r => r.Category == budget.Category && r.Amount < 0)
-                    .Sum(r => r.Amount));
+                var actualAmount = records
+                    .Where(r => r.Category == budget.Category && r.Type == "Expense")
+                    .Sum(r => r.Amount);
 
                 var remainingAmount = Math.Max(0, budget.BudgetAmount - actualAmount);
                 var usedPercentage = budget.BudgetAmount > 0 
@@ -323,7 +323,7 @@ public class BudgetManagementService
             foreach (var category in categories)
             {
                 var categoryRecords = historicalRecords
-                    .Where(r => r.Category == category.Name && r.Amount < 0)
+                    .Where(r => r.Category == category.Name && r.Type == "Expense")
                     .ToList();
 
                 if (!categoryRecords.Any()) continue;
@@ -334,9 +334,9 @@ public class BudgetManagementService
                 {
                     var monthStart = startDate.AddMonths(-(i + 1));
                     var monthEnd = monthStart.AddMonths(1).AddDays(-1);
-                    var monthAmount = Math.Abs(categoryRecords
+                    var monthAmount = categoryRecords
                         .Where(r => r.Date >= monthStart && r.Date <= monthEnd)
-                        .Sum(r => r.Amount));
+                        .Sum(r => r.Amount);
                     monthlyAmounts.Add(monthAmount);
                 }
 

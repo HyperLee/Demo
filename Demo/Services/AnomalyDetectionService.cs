@@ -148,7 +148,7 @@ public class AnomalyDetectionService
             foreach (var category in categories)
             {
                 var currentFrequency = currentRecords
-                    .Count(r => r.Category == category.Name && r.Amount < 0);
+                    .Count(r => r.Category == category.Name && r.Type == "Expense");
 
                 // 獲取歷史頻率數據 (過去3個月)
                 var historicalFrequencies = new List<int>();
@@ -158,7 +158,7 @@ public class AnomalyDetectionService
                     var monthEnd = monthStart.AddMonths(1).AddDays(-1);
                     var historicalRecords = await _accountingService.GetRecordsAsync(monthStart, monthEnd);
                     var frequency = historicalRecords
-                        .Count(r => r.Category == category.Name && r.Amount < 0);
+                        .Count(r => r.Category == category.Name && r.Type == "Expense");
                     historicalFrequencies.Add(frequency);
                 }
 
@@ -205,8 +205,8 @@ public class AnomalyDetectionService
         try
         {
             var records = await _accountingService.GetRecordsAsync(startDate, endDate);
-            var totalIncome = records.Where(r => r.Amount > 0).Sum(r => r.Amount);
-            var totalExpense = Math.Abs(records.Where(r => r.Amount < 0).Sum(r => r.Amount));
+            var totalIncome = records.Where(r => r.Type == "Income").Sum(r => r.Amount);
+            var totalExpense = records.Where(r => r.Type == "Expense").Sum(r => r.Amount);
             
             var riskFactors = new List<RiskFactor>();
             int totalScore = 0;
@@ -231,9 +231,9 @@ public class AnomalyDetectionService
             });
 
             // 2. 支出波動性分析
-            var dailyExpenses = records.Where(r => r.Amount < 0)
+            var dailyExpenses = records.Where(r => r.Type == "Expense")
                 .GroupBy(r => r.Date.Date)
-                .Select(g => Math.Abs(g.Sum(r => r.Amount)))
+                .Select(g => g.Sum(r => r.Amount))
                 .ToList();
 
             var expenseVolatility = CalculateStandardDeviation(dailyExpenses) / (dailyExpenses.Average() + 1);

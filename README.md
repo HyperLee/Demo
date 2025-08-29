@@ -727,8 +727,122 @@ public class AccountingRecord
 - `Pages/index8.cshtml.cs`：編輯邏輯、分類載入、資料驗證
 - `Services/AccountingService.cs`：記帳資料服務核心
 - `Models/AccountingModels.cs`：記帳資料模型定義
+- `Services/StatisticsService.cs`：統計分析服務
+- `Services/FinancialInsightsService.cs`：財務洞察服務
+- `Services/AnomalyDetectionService.cs`：異常偵測服務
+- `Services/PredictiveAnalysisService.cs`：預測分析服務
+- `wwwroot/js/financial-ai.js`：AI 智慧分析前端腳本
+- `wwwroot/js/statistics-advanced.js`：進階統計分析腳本
 - `App_Data/accounting-records.json`：記帳記錄檔案 🔴
 - `App_Data/accounting-categories.json`：分類結構檔案 🔴
+
+### 🤖 AI 智慧分析功能
+
+記帳系統整合了先進的 AI 智慧分析功能，提供深度財務洞察和個人化建議，幫助使用者更好地管理財務狀況。
+
+#### 財務健康度評分系統
+- **整體健康度評分**：0-100 分制，綜合評估財務狀況
+- **儲蓄能力分析**：評估收支比例和儲蓄潛力
+- **收支平衡指標**：分析收入支出的健康比例
+- **成長趨勢評估**：追蹤財務狀況的變化趨勢
+
+#### 智慧洞察與分析
+```javascript
+// 智慧洞察載入示例
+class FinancialAI {
+    async loadSmartInsights() {
+        const insights = await fetch('/index7?handler=SmartInsights');
+        // 分析支出模式、節省機會、趨勢變化
+    }
+}
+```
+
+**洞察類型**：
+- **支出模式分析**：識別消費習慣和週期性模式
+- **節省機會識別**：發現可優化的支出類別
+- **趨勢分析洞察**：預測未來財務發展方向
+- **比較分析**：與歷史數據和標準基準的對比
+
+#### 異常偵測與警報系統
+**Z-Score 分析**：
+- 偵測異常高額支出
+- 識別消費模式的突然變化
+- 提供風險等級評估（低、中、高、嚴重）
+
+**移動平均偏差分析**：
+- 追蹤支出模式的長期變化
+- 偵測消費習慣的異常波動
+- 提供預警機制和建議
+
+**頻率異常分析**：
+- 監控消費頻率的變化
+- 識別新的消費模式
+- 分析分類消費頻率的異常
+
+#### 支出預測與現金流分析
+**預測演算法**：
+```csharp
+// 線性回歸預測支出
+private ExpenseForecast? ForecastCategoryExpense(
+    string category, List<AccountingRecord> historicalRecords, int monthsAhead)
+{
+    // 使用歷史數據建立預測模型
+    var (slope, intercept) = CalculateLinearRegression(monthlyExpenses);
+    // 加入季節性調整因子
+    var forecastAmount = baseAmount * seasonalFactor;
+}
+```
+
+**預測功能**：
+- **支出預測**：基於歷史數據預測未來 6 個月支出
+- **收入預測**：分析收入趨勢和穩定性
+- **現金流預測**：預測未來 12 個月的現金流狀況
+- **季節性分析**：識別不同月份的消費模式
+
+#### 個人化建議系統
+**建議生成邏輯**：
+- **分類建議**：針對各支出分類提供優化建議
+- **預算建議**：基於歷史數據建議合理預算
+- **節約機會**：識別具體的節約潛力和方法
+- **財務目標**：提供達成財務目標的具體步驟
+
+**建議類型**：
+```typescript
+interface PersonalizedRecommendation {
+    category: string;           // 建議類別
+    priority: "high" | "medium" | "low";  // 優先級
+    impact: number;            // 預期影響 (0-100)
+    description: string;       // 建議描述
+    actionItems: string[];     // 具體行動項目
+    estimatedSavings: number;  // 預估節省金額
+}
+```
+
+#### 技術架構特色
+**微服務化設計**：
+- `FinancialInsightsService`：財務洞察核心服務
+- `AnomalyDetectionService`：異常偵測專門服務  
+- `PredictiveAnalysisService`：預測分析演算法服務
+- `StatisticsService`：統計分析統一介面
+
+**前端整合**：
+- Chart.js 圖表視覺化
+- 即時資料載入和更新
+- 響應式儀表板設計
+- 互動式分析面板
+
+**資料處理流程**：
+1. **資料收集**：從記帳記錄提取分析所需資料
+2. **模型訓練**：使用歷史資料建立預測和分析模型  
+3. **洞察生成**：運行各種分析演算法產生洞察
+4. **建議產生**：基於分析結果生成個人化建議
+5. **視覺化呈現**：透過圖表和儀表板展示結果
+
+**⚠️ AI 分析注意事項**：
+- **資料需求**：需要至少 3-6 個月的記帳資料才能產生準確分析
+- **模型準確性**：預測準確度會隨著資料量增加而提升
+- **隱私保護**：所有分析均在本地進行，不涉及外部 API
+- **定期更新**：建議定期檢視和更新 AI 分析結果
 
 ---
 

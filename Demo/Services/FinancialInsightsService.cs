@@ -649,8 +649,8 @@ public class FinancialInsightsService
     /// </summary>
     private static HealthMetric CalculateSavingsMetric(List<AccountingRecord> records)
     {
-        var totalIncome = records.Where(r => r.Amount > 0).Sum(r => r.Amount);
-        var totalExpense = Math.Abs(records.Where(r => r.Amount < 0).Sum(r => r.Amount));
+        var totalIncome = records.Where(r => r.Type == "Income").Sum(r => r.Amount);
+        var totalExpense = records.Where(r => r.Type == "Expense").Sum(r => r.Amount);
         
         var savingsRate = totalIncome > 0 ? (totalIncome - totalExpense) / totalIncome : 0;
         var score = savingsRate switch
@@ -764,9 +764,9 @@ public class FinancialInsightsService
     private static HealthMetric CalculateStabilityMetric(List<AccountingRecord> records)
     {
         var dailyExpenses = records
-            .Where(r => r.Amount < 0)
+            .Where(r => r.Type == "Expense")
             .GroupBy(r => r.Date.Date)
-            .Select(g => Math.Abs(g.Sum(r => r.Amount)))
+            .Select(g => g.Sum(r => r.Amount))
             .ToList();
 
         if (dailyExpenses.Count < 5)
@@ -811,10 +811,10 @@ public class FinancialInsightsService
     private static SavingsOpportunity? AnalyzeCategorySavingsOpportunity(
         string category, List<AccountingRecord> records, DateTime startDate, DateTime endDate)
     {
-        var categoryRecords = records.Where(r => r.Category == category && r.Amount < 0).ToList();
+        var categoryRecords = records.Where(r => r.Category == category && r.Type == "Expense").ToList();
         if (!categoryRecords.Any()) return null;
 
-        var currentAmount = Math.Abs(categoryRecords.Sum(r => r.Amount));
+        var currentAmount = categoryRecords.Sum(r => r.Amount);
 
         // 分析節省潛力
         var savingsPotential = category switch
@@ -870,10 +870,10 @@ public class FinancialInsightsService
     private static CategoryEfficiency? CalculateCategoryEfficiency(
         string category, List<AccountingRecord> records)
     {
-        var categoryRecords = records.Where(r => r.Category == category && r.Amount < 0).ToList();
+        var categoryRecords = records.Where(r => r.Category == category && r.Type == "Expense").ToList();
         if (!categoryRecords.Any()) return null;
 
-        var currentSpending = Math.Abs(categoryRecords.Sum(r => r.Amount));
+        var currentSpending = categoryRecords.Sum(r => r.Amount);
 
         // 基於一般標準估算最佳支出
         var optimalSpending = category switch
