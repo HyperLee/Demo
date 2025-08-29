@@ -458,65 +458,189 @@ class FinancialAI {
         const canvas = document.getElementById('cash-flow-chart');
         if (!canvas) return;
 
+        // 檢查資料是否存在
+        if (!data || !data.dataPoints || data.dataPoints.length === 0) {
+            this.showCashFlowError();
+            return;
+        }
+
         // 銷毀舊圖表
         if (this.charts.cashFlow) {
             this.charts.cashFlow.destroy();
         }
 
         const ctx = canvas.getContext('2d');
+        
+        // 格式化資料
+        const labels = data.dataPoints.map(point => {
+            const date = new Date(point.date);
+            return date.toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit' });
+        });
+        
         this.charts.cashFlow = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: data.monthlyProjections.map(m => m.month),
+                labels: labels,
                 datasets: [
                     {
                         label: '預測收入',
-                        data: data.monthlyProjections.map(m => m.predictedIncome),
-                        backgroundColor: '#28a745',
+                        data: data.dataPoints.map(point => point.income),
+                        backgroundColor: 'rgba(40, 167, 69, 0.8)',
                         borderColor: '#28a745',
                         borderWidth: 1
                     },
                     {
                         label: '預測支出',
-                        data: data.monthlyProjections.map(m => -m.predictedExpense),
-                        backgroundColor: '#dc3545',
+                        data: data.dataPoints.map(point => -point.expense),
+                        backgroundColor: 'rgba(220, 53, 69, 0.8)',
                         borderColor: '#dc3545',
                         borderWidth: 1
                     },
                     {
                         label: '淨現金流',
-                        data: data.monthlyProjections.map(m => m.netCashFlow),
+                        data: data.dataPoints.map(point => point.netFlow),
                         type: 'line',
                         borderColor: '#007bff',
                         backgroundColor: 'transparent',
                         borderWidth: 3,
-                        tension: 0.4
+                        tension: 0.4,
+                        fill: false
+                    },
+                    {
+                        label: '累積餘額',
+                        data: data.dataPoints.map(point => point.cumulativeBalance),
+                        type: 'line',
+                        borderColor: '#6f42c1',
+                        backgroundColor: 'rgba(111, 66, 193, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        yAxisID: 'y1'
                     }
                 ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
                 plugins: {
                     title: {
                         display: true,
-                        text: '未來 12 個月現金流預測'
+                        text: '未來現金流預測分析',
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        }
                     },
                     legend: {
-                        position: 'top'
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += 'NT$ ' + Math.abs(context.parsed.y).toLocaleString();
+                                return label;
+                            }
+                        }
                     }
                 },
                 scales: {
                     y: {
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: '金額 (NT$)'
+                        },
                         ticks: {
                             callback: function(value) {
                                 return 'NT$ ' + value.toLocaleString();
                             }
+                        },
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: '累積餘額 (NT$)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return 'NT$ ' + value.toLocaleString();
+                            }
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: '月份'
                         }
                     }
                 }
             }
         });
+        
+        // 顯示警告訊息
+        if (data.warnings && data.warnings.length > 0) {
+            this.displayCashFlowWarnings(data.warnings);
+        }
+    }
+
+    /**
+     * 顯示現金流警告訊息
+     */
+    displayCashFlowWarnings(warnings) {
+        if (!warnings || warnings.length === 0) return;
+        
+        // 找到現金流圖表的父容器
+        const chartContainer = document.getElementById('cash-flow-chart').closest('.card');
+        if (!chartContainer) return;
+        
+        // 移除舊的警告
+        const oldWarnings = chartContainer.querySelector('.cash-flow-warnings');
+        if (oldWarnings) {
+            oldWarnings.remove();
+        }
+        
+        // 建立警告容器
+        const warningsContainer = document.createElement('div');
+        warningsContainer.className = 'cash-flow-warnings mt-3 p-3 bg-warning bg-opacity-10 border border-warning rounded';
+        
+        const warningsHtml = `
+            <div class="d-flex align-items-center mb-2">
+                <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                <strong>現金流警告</strong>
+            </div>
+            <div class="warnings-list">
+                ${warnings.map(warning => `
+                    <div class="alert alert-warning alert-sm mb-2 py-2">
+                        <i class="fas fa-info-circle me-1"></i>
+                        <small>${warning}</small>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        
+        warningsContainer.innerHTML = warningsHtml;
+        
+        // 將警告加到圖表容器的底部
+        chartContainer.querySelector('.card-body').appendChild(warningsContainer);
     }
 
     /**
