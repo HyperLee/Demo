@@ -68,7 +68,7 @@ public class PredictiveAnalysisService
             var historicalStart = now.AddMonths(-12);
             var historicalRecords = await _accountingService.GetRecordsAsync(historicalStart, now);
             
-            var incomeRecords = historicalRecords.Where(r => r.Amount > 0).ToList();
+            var incomeRecords = historicalRecords.Where(r => r.Type == "Income").ToList();
             if (!incomeRecords.Any())
             {
                 return new IncomeForecast
@@ -385,7 +385,7 @@ public class PredictiveAnalysisService
         string category, List<AccountingRecord> historicalRecords, int monthsAhead)
     {
         var categoryRecords = historicalRecords
-            .Where(r => r.Category == category && r.Amount < 0)
+            .Where(r => r.Category == category && r.Type == "Expense")
             .ToList();
 
         if (!categoryRecords.Any())
@@ -399,9 +399,9 @@ public class PredictiveAnalysisService
         {
             var monthStart = now.AddMonths(i);
             var monthEnd = monthStart.AddMonths(1).AddDays(-1);
-            var monthExpense = Math.Abs(categoryRecords
+            var monthExpense = categoryRecords
                 .Where(r => r.Date >= monthStart && r.Date <= monthEnd)
-                .Sum(r => r.Amount));
+                .Sum(r => r.Amount);
             monthlyExpenses.Add((monthStart, monthExpense));
         }
 
@@ -461,7 +461,7 @@ public class PredictiveAnalysisService
     private static SeasonalTrend? AnalyzeCategorySeasonalTrend(string category, List<AccountingRecord> records)
     {
         var categoryRecords = records
-            .Where(r => r.Category == category && r.Amount < 0)
+            .Where(r => r.Category == category && r.Type == "Expense")
             .ToList();
 
         if (!categoryRecords.Any())
@@ -473,7 +473,7 @@ public class PredictiveAnalysisService
             .Select(g => new
             {
                 Month = g.Key,
-                Average = Math.Abs(g.Average(r => r.Amount))
+                Average = g.Average(r => r.Amount)
             })
             .OrderBy(m => m.Month)
             .ToList();

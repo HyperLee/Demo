@@ -184,7 +184,12 @@ public class FinancialInsightsService
                 Metrics = metrics,
                 StrengthAreas = strengthAreas,
                 ImprovementAreas = improvementAreas,
-                CalculatedDate = DateTime.Now
+                CalculatedDate = DateTime.Now,
+                
+                // 設置前端 UI 顯示用的個別分數
+                SavingsScore = savingsMetric.Score,
+                BalanceScore = incomeExpenseMetric.Score,
+                GrowthScore = stabilityMetric.Score
             };
         }
         catch (Exception ex)

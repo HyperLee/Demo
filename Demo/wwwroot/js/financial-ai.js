@@ -268,7 +268,12 @@ class FinancialAI {
      * 渲染財務健康度評分
      */
     renderHealthScore() {
-        if (!this.healthScore) return;
+        console.log('渲染財務健康度評分:', this.healthScore);
+        
+        if (!this.healthScore) {
+            console.warn('健康度評分資料為空');
+            return;
+        }
 
         // 更新整體評分
         const overallScore = document.getElementById('overall-health-score');
@@ -277,7 +282,11 @@ class FinancialAI {
             overallScore.className = `health-score-number ${this.getScoreClass(this.healthScore.overallScore)}`;
         }
 
-        // 更新各項指標
+        // 更新各項指標 - 添加調試資訊
+        console.log('儲蓄分數:', this.healthScore.savingsScore);
+        console.log('平衡分數:', this.healthScore.balanceScore);
+        console.log('成長分數:', this.healthScore.growthScore);
+        
         this.updateMetric('savings-score', this.healthScore.savingsScore);
         this.updateMetric('balance-score', this.healthScore.balanceScore);
         this.updateMetric('growth-score', this.healthScore.growthScore);
@@ -288,9 +297,15 @@ class FinancialAI {
      */
     updateMetric(elementId, value) {
         const element = document.getElementById(elementId);
-        if (element && typeof value === 'number') {
-            element.textContent = Math.round(value);
-            element.className = `metric-value ${this.getScoreClass(value)}`;
+        if (element) {
+            if (typeof value === 'number') {
+                element.textContent = Math.round(value);
+                element.className = `metric-value ${this.getScoreClass(value)}`;
+            } else {
+                // 處理 null 或 undefined 的情況
+                element.textContent = '--';
+                element.className = 'metric-value text-muted';
+            }
         }
     }
 
@@ -818,11 +833,17 @@ class FinancialAI {
     }
 
     showHealthScoreError() {
-        const container = document.getElementById('overall-health-score');
-        if (container) {
-            container.textContent = '錯誤';
-            container.className = 'health-score-number text-danger';
+        // 更新整體評分顯示錯誤
+        const overallScore = document.getElementById('overall-health-score');
+        if (overallScore) {
+            overallScore.textContent = '錯誤';
+            overallScore.className = 'health-score-number text-danger';
         }
+        
+        // 更新各項指標顯示錯誤
+        this.updateMetric('savings-score', null);
+        this.updateMetric('balance-score', null);
+        this.updateMetric('growth-score', null);
     }
 
     showInsightsError() {

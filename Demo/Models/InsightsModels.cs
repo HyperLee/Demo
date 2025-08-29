@@ -43,6 +43,11 @@ public class FinancialHealthScore
     public List<string> StrengthAreas { get; set; } = new();
     public List<string> ImprovementAreas { get; set; } = new();
     public DateTime CalculatedDate { get; set; }
+    
+    // 前端 UI 顯示用的個別分數
+    public int SavingsScore { get; set; } // 儲蓄能力分數
+    public int BalanceScore { get; set; } // 收支平衡分數
+    public int GrowthScore { get; set; } // 成長趨勢分數
 }
 
 /// <summary>
