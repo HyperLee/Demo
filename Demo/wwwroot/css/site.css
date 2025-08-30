@@ -508,3 +508,604 @@ body {
         --border-color: #666666;
     }
 }
+
+/* ===== 待辦清單樣式 ===== */
+
+/* 待辦清單容器 */
+.todo-header {
+    background: linear-gradient(135deg, var(--bs-primary), var(--bs-info));
+    border-radius: 12px;
+    padding: 1.5rem;
+    color: white;
+    margin-bottom: 2rem;
+}
+
+.todo-header h1 {
+    color: white;
+    margin: 0;
+}
+
+/* 統計卡片 */
+.todo-stats {
+    margin-top: 1rem;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 1rem;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    opacity: 0.9;
+}
+
+/* 任務區段 */
+.todo-section {
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    color: var(--bs-body-color);
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.section-title .badge {
+    font-size: 0.75rem;
+}
+
+/* 任務項目 */
+.todo-item {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    padding: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px var(--shadow-color);
+    position: relative;
+}
+
+.todo-item:hover {
+    box-shadow: 0 4px 12px var(--shadow-color);
+    transform: translateY(-1px);
+    border-color: var(--bs-primary);
+}
+
+.todo-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.todo-check {
+    display: flex;
+    align-items: center;
+    padding-top: 2px;
+}
+
+.todo-checkbox {
+    transform: scale(1.2);
+    cursor: pointer;
+}
+
+.todo-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.todo-title {
+    font-weight: 600;
+    color: var(--bs-body-color);
+    margin-bottom: 0.25rem;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+.todo-title.completed {
+    text-decoration: line-through;
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+.todo-description {
+    font-size: 0.9rem;
+    line-height: 1.4;
+    margin-bottom: 0.5rem;
+    word-wrap: break-word;
+}
+
+.todo-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    font-size: 0.8rem;
+}
+
+/* 優先級標籤 */
+.priority-badge {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.priority-high {
+    background-color: #ffe6e6;
+    color: #dc3545;
+    border: 1px solid #dc3545;
+}
+
+.priority-medium {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffc107;
+}
+
+.priority-low {
+    background-color: #e6f3ff;
+    color: #0066cc;
+    border: 1px solid #0dcaf0;
+}
+
+/* 狀態標籤 */
+.status-badge {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+.status-pending {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    border: 1px solid #dee2e6;
+}
+
+.status-inprogress {
+    background-color: #cff4fc;
+    color: #055160;
+    border: 1px solid #0dcaf0;
+}
+
+.status-completed {
+    background-color: #d1e7dd;
+    color: #0f5132;
+    border: 1px solid #198754;
+}
+
+/* 到期日期 */
+.due-date {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--bs-info);
+}
+
+.due-date.overdue {
+    color: var(--bs-danger);
+    font-weight: 600;
+}
+
+.due-date i {
+    font-size: 0.75rem;
+}
+
+/* 分類標籤 */
+.category-tag {
+    background-color: var(--surface-variant);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    border: 1px solid var(--border-color);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* 任務標籤 */
+.tags-container {
+    display: inline-flex;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+}
+
+.tag-item {
+    background-color: var(--bs-light);
+    color: var(--bs-primary);
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+/* 時間預估 */
+.time-estimate {
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.time-estimate i {
+    font-size: 0.75rem;
+}
+
+/* 任務操作區 */
+.todo-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.todo-item:hover .todo-actions {
+    opacity: 1;
+}
+
+.todo-actions .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+}
+
+/* 拖拽控制 */
+.drag-handle {
+    cursor: grab;
+    color: var(--text-muted);
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.drag-handle:hover {
+    background-color: var(--surface-variant);
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+/* 可排序元素狀態 */
+.sortable-ghost {
+    opacity: 0.5;
+    background: var(--surface-variant);
+}
+
+.sortable-chosen {
+    transform: scale(1.02);
+    box-shadow: 0 6px 20px var(--shadow-color);
+}
+
+.sortable-drag {
+    opacity: 0.8;
+    transform: rotate(5deg);
+}
+
+/* 任務進度條 */
+.todo-progress {
+    margin-top: 0.5rem;
+}
+
+.todo-progress .progress {
+    height: 4px;
+    background-color: var(--surface-variant);
+}
+
+.todo-progress .progress-bar {
+    background: linear-gradient(90deg, var(--bs-info), var(--bs-success));
+}
+
+/* 空狀態 */
+.empty-state {
+    padding: 3rem 1rem;
+    text-align: center;
+}
+
+.empty-state i {
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+}
+
+.empty-state h4,
+.empty-state p {
+    color: var(--text-muted);
+}
+
+/* 模態框樣式增強 */
+.modal-content {
+    background: var(--modal-bg);
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--border-color);
+    background: var(--surface-variant);
+    border-radius: 12px 12px 0 0;
+}
+
+.modal-title i {
+    color: var(--bs-primary);
+}
+
+/* 搜尋框增強 */
+#searchInput {
+    border-radius: 25px;
+    padding-left: 2.5rem;
+    background: var(--input-bg);
+    border: 2px solid var(--input-border);
+    transition: all 0.3s ease;
+}
+
+#searchInput:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
+    background: var(--surface-color);
+}
+
+.input-group-text {
+    background: var(--surface-variant);
+    border: 2px solid var(--input-border);
+    border-right: none;
+    border-radius: 25px 0 0 25px;
+}
+
+/* 按鈕增強 */
+.btn-group .btn.active,
+.dropdown-item.active {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+    color: white;
+}
+
+.dropdown-item:hover {
+    background-color: var(--surface-variant);
+}
+
+/* 檢視模式 */
+.todo-list.view-list .todo-section {
+    border: none;
+    margin-bottom: 0;
+}
+
+.todo-list.view-list .section-title {
+    display: none;
+}
+
+.todo-list.view-list .todo-item {
+    margin-bottom: 1px;
+    border-radius: 0;
+}
+
+.todo-list.view-list .todo-item:first-child {
+    border-radius: 8px 8px 0 0;
+}
+
+.todo-list.view-list .todo-item:last-child {
+    border-radius: 0 0 8px 8px;
+}
+
+.todo-list.view-priority .todo-item {
+    order: var(--priority-order);
+}
+
+.todo-list.view-priority .todo-item[data-priority="high"] {
+    --priority-order: 1;
+    border-left: 4px solid var(--bs-danger);
+}
+
+.todo-list.view-priority .todo-item[data-priority="medium"] {
+    --priority-order: 2;
+    border-left: 4px solid var(--bs-warning);
+}
+
+.todo-list.view-priority .todo-item[data-priority="low"] {
+    --priority-order: 3;
+    border-left: 4px solid var(--bs-info);
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .todo-header {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+    }
+    
+    .todo-content {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .todo-actions {
+        align-self: flex-end;
+        margin-top: 0.5rem;
+    }
+    
+    .todo-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+    
+    .todo-item {
+        padding: 0.75rem;
+    }
+    
+    .section-title {
+        font-size: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .todo-actions .btn-group {
+        flex-wrap: wrap;
+    }
+    
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .todo-header .d-flex {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+    
+    .todo-actions .btn-group,
+    .todo-actions > * {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-card {
+        padding: 0.75rem;
+    }
+    
+    .todo-meta {
+        font-size: 0.75rem;
+    }
+}
+
+/* 動畫效果 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.todo-item {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.todo-item.removing {
+    animation: fadeOut 0.3s ease-out;
+}
+
+@keyframes fadeOut {
+    to {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+}
+
+/* 載入狀態 */
+.loading {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid var(--bs-primary);
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s infinite linear;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* 深色模式特定調整 */
+[data-bs-theme="dark"] .todo-item {
+    background: var(--surface-color);
+    border-color: var(--border-color);
+}
+
+[data-bs-theme="dark"] .priority-high {
+    background-color: rgba(220, 53, 69, 0.2);
+    color: #ea868f;
+}
+
+[data-bs-theme="dark"] .priority-medium {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: #ffda6a;
+}
+
+[data-bs-theme="dark"] .priority-low {
+    background-color: rgba(13, 202, 240, 0.2);
+    color: #6edff6;
+}
+
+[data-bs-theme="dark"] .category-tag {
+    background-color: var(--surface-variant);
+    border-color: var(--border-color);
+}
+
+[data-bs-theme="dark"] .tag-item {
+    background-color: var(--surface-variant);
+    color: var(--bs-primary);
+}
+
+/* 列印樣式 */
+@media print {
+    .todo-header,
+    .todo-actions,
+    .drag-handle,
+    .modal,
+    .btn,
+    .dropdown {
+        display: none !important;
+    }
+    
+    .todo-item {
+        border: 1px solid #000;
+        margin-bottom: 0.5rem;
+        padding: 0.5rem;
+        break-inside: avoid;
+    }
+    
+    .todo-title {
+        font-weight: bold;
+        color: #000;
+    }
+    
+    .todo-meta {
+        color: #666;
+    }
+}

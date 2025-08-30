@@ -1,0 +1,113 @@
+@model Demo.Models.TodoTask
+
+<div class="todo-item" data-id="@Model.Id" data-priority="@Model.Priority.ToString().ToLower()" 
+     data-status="@Model.Status.ToString().ToLower()" data-category="@Model.Category.ToLower()">
+    <div class="todo-content">
+        <div class="todo-check">
+            <input type="checkbox" class="form-check-input todo-checkbox" 
+                   @(Model.IsCompleted ? "checked" : "") 
+                   data-task-id="@Model.Id" />
+        </div>
+        <div class="todo-details flex-grow-1">
+            <div class="todo-title @(Model.IsCompleted ? "completed" : "")">
+                @Model.Title
+            </div>
+            @if (!string.IsNullOrEmpty(Model.Description))
+            {
+                <div class="todo-description text-muted small">
+                    @Model.Description
+                </div>
+            }
+            <div class="todo-meta">
+                @if (Model.DueDate.HasValue)
+                {
+                    <span class="due-date @(Model.IsOverdue ? "overdue" : "")">
+                        <i class="fas fa-clock"></i> 
+                        @Model.DueDate.Value.ToString("MM/dd HH:mm")
+                        @if (Model.IsOverdue)
+                        {
+                            <small class="text-danger ms-1">(已逾期)</small>
+                        }
+                    </span>
+                }
+                @if (!string.IsNullOrEmpty(Model.Category))
+                {
+                    <span class="category-tag">
+                        <i class="fas fa-folder"></i> @Model.Category
+                    </span>
+                }
+                @if (Model.Tags.Any())
+                {
+                    <span class="tags-container">
+                        @foreach (var tag in Model.Tags.Take(3))
+                        {
+                            <span class="tag-item">#@tag</span>
+                        }
+                        @if (Model.Tags.Count > 3)
+                        {
+                            <span class="tag-item text-muted">+@(Model.Tags.Count - 3)</span>
+                        }
+                    </span>
+                }
+                <span class="priority-badge priority-@Model.Priority.ToString().ToLower()">
+                    @Model.PriorityDisplayName
+                </span>
+                <span class="status-badge status-@Model.Status.ToString().ToLower()">
+                    @Model.StatusDisplayName
+                </span>
+                @if (Model.EstimatedMinutes > 0)
+                {
+                    <span class="time-estimate">
+                        <i class="fas fa-hourglass-half"></i> @Model.EstimatedMinutes 分鐘
+                    </span>
+                }
+            </div>
+        </div>
+        <div class="todo-actions">
+            <div class="btn-group">
+                <button class="btn btn-sm btn-outline-primary edit-task-btn" 
+                        data-task-id="@Model.Id" title="編輯任務">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger delete-task-btn" 
+                        data-task-id="@Model.Id" title="刪除任務">
+                    <i class="fas fa-trash"></i>
+                </button>
+                @if (!Model.IsCompleted)
+                {
+                    <button class="btn btn-sm btn-outline-success complete-task-btn" 
+                            data-task-id="@Model.Id" title="標記為完成">
+                        <i class="fas fa-check"></i>
+                    </button>
+                }
+                else
+                {
+                    <button class="btn btn-sm btn-outline-warning uncomplete-task-btn" 
+                            data-task-id="@Model.Id" title="標記為未完成">
+                        <i class="fas fa-undo"></i>
+                    </button>
+                }
+            </div>
+            <div class="drag-handle ms-2" title="拖拽排序">
+                <i class="fas fa-grip-vertical text-muted"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 任務進度條（可選） -->
+    @if (Model.Status == Demo.Models.TodoStatus.InProgress && Model.EstimatedMinutes > 0 && Model.ActualMinutes > 0)
+    {
+        var progress = Math.Min(100, (double)Model.ActualMinutes / Model.EstimatedMinutes * 100);
+        <div class="todo-progress mt-2">
+            <div class="progress" style="height: 4px;">
+                <div class="progress-bar" role="progressbar" 
+                     style="width: @(progress)%" 
+                     aria-valuenow="@progress" aria-valuemin="0" aria-valuemax="100">
+                </div>
+            </div>
+            <small class="text-muted">
+                已用時間: @Model.ActualMinutes/@Model.EstimatedMinutes 分鐘 (@(progress.ToString("F0"))%)
+            </small>
+        </div>
+    }
+</div>

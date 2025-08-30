@@ -1,0 +1,61 @@
+{
+  "categories": [
+    {
+      "id": 1,
+      "name": "工作",
+      "color": "#007bff",
+      "icon": "fas fa-briefcase",
+      "sortOrder": 1
+    },
+    {
+      "id": 2,
+      "name": "個人",
+      "color": "#28a745",
+      "icon": "fas fa-user",
+      "sortOrder": 2
+    },
+    {
+      "id": 3,
+      "name": "學習",
+      "color": "#17a2b8",
+      "icon": "fas fa-graduation-cap",
+      "sortOrder": 3
+    },
+    {
+      "id": 4,
+      "name": "健康",
+      "color": "#dc3545",
+      "icon": "fas fa-heart",
+      "sortOrder": 4
+    },
+    {
+      "id": 5,
+      "name": "購物",
+      "color": "#ffc107",
+      "icon": "fas fa-shopping-cart",
+      "sortOrder": 5
+    },
+    {
+      "id": 6,
+      "name": "家庭",
+      "color": "#6f42c1",
+      "icon": "fas fa-home",
+      "sortOrder": 6
+    },
+    {
+      "id": 7,
+      "name": "娛樂",
+      "color": "#fd7e14",
+      "icon": "fas fa-gamepad",
+      "sortOrder": 7
+    },
+    {
+      "id": 8,
+      "name": "旅遊",
+      "color": "#20c997",
+      "icon": "fas fa-plane",
+      "sortOrder": 8
+    }
+  ],
+  "nextId": 9
+}

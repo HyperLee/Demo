@@ -31,6 +31,9 @@ public class Program
         // 註冊統計服務
         builder.Services.AddScoped<IStatisticsService, StatisticsService>();
         builder.Services.AddScoped<IStatisticsExportService, StatisticsExportService>();
+        
+        // 註冊待辦清單服務
+        builder.Services.AddSingleton<TodoService>();
 
         var app = builder.Build();
 

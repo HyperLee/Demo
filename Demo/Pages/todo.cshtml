@@ -1,0 +1,302 @@
+@page
+@model Demo.Pages.TodoModel
+@{
+    ViewData["Title"] = "我的待辦清單";
+}
+
+<div class="container-fluid py-4">
+    <!-- 頂部工具列 -->
+    <div class="todo-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="h2 mb-0">
+                <i class="fas fa-tasks text-primary"></i>
+                我的待辦清單
+            </h1>
+            <div class="todo-actions">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTodoModal">
+                    <i class="fas fa-plus"></i> 新增任務
+                </button>
+                <div class="btn-group ms-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="fas fa-filter"></i> 篩選
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" data-filter="all">全部任務</a></li>
+                        <li><a class="dropdown-item" href="#" data-filter="pending">待處理</a></li>
+                        <li><a class="dropdown-item" href="#" data-filter="in-progress">進行中</a></li>
+                        <li><a class="dropdown-item" href="#" data-filter="completed">已完成</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" data-filter="high">高優先級</a></li>
+                        <li><a class="dropdown-item" href="#" data-filter="today">今日到期</a></li>
+                        <li><a class="dropdown-item" href="#" data-filter="overdue">已逾期</a></li>
+                    </ul>
+                </div>
+                <div class="btn-group ms-2">
+                    <button class="btn btn-outline-info dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="fas fa-eye"></i> 檢視
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" data-view="sections">分組檢視</a></li>
+                        <li><a class="dropdown-item" href="#" data-view="list">清單檢視</a></li>
+                        <li><a class="dropdown-item" href="#" data-view="priority">優先級檢視</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 統計摘要 -->
+        <div class="todo-stats mt-3">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="stat-card text-center">
+                        <div class="stat-number text-warning">@Model.PendingCount</div>
+                        <div class="stat-label">待處理</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card text-center">
+                        <div class="stat-number text-info">@Model.InProgressCount</div>
+                        <div class="stat-label">進行中</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card text-center">
+                        <div class="stat-number text-success">@Model.CompletedCount</div>
+                        <div class="stat-label">已完成</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card text-center">
+                        <div class="stat-number text-danger">@Model.OverdueCount</div>
+                        <div class="stat-label">已逾期</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 搜尋列 -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="text" id="searchInput" class="form-control" placeholder="搜尋任務標題或描述...">
+            </div>
+        </div>
+    </div>
+
+    <!-- 任務清單區域 -->
+    <div class="todo-list" id="todoSections">
+        <!-- 今日任務 -->
+        @if (Model.TodayTasks.Any())
+        {
+            <div class="todo-section" data-section="today">
+                <h5 class="section-title">
+                    <i class="fas fa-calendar-day text-primary"></i> 今日任務
+                    <span class="badge bg-warning ms-2">@Model.TodayTasks.Count</span>
+                </h5>
+                <div class="todo-items sortable" id="today-tasks">
+                    @foreach (var task in Model.TodayTasks)
+                    {
+                        <partial name="_TodoItem" model="task" />
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- 明日任務 -->
+        @if (Model.TomorrowTasks.Any())
+        {
+            <div class="todo-section" data-section="tomorrow">
+                <h5 class="section-title">
+                    <i class="fas fa-calendar-plus text-info"></i> 明日任務
+                    <span class="badge bg-info ms-2">@Model.TomorrowTasks.Count</span>
+                </h5>
+                <div class="todo-items sortable" id="tomorrow-tasks">
+                    @foreach (var task in Model.TomorrowTasks)
+                    {
+                        <partial name="_TodoItem" model="task" />
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- 本週任務 -->
+        @if (Model.ThisWeekTasks.Any())
+        {
+            <div class="todo-section" data-section="thisweek">
+                <h5 class="section-title">
+                    <i class="fas fa-calendar-week text-success"></i> 本週任務
+                    <span class="badge bg-success ms-2">@Model.ThisWeekTasks.Count</span>
+                </h5>
+                <div class="todo-items sortable" id="thisweek-tasks">
+                    @foreach (var task in Model.ThisWeekTasks)
+                    {
+                        <partial name="_TodoItem" model="task" />
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- 未來任務 -->
+        @if (Model.FutureTasks.Any())
+        {
+            <div class="todo-section" data-section="future">
+                <h5 class="section-title">
+                    <i class="fas fa-calendar-alt text-secondary"></i> 未來任務
+                    <span class="badge bg-secondary ms-2">@Model.FutureTasks.Count</span>
+                </h5>
+                <div class="todo-items sortable" id="future-tasks">
+                    @foreach (var task in Model.FutureTasks)
+                    {
+                        <partial name="_TodoItem" model="task" />
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- 已完成任務 -->
+        @if (Model.CompletedTasks.Any())
+        {
+            <div class="todo-section" data-section="completed">
+                <h5 class="section-title">
+                    <i class="fas fa-check-circle text-success"></i> 已完成任務
+                    <span class="badge bg-light text-dark ms-2">@Model.CompletedTasks.Count</span>
+                    <button class="btn btn-sm btn-outline-secondary ms-2" type="button" data-bs-toggle="collapse" 
+                            data-bs-target="#completed-tasks" aria-expanded="false">
+                        <i class="fas fa-chevron-down"></i> 展開/收起
+                    </button>
+                </h5>
+                <div class="todo-items collapse" id="completed-tasks">
+                    @foreach (var task in Model.CompletedTasks)
+                    {
+                        <partial name="_TodoItem" model="task" />
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- 無任務時的提示 -->
+    @if (!Model.TodayTasks.Any() && !Model.TomorrowTasks.Any() && !Model.ThisWeekTasks.Any() && !Model.FutureTasks.Any())
+    {
+        <div class="empty-state text-center py-5">
+            <i class="fas fa-clipboard-list fa-4x text-muted mb-3"></i>
+            <h4 class="text-muted">還沒有任何任務</h4>
+            <p class="text-muted">點擊上方的「新增任務」按鈕來建立您的第一個任務吧！</p>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTodoModal">
+                <i class="fas fa-plus"></i> 建立第一個任務
+            </button>
+        </div>
+    }
+</div>
+
+<!-- 任務編輯模態框 -->
+<div class="modal fade" id="addTodoModal" tabindex="-1" aria-labelledby="addTodoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addTodoModalLabel">
+                    <i class="fas fa-plus-circle"></i> 
+                    <span id="modal-title">新增任務</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+            </div>
+            <div class="modal-body">
+                <form id="todoForm" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="taskId" asp-for="Task.Id" />
+                    
+                    <!-- 任務標題 -->
+                    <div class="mb-3">
+                        <label for="taskTitle" class="form-label">任務標題 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="taskTitle" asp-for="Task.Title" 
+                               placeholder="輸入任務標題..." maxlength="100" required />
+                        <div class="form-text">
+                            <span id="titleCount">0</span>/100 字元
+                        </div>
+                        <span asp-validation-for="Task.Title" class="text-danger"></span>
+                    </div>
+                    
+                    <!-- 任務描述 -->
+                    <div class="mb-3">
+                        <label for="taskDescription" class="form-label">詳細描述</label>
+                        <textarea class="form-control" id="taskDescription" asp-for="Task.Description" 
+                                  rows="3" placeholder="輸入任務詳細描述..."></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <!-- 優先級 -->
+                        <div class="col-md-6 mb-3">
+                            <label for="taskPriority" class="form-label">優先級</label>
+                            <select class="form-select" id="taskPriority" asp-for="Task.Priority">
+                                <option value="Low">低優先級</option>
+                                <option value="Medium" selected>中優先級</option>
+                                <option value="High">高優先級</option>
+                            </select>
+                        </div>
+                        
+                        <!-- 狀態 -->
+                        <div class="col-md-6 mb-3">
+                            <label for="taskStatus" class="form-label">狀態</label>
+                            <select class="form-select" id="taskStatus" asp-for="Task.Status">
+                                <option value="Pending">待處理</option>
+                                <option value="InProgress">進行中</option>
+                                <option value="Completed">已完成</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <!-- 分類 -->
+                        <div class="col-md-6 mb-3">
+                            <label for="taskCategory" class="form-label">分類</label>
+                            <select class="form-select" id="taskCategory" asp-for="Task.Category">
+                                <option value="">選擇分類...</option>
+                                @foreach (var category in Model.Categories)
+                                {
+                                    <option value="@category.Name">@category.Name</option>
+                                }
+                            </select>
+                        </div>
+                        
+                        <!-- 預估時間 -->
+                        <div class="col-md-6 mb-3">
+                            <label for="taskEstimated" class="form-label">預估時間（分鐘）</label>
+                            <input type="number" class="form-control" id="taskEstimated" asp-for="Task.EstimatedMinutes" 
+                                   min="5" max="480" step="5" placeholder="30" />
+                            <span asp-validation-for="Task.EstimatedMinutes" class="text-danger"></span>
+                        </div>
+                    </div>
+                    
+                    <!-- 到期日期 -->
+                    <div class="mb-3">
+                        <label for="taskDueDate" class="form-label">到期日期</label>
+                        <input type="datetime-local" class="form-control" id="taskDueDate" asp-for="Task.DueDate" />
+                    </div>
+                    
+                    <!-- 標籤 -->
+                    <div class="mb-3">
+                        <label for="taskTags" class="form-label">標籤</label>
+                        <input type="text" class="form-control" id="taskTags" name="TagsString" 
+                               placeholder="輸入標籤，用逗號分隔..." />
+                        <div class="form-text">例如：重要, 緊急, 專案A</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="saveTodoBtn">
+                    <i class="fas fa-save"></i> 儲存
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/todo.js" asp-append-version="true"></script>
+}
