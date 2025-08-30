@@ -55,10 +55,56 @@
       - [後端服務層](#後端服務層)
       - [前端技術棧](#前端技術棧)
       - [資料持久化](#資料持久化)
+    - [🤖 AI 智慧分析功能](#-ai-智慧分析功能)
+      - [財務健康度評分系統](#財務健康度評分系統)
+      - [智慧洞察與分析](#智慧洞察與分析)
+      - [異常偵測與警報系統](#異常偵測與警報系統)
+      - [支出預測與現金流分析](#支出預測與現金流分析)
+      - [個人化建議系統](#個人化建議系統)
+      - [技術架構特色](#技術架構特色)
+  - [智慧待辦清單系統（todo.cshtml）](#智慧待辦清單系統todocshtml)
+    - [🎯 核心功能特色](#-核心功能特色-1)
+      - [智慧時間分組](#智慧時間分組)
+      - [任務管理功能](#任務管理功能)
+      - [進階搜尋與篩選](#進階搜尋與篩選)
+    - [🎨 使用者介面設計](#-使用者介面設計)
+      - [響應式卡片布局](#響應式卡片布局)
+      - [互動式編輯體驗](#互動式編輯體驗)
+    - [🏗️ 技術架構亮點](#️-技術架構亮點)
+      - [後端設計模式](#後端設計模式)
+      - [服務層設計](#服務層設計)
+      - [前端技術整合](#前端技術整合)
+    - [📊 資料模型設計](#-資料模型設計)
+      - [TodoTask 核心模型](#todotask-核心模型)
+      - [統計分析模型](#統計分析模型)
+    - [🚀 效能最佳化](#-效能最佳化)
+      - [快取策略](#快取策略)
+      - [使用者體驗優化](#使用者體驗優化)
+  - [財務儀表板系統（index9.cshtml）](#財務儀表板系統index9cshtml)
+    - [📊 核心分析功能](#-核心分析功能)
+      - [多維度財務統計](#多維度財務統計)
+      - [視覺化圖表系統](#視覺化圖表系統)
+      - [智慧統計卡片](#智慧統計卡片)
+    - [🎨 使用者介面設計](#-使用者介面設計-1)
+      - [響應式儀表板布局](#響應式儀表板布局)
+      - [動態圖表互動](#動態圖表互動)
+    - [🏗️ 技術架構設計](#️-技術架構設計)
+      - [智慧快取系統](#智慧快取系統)
+      - [AJAX 資料更新機制](#ajax-資料更新機制)
+    - [📈 分析演算法](#-分析演算法)
+      - [趨勢計算邏輯](#趨勢計算邏輯)
+      - [分類分析功能](#分類分析功能)
+    - [🛡️ 效能與安全性](#️-效能與安全性)
+      - [快取最佳化](#快取最佳化)
+      - [安全性設計](#安全性設計)
+    - [🚀 擴展性設計](#-擴展性設計)
+      - [模組化架構](#模組化架構)
+      - [升級路徑](#升級路徑)
   - [設定說明](#設定說明)
     - [📝 註記功能設定](#-註記功能設定)
     - [🗂️ 備忘錄系統設定](#️-備忘錄系統設定)
     - [🏦 匯率系統設定](#-匯率系統設定)
+    - [✅ 待辦清單系統設定](#-待辦清單系統設定)
   - [常見問題](#常見問題)
 
 ---
@@ -81,6 +127,8 @@
 - **✏️ 智慧備忘錄編輯器**，具備標籤管理、分類整合、字元計數和自動保存提醒
 - **🏦 台幣外幣匯率計算器**，整合台灣銀行官方 API，支援即時匯率查詢與雙向精確計算
 - **💰 個人記帳系統**，月曆檢視記帳記錄、收支統計分析、多格式報表匯出（CSV/Excel/PDF）
+- **✅ 智慧待辦清單系統**，時間智慧分組、拖拽排序、進階篩選、標籤管理和完成率統計
+- **📊 財務儀表板系統**，動態圖表分析、多時間範圍統計、收支趨勢預測和分類支出視覺化
 - **JSON 檔案儲存**，支援個人化資料持久化，無需資料庫設定
 
 ## 快速開始
@@ -105,6 +153,8 @@ $ dotnet run --project Demo/Demo.csproj
 # 匯率計算器: http://localhost:5000/index6
 # 記帳系統列表: http://localhost:5000/index7
 # 記帳記錄編輯: http://localhost:5000/index8
+# 財務儀表板: http://localhost:5000/index9
+# 待辦清單: http://localhost:5000/todo
 ```
 
 > [!TIP]
@@ -120,10 +170,13 @@ Demo/
 ├── Services/             # 業務服務層
 │   ├── NoteService.cs    # 註記功能服務（JSON 檔案 I/O）+ 備忘錄管理服務
 │   ├── ExchangeRateService.cs # 匯率資料服務（台銀 API 整合）
-│   └── AccountingService.cs # 記帳資料服務（JSON 檔案 I/O）
+│   ├── AccountingService.cs # 記帳資料服務（JSON 檔案 I/O）
+│   └── TodoService.cs # 待辦事項資料服務（JSON 檔案 I/O）
 ├── Models/               # 資料模型
 │   ├── ExchangeRate.cs   # 匯率資料模型
-│   └── AccountingModels.cs # 記帳資料模型
+│   ├── AccountingModels.cs # 記帳資料模型
+│   ├── DashboardModels.cs # 財務儀表板資料模型
+│   └── TodoModels.cs # 待辦事項資料模型
 ├── Utilities/            # 工具類別
 │   ├── DataFixUtility.cs # 資料修正工具
 │   └── PdfExportUtility.cs # PDF 匯出工具
@@ -144,6 +197,10 @@ Demo/
 │   ├── index7.cshtml.cs  # index7 頁面 Model（記帳列表、統計、匯出）
 │   ├── index8.cshtml     # ✏️ 記帳記錄編輯頁面
 │   ├── index8.cshtml.cs  # index8 頁面 Model（記錄新增修改、驗證）
+│   ├── index9.cshtml     # 📊 財務儀表板頁面（圖表分析）
+│   ├── index9.cshtml.cs  # index9 頁面 Model（儀表板統計、圖表資料）
+│   ├── todo.cshtml       # ✅ 智慧待辦清單頁面
+│   ├── todo.cshtml.cs    # todo 頁面 Model（任務管理、統計分析）
 │   └── ...
 ├── wwwroot/              # 靜態資源 (CSS, JS, 圖片)
 ├── App_Data/             # 應用程式資料檔案
@@ -153,7 +210,9 @@ Demo/
 │   ├── tags.json         # 🏷️ 標籤資料儲存檔案
 │   ├── categories.json   # 📁 分類資料儲存檔案
 │   └── accounting-records.json # 💰 記帳記錄檔案（重要備份目標）
-│   └── accounting-categories.json # 💰 記帳分類檔案（重要備份目標）
+│   ├── accounting-categories.json # 💰 記帳分類檔案（重要備份目標）
+│   ├── todo-tasks.json # ✅ 待辦任務資料檔案（重要備份目標）
+│   └── todo-categories.json # ✅ 待辦分類資料檔案（重要備份目標）
 ├── appsettings.json      # 全域設定檔
 ├── appsettings.Development.json # 開發環境設定
 ├── Program.cs            # 進入點與服務設定
@@ -846,6 +905,306 @@ interface PersonalizedRecommendation {
 
 ---
 
+## 智慧待辦清單系統（todo.cshtml）
+
+`todo.cshtml` 是一個功能完整的智慧待辦清單管理系統，提供直覺的任務管理體驗，具備時間智慧分組、進階篩選、標籤系統等現代化功能。
+
+### 🎯 核心功能特色
+
+#### 智慧時間分組
+- **自動分類**：系統自動將任務分為今日、明日、本週、未來和無到期日等類別
+- **逾期識別**：自動標示逾期任務，提供視覺警示
+- **優先級管理**：支援高、中、低優先級設定，並以顏色編碼區分
+- **進度追蹤**：實時統計待處理、進行中、已完成任務數量
+
+#### 任務管理功能
+- **完整 CRUD**：支援任務的建立、讀取、更新、刪除操作
+- **狀態管理**：支援待處理、進行中、已完成三種狀態
+- **拖拽排序**：支援拖拽重新排序任務優先順序
+- **批次操作**：支援批次標示完成、批次刪除等操作
+
+#### 進階搜尋與篩選
+```javascript
+// 多維度篩選功能
+const filterOptions = {
+    status: ['pending', 'in-progress', 'completed'],
+    priority: ['high', 'medium', 'low'],
+    category: ['work', 'personal', 'shopping'],
+    tags: ['urgent', 'important', 'routine'],
+    dueDate: ['today', 'tomorrow', 'overdue']
+};
+```
+
+### 🎨 使用者介面設計
+
+#### 響應式卡片布局
+- **統計摘要**：頂部顯示待處理、進行中、已完成、逾期任務統計
+- **分組檢視**：按時間緊急程度自動分組顯示
+- **任務卡片**：每個任務以卡片形式呈現，包含標題、描述、到期日、標籤等資訊
+- **狀態指示**：使用顏色編碼和圖示清楚表示任務狀態
+
+#### 互動式編輯體驗
+- **模態框編輯**：點擊任務即可在彈出視窗中編輯
+- **即時保存**：支援自動保存和手動保存
+- **表單驗證**：完整的前端和後端驗證機制
+- **標籤輸入**：支援標籤的新增、編輯、刪除和自動完成
+
+### 🏗️ 技術架構亮點
+
+#### 後端設計模式
+```csharp
+public class TodoModel : PageModel
+{
+    private readonly TodoService _todoService;
+    private readonly ILogger<TodoModel> _logger;
+
+    // 智慧分組屬性
+    public List<TodoTask> TodayTasks { get; set; } = [];
+    public List<TodoTask> TomorrowTasks { get; set; } = [];
+    public List<TodoTask> ThisWeekTasks { get; set; } = [];
+    public List<TodoTask> FutureTasks { get; set; } = [];
+    public List<TodoTask> CompletedTasks { get; set; } = [];
+    
+    // 統計資訊
+    public TodoStatistics Statistics { get; set; } = new();
+}
+```
+
+#### 服務層設計
+- **TodoService**：核心業務邏輯服務，處理任務 CRUD 操作
+- **依賴注入**：使用 ASP.NET Core 內建 DI 容器
+- **資料持久化**：使用 JSON 檔案儲存，支援升級到資料庫
+- **錯誤處理**：完整的例外處理和日誌記錄
+
+#### 前端技術整合
+- **AJAX 化操作**：所有操作均透過 AJAX 進行，無需頁面重載
+- **即時搜尋**：JavaScript 實現本地即時搜尋功能
+- **拖拽支援**：整合 Sortable.js 實現拖拽排序
+- **Bootstrap 5**：使用最新 Bootstrap 框架確保響應式設計
+
+### 📊 資料模型設計
+
+#### TodoTask 核心模型
+```csharp
+public class TodoTask
+{
+    public int Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public TaskStatus Status { get; set; }
+    public TaskPriority Priority { get; set; }
+    public string Category { get; set; } = string.Empty;
+    public List<string> Tags { get; set; } = [];
+    public DateTime? DueDate { get; set; }
+    public int EstimatedMinutes { get; set; }
+    public DateTime CreatedDate { get; set; }
+    public DateTime? CompletedDate { get; set; }
+    public bool IsCompleted { get; set; }
+    public int Order { get; set; }
+}
+```
+
+#### 統計分析模型
+```csharp
+public class TodoStatistics
+{
+    public int PendingCount { get; set; }
+    public int InProgressCount { get; set; }
+    public int CompletedCount { get; set; }
+    public int OverdueCount { get; set; }
+    public int TotalCount { get; set; }
+    public double CompletionRate { get; set; }
+}
+```
+
+### 🚀 效能最佳化
+
+#### 快取策略
+- **記憶體快取**：分組資料在記憶體中快取 5 分鐘
+- **延遲載入**：已完成任務限制顯示最近 30 個
+- **本地搜尋**：搜尋功能在前端執行，減少伺服器負載
+
+#### 使用者體驗優化
+- **載入提示**：所有非同步操作提供載入動畫
+- **錯誤處理**：友善的錯誤訊息和重試機制
+- **自動保存**：編輯過程中定期自動保存草稿
+- **鍵盤快速鍵**：支援常用操作的鍵盤快速鍵
+
+**相關檔案**：
+- `Pages/todo.cshtml`：待辦清單主頁面和 UI 模板
+- `Pages/todo.cshtml.cs`：頁面後端邏輯和 API 處理器
+- `Services/TodoService.cs`：待辦事項核心服務
+- `Models/TodoModels.cs`：待辦事項資料模型定義
+- `App_Data/todo-tasks.json`：任務資料檔案 🔴
+- `App_Data/todo-categories.json`：分類資料檔案 🔴
+- `wwwroot/js/todo.js`：前端互動邏輯腳本
+
+---
+
+## 財務儀表板系統（index9.cshtml）
+
+`index9.cshtml` 是一個進階財務儀表板系統，整合記帳數據提供全方位的財務分析視覺化介面，具備動態圖表、多時間範圍分析、智慧統計等功能。
+
+### 📊 核心分析功能
+
+#### 多維度財務統計
+- **收支分析**：實時計算當期收入、支出和淨收支
+- **時間範圍切換**：支援本週、本月、本年、上月等多種時間維度
+- **比較分析**：自動計算與上期的變化百分比和趨勢方向
+- **日均統計**：精確計算日均消費和收入指標
+
+#### 視覺化圖表系統
+```javascript
+// 收支趨勢線圖
+window.trendChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: months,
+        datasets: [
+            {
+                label: '收入',
+                data: incomeData,
+                borderColor: '#28a745',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)'
+            },
+            {
+                label: '支出',
+                data: expenseData,
+                borderColor: '#dc3545',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)'
+            }
+        ]
+    }
+});
+```
+
+#### 智慧統計卡片
+- **收入統計卡**：顯示當期收入、變化趨勢和成長率
+- **支出統計卡**：顯示當期支出、變化趨勢和控制狀況
+- **淨收支卡**：顯示收支平衡和財務健康度
+- **日均支出卡**：顯示消費習慣和預算控制情況
+
+### 🎨 使用者介面設計
+
+#### 響應式儀表板布局
+- **統計卡片區**：4 欄網格布局，展示關鍵財務指標
+- **圖表區域**：分為趨勢線圖和分類圓餅圖兩個主要區塊
+- **交易記錄區**：顯示最近交易記錄的表格檢視
+- **控制面板**：時間範圍選擇和重新整理控制
+
+#### 動態圖表互動
+- **Chart.js 整合**：使用最新版本 Chart.js 提供豐富圖表類型
+- **即時更新**：切換時間範圍時圖表自動重繪
+- **互動提示**：滑鼠懸停顯示詳細數據
+- **響應式適配**：自動適應不同螢幕尺寸
+
+### 🏗️ 技術架構設計
+
+#### 智慧快取系統
+```csharp
+public class Index9Model : PageModel
+{
+    private static DashboardStats? _cachedStats;
+    private static DateTime _lastCacheUpdate = DateTime.MinValue;
+
+    private async Task GetDashboardStatsAsync()
+    {
+        // 5分鐘快取機制，避免重複計算
+        if (_cachedStats != null && 
+            DateTime.Now.Subtract(_lastCacheUpdate).TotalMinutes < 5)
+        {
+            return;
+        }
+        
+        // 重新計算統計資料
+        var allRecords = await _accountingService.GetRecordsAsync();
+        _cachedStats = CalculateStats(filteredRecords, allRecords);
+        _lastCacheUpdate = DateTime.Now;
+    }
+}
+```
+
+#### AJAX 資料更新機制
+- **非同步載入**：所有資料更新透過 AJAX 進行
+- **載入指示器**：提供載入動畫和進度提示
+- **錯誤處理**：完善的網路錯誤處理機制
+- **資料快取**：前端快取機制減少重複請求
+
+### 📈 分析演算法
+
+#### 趨勢計算邏輯
+```csharp
+private List<MonthlyTrend> CalculateTrendData(List<AccountingRecord> records)
+{
+    if (TimeRange == "thisYear")
+    {
+        // 年度趨勢：月份統計
+        for (int month = 1; month <= 12; month++)
+        {
+            var monthlyIncome = monthRecords.Where(r => r.Amount > 0).Sum(r => r.Amount);
+            var monthlyExpense = Math.Abs(monthRecords.Where(r => r.Amount < 0).Sum(r => r.Amount));
+            
+            trendData.Add(new MonthlyTrend
+            {
+                MonthName = $"{month}月",
+                Income = monthlyIncome,
+                Expense = monthlyExpense
+            });
+        }
+    }
+    else
+    {
+        // 月度趨勢：日統計
+        var groupedByDay = records.GroupBy(r => r.Date.Date);
+        // 處理日度數據...
+    }
+    
+    return trendData;
+}
+```
+
+#### 分類分析功能
+- **支出分類統計**：自動計算各分類支出佔比
+- **圓餅圖視覺化**：直觀展示支出分布
+- **動態顏色配置**：為不同分類自動分配顏色
+- **百分比計算**：精確計算各分類佔比
+
+### 🛡️ 效能與安全性
+
+#### 快取最佳化
+- **靜態快取**：使用靜態變數實現記憶體快取
+- **過期機制**：5分鐘自動過期，確保資料新鮮度
+- **記憶體管理**：合理控制快取大小，避免記憶體洩漏
+
+#### 安全性設計
+- **CSRF 保護**：所有 POST 請求使用防偽令牌
+- **輸入驗證**：完整的前端和後端資料驗證
+- **XSS 防護**：Razor 引擎自動 HTML 編碼輸出
+
+### 🚀 擴展性設計
+
+#### 模組化架構
+- **服務解耦**：清晰的服務層邊界
+- **介面導向**：使用介面實現依賴倒置
+- **配置外部化**：支援外部配置檔案
+- **API 準備**：可輕易轉換為 Web API
+
+#### 升級路徑
+- **資料庫支援**：可升級到 Entity Framework Core
+- **分散式快取**：可整合 Redis 或 Memcached
+- **微服務架構**：支援拆分為獨立微服務
+- **雲端部署**：支援 Azure、AWS 等雲端平台
+
+**相關檔案**：
+- `Pages/index9.cshtml`：財務儀表板主頁面和圖表模板
+- `Pages/index9.cshtml.cs`：儀表板後端邏輯和統計計算
+- `Models/DashboardModels.cs`：儀表板資料模型定義
+- `Services/IAccountingService.cs`：記帳資料服務介面
+- `wwwroot/js/dashboard.js`：前端圖表和互動邏輯
+- 整合 `App_Data/accounting-records.json`：記帳資料來源 🔴
+
+---
+
 ## 設定說明
 
 - **appsettings.json**：全域設定檔，適用於所有環境。
@@ -855,6 +1214,8 @@ interface PersonalizedRecommendation {
 - **🔴 App_Data/memo-notes.json**：備忘錄主要資料檔案，包含所有備忘錄內容和關聯資訊。
 - **🔴 App_Data/tags.json**：標籤系統資料檔案，包含標籤定義、顏色和使用統計。
 - **🔴 App_Data/categories.json**：分類系統資料檔案，包含分類階層和描述資訊。
+- **🔴 App_Data/todo-tasks.json**：待辦任務資料檔案，包含所有任務資訊和狀態。
+- **🔴 App_Data/todo-categories.json**：待辦分類資料檔案，包含任務分類定義。
 
 ### 📝 註記功能設定
 
@@ -948,6 +1309,47 @@ interface PersonalizedRecommendation {
     }
   ]
 }
+```
+
+### ✅ 待辦清單系統設定
+
+**主要資料檔案**: `App_Data/todo-tasks.json`
+**分類資料檔案**: `App_Data/todo-categories.json`
+
+**資料格式說明**：
+
+**todo-tasks.json**：
+```json
+[
+  {
+    "Id": 1,
+    "Title": "完成專案報告",
+    "Description": "撰寫 Q4 專案總結報告",
+    "Status": "InProgress",
+    "Priority": "High", 
+    "Category": "工作",
+    "Tags": ["重要", "截止日期"],
+    "DueDate": "2025-09-01T18:00:00",
+    "EstimatedMinutes": 120,
+    "CreatedDate": "2025-08-27T10:00:00",
+    "CompletedDate": null,
+    "IsCompleted": false,
+    "Order": 1
+  }
+]
+```
+
+**todo-categories.json**：
+```json
+[
+  {
+    "Id": 1,
+    "Name": "工作",
+    "Description": "工作相關任務",
+    "Color": "#007bff",
+    "Icon": "fas fa-briefcase"
+  }
+]
 ```
 
 **⚠️ 重要備份提醒**：
