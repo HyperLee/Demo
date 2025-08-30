@@ -157,6 +157,23 @@
             </div>
         }
 
+        <!-- 無到期日任務 -->
+        @if (Model.NoDueDateTasks.Any())
+        {
+            <div class="todo-section" data-section="nodue">
+                <h5 class="section-title">
+                    <i class="fas fa-inbox text-secondary"></i> 無到期日任務
+                    <span class="badge bg-secondary ms-2">@Model.NoDueDateTasks.Count</span>
+                </h5>
+                <div class="todo-items sortable" id="nodue-tasks">
+                    @foreach (var task in Model.NoDueDateTasks)
+                    {
+                        <partial name="_TodoItem" model="task" />
+                    }
+                </div>
+            </div>
+        }
+
         <!-- 已完成任務 -->
         @if (Model.CompletedTasks.Any())
         {
@@ -180,7 +197,7 @@
     </div>
 
     <!-- 無任務時的提示 -->
-    @if (!Model.TodayTasks.Any() && !Model.TomorrowTasks.Any() && !Model.ThisWeekTasks.Any() && !Model.FutureTasks.Any())
+    @if (!Model.TodayTasks.Any() && !Model.TomorrowTasks.Any() && !Model.ThisWeekTasks.Any() && !Model.FutureTasks.Any() && !Model.NoDueDateTasks.Any())
     {
         <div class="empty-state text-center py-5">
             <i class="fas fa-clipboard-list fa-4x text-muted mb-3"></i>

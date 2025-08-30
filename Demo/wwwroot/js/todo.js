@@ -328,21 +328,36 @@ class TodoManager {
         
         this.searchTimeout = setTimeout(() => {
             const searchTerm = query.toLowerCase().trim();
+            console.log('搜尋條件:', searchTerm); // 調試用
+            
+            let matchCount = 0;
             
             document.querySelectorAll('.todo-item').forEach(item => {
                 const title = item.querySelector('.todo-title')?.textContent.toLowerCase() || '';
                 const description = item.querySelector('.todo-description')?.textContent.toLowerCase() || '';
-                const category = item.dataset.category || '';
+                const category = item.dataset.category?.toLowerCase() || '';
                 
-                const matches = title.includes(searchTerm) || 
+                console.log('檢查任務:', { title, description, category }); // 調試用
+                
+                const matches = searchTerm === '' || 
+                               title.includes(searchTerm) || 
                                description.includes(searchTerm) ||
                                category.includes(searchTerm);
                 
-                item.style.display = matches || searchTerm === '' ? 'block' : 'none';
+                if (matches) {
+                    item.style.display = 'block';
+                    item.parentElement?.style.setProperty('display', 'block', 'important');
+                    matchCount++;
+                } else {
+                    item.style.display = 'none';
+                }
             });
             
-            // 更新分組標題中的計數
+            console.log('找到匹配任務數量:', matchCount); // 調試用
+            
+            // 更新分組標題中的計數和顯示/隱藏空分組
             this.updateSectionCounts();
+            this.toggleEmptySections();
         }, 300);
     }
 
@@ -496,6 +511,28 @@ class TodoManager {
             const badge = section.querySelector('.badge');
             if (badge) {
                 badge.textContent = visibleItems.length;
+            }
+        });
+    }
+
+    /**
+     * 切換空分組的顯示/隱藏
+     */
+    toggleEmptySections() {
+        document.querySelectorAll('.todo-section').forEach(section => {
+            const visibleItems = section.querySelectorAll('.todo-item:not([style*="display: none"])');
+            const hasVisibleItems = visibleItems.length > 0;
+            
+            if (hasVisibleItems) {
+                section.style.display = 'block';
+            } else {
+                // 在搜尋時隱藏沒有匹配項目的分組
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput && searchInput.value.trim() !== '') {
+                    section.style.display = 'none';
+                } else {
+                    section.style.display = 'block';
+                }
             }
         });
     }

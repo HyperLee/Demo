@@ -43,6 +43,11 @@ public class TodoModel : PageModel
     public List<TodoTask> FutureTasks { get; set; } = [];
 
     /// <summary>
+    /// 無到期日任務清單
+    /// </summary>
+    public List<TodoTask> NoDueDateTasks { get; set; } = [];
+
+    /// <summary>
     /// 已完成任務清單
     /// </summary>
     public List<TodoTask> CompletedTasks { get; set; } = [];
@@ -333,6 +338,12 @@ public class TodoModel : PageModel
             t.DueDate.Value.Date >= nextWeek &&
             !t.IsCompleted
         ).OrderBy(t => t.DueDate).ToList();
+
+        // 載入無到期日任務
+        NoDueDateTasks = allTasks.Where(t => 
+            !t.DueDate.HasValue && 
+            !t.IsCompleted
+        ).OrderByDescending(t => t.CreatedDate).ToList();
 
         // 載入已完成任務（最近30個）
         CompletedTasks = allTasks
