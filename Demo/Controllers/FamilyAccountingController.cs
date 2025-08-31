@@ -162,7 +162,7 @@ public class FamilyAccountingController : ControllerBase
                 Data = createdRecord
             });
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
             return Forbid();
         }
@@ -240,7 +240,7 @@ public class FamilyAccountingController : ControllerBase
                 Message = "記錄更新成功"
             });
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
             return Forbid();
         }
@@ -313,7 +313,7 @@ public class FamilyAccountingController : ControllerBase
                 Message = "記錄刪除成功"
             });
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
             return Forbid();
         }
@@ -433,7 +433,7 @@ public class FamilyAccountingController : ControllerBase
                 Message = request.Approved ? "審核通過" : "審核拒絕"
             });
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
             return Forbid();
         }
