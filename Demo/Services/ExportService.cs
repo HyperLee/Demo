@@ -119,37 +119,40 @@ public class ExportService
     /// <summary>
     /// 清理過期匯出檔案
     /// </summary>
-    public async Task CleanupExpiredExportsAsync()
+    public Task CleanupExpiredExportsAsync()
     {
-        try
+        return Task.Run(() =>
         {
-            var expiredDate = DateTime.Now.AddDays(-7); // 7天後清理
-            var exportDir = new DirectoryInfo(_exportPath);
-            
-            if (exportDir.Exists)
+            try
             {
-                var expiredFiles = exportDir.GetFiles()
-                    .Where(f => f.CreationTime < expiredDate)
-                    .ToArray();
+                var expiredDate = DateTime.Now.AddDays(-7); // 7天後清理
+                var exportDir = new DirectoryInfo(_exportPath);
                 
-                foreach (var file in expiredFiles)
+                if (exportDir.Exists)
                 {
-                    try
+                    var expiredFiles = exportDir.GetFiles()
+                        .Where(f => f.CreationTime < expiredDate)
+                        .ToArray();
+                    
+                    foreach (var file in expiredFiles)
                     {
-                        file.Delete();
-                        _logger.LogInformation("已清理過期匯出檔案: {FileName}", file.Name);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "清理檔案失敗: {FileName}", file.Name);
+                        try
+                        {
+                            file.Delete();
+                            _logger.LogInformation("已清理過期匯出檔案: {FileName}", file.Name);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "清理檔案失敗: {FileName}", file.Name);
+                        }
                     }
                 }
             }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "清理過期匯出檔案失敗");
-        }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "清理過期匯出檔案失敗");
+            }
+        });
     }
 
     /// <summary>
@@ -295,10 +298,22 @@ public class ExportService
     /// <summary>
     /// 收集待辦事項資料
     /// </summary>
-    private async Task<object> CollectTodoDataAsync(DateTime? startDate, DateTime? endDate)
+    private Task<object> CollectTodoDataAsync(DateTime? startDate, DateTime? endDate)
+    {
+        return Task.FromResult<object>(new
+        {
+            Tasks = GetFilteredTasks(startDate, endDate),
+            Categories = _todoService.GetCategories(),
+            Summary = GetTaskSummary(startDate, endDate)
+        });
+    }
+
+    /// <summary>
+    /// 取得篩選後的任務
+    /// </summary>
+    private List<TodoTask> GetFilteredTasks(DateTime? startDate, DateTime? endDate)
     {
         var tasks = _todoService.GetAllTasks();
-        var categories = _todoService.GetCategories();
         
         // 按日期範圍篩選
         if (startDate.HasValue || endDate.HasValue)
@@ -313,18 +328,23 @@ public class ExportService
             }).ToList();
         }
         
+        return tasks;
+    }
+
+    /// <summary>
+    /// 取得任務摘要
+    /// </summary>
+    private object GetTaskSummary(DateTime? startDate, DateTime? endDate)
+    {
+        var tasks = GetFilteredTasks(startDate, endDate);
+        
         return new
         {
-            Tasks = tasks,
-            Categories = categories,
-            Summary = new
-            {
-                TotalTasks = tasks.Count,
-                CompletedTasks = tasks.Count(t => t.Status == TodoStatus.Completed),
-                PendingTasks = tasks.Count(t => t.Status == TodoStatus.Pending),
-                InProgressTasks = tasks.Count(t => t.Status == TodoStatus.InProgress),
-                Period = new { StartDate = startDate, EndDate = endDate }
-            }
+            TotalTasks = tasks.Count,
+            CompletedTasks = tasks.Count(t => t.Status == TodoStatus.Completed),
+            PendingTasks = tasks.Count(t => t.Status == TodoStatus.Pending),
+            InProgressTasks = tasks.Count(t => t.Status == TodoStatus.InProgress),
+            Period = new { StartDate = startDate, EndDate = endDate }
         };
     }
 
