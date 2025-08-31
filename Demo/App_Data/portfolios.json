@@ -1,0 +1,14 @@
+{
+  "portfolios": [
+    {
+      "id": 1,
+      "name": "主要投資組合",
+      "description": "長期投資的主要組合",
+      "createdAt": "2024-01-01T00:00:00Z",
+      "totalValue": 0,
+      "totalCost": 0,
+      "totalGainLoss": 0,
+      "totalGainLossPercentage": 0
+    }
+  ]
+}

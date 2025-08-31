@@ -1,0 +1,279 @@
+@page
+@model InvestmentTransactionsModel
+@{
+    ViewData["Title"] = "交易記錄";
+}
+
+<div class="container mt-4">
+    <!-- 快速新增交易 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5><i class="fas fa-plus-circle me-2"></i>快速新增交易</h5>
+        </div>
+        <div class="card-body">
+            <form id="quickTransactionForm">
+                <div class="row">
+                    <div class="col-md-2">
+                        <select class="form-select" id="quickTransactionType">
+                            <option value="買入">買入</option>
+                            <option value="賣出">賣出</option>
+                            <option value="股息">股息</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="text" class="form-control" id="quickSymbol" placeholder="股票代號">
+                    </div>
+                    <div class="col-md-2">
+                        <input type="number" class="form-control" id="quickQuantity" placeholder="數量" step="1" min="1">
+                    </div>
+                    <div class="col-md-2">
+                        <input type="number" class="form-control" id="quickPrice" placeholder="價格" step="0.01" min="0">
+                    </div>
+                    <div class="col-md-2">
+                        <input type="number" class="form-control" id="quickFee" placeholder="手續費" step="0.01" value="0" min="0">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-primary w-100" id="addQuickTransaction">
+                            <i class="fas fa-plus"></i> 新增
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 篩選器 -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <label class="form-label">投資組合</label>
+                    <select class="form-select" id="portfolioFilter">
+                        <option value="">全部組合</option>
+                        <!-- 動態載入投資組合 -->
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">開始日期</label>
+                    <input type="date" class="form-control" id="startDate">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">結束日期</label>
+                    <input type="date" class="form-control" id="endDate">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">交易類型</label>
+                    <select class="form-select" id="transactionTypeFilter">
+                        <option value="">全部</option>
+                        <option value="買入">買入</option>
+                        <option value="賣出">賣出</option>
+                        <option value="股息">股息</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-3">
+                    <label class="form-label">股票代號</label>
+                    <input type="text" class="form-control" id="symbolFilter" placeholder="篩選股票">
+                </div>
+                <div class="col-md-9">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-primary" id="applyFilters">
+                            <i class="fas fa-filter"></i> 套用篩選
+                        </button>
+                        <button class="btn btn-outline-secondary" id="clearFilters">
+                            <i class="fas fa-times"></i> 清除篩選
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 交易記錄表格 -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5><i class="fas fa-history me-2"></i>交易記錄</h5>
+            <div class="btn-group">
+                <button class="btn btn-outline-success btn-sm" id="exportTransactionsBtn">
+                    <i class="fas fa-download"></i> 匯出 Excel
+                </button>
+                <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addTransactionModal">
+                    <i class="fas fa-plus"></i> 詳細新增
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- 統計資訊 -->
+            <div class="row mb-3" id="transactionStats">
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <h4 class="text-primary mb-0" id="totalTransactions">0</h4>
+                        <small class="text-muted">總交易筆數</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <h4 class="text-success mb-0" id="totalBuyAmount">$0</h4>
+                        <small class="text-muted">總買入金額</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <h4 class="text-warning mb-0" id="totalSellAmount">$0</h4>
+                        <small class="text-muted">總賣出金額</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <h4 class="text-info mb-0" id="totalFees">$0</h4>
+                        <small class="text-muted">總手續費</small>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            
+            <div class="table-responsive">
+                <table class="table table-hover" id="transactionsTable">
+                    <thead>
+                        <tr>
+                            <th>日期</th>
+                            <th>類型</th>
+                            <th>股票代號</th>
+                            <th>數量</th>
+                            <th>價格</th>
+                            <th>總金額</th>
+                            <th>手續費</th>
+                            <th>淨金額</th>
+                            <th>備註</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- 動態載入交易記錄 -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="noTransactionsMessage" class="text-center py-4 d-none">
+                <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">尚無交易記錄</h5>
+                <p class="text-muted">新增第一筆交易開始追蹤您的投資活動</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 詳細新增交易模態框 -->
+<div class="modal fade" id="addTransactionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">新增交易記錄</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addTransactionForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">投資組合 <span class="text-danger">*</span></label>
+                            <select class="form-select" id="transactionPortfolioId" required>
+                                <option value="">選擇投資組合</option>
+                                <!-- 動態載入 -->
+                            </select>
+                            <div class="invalid-feedback">請選擇投資組合</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">交易類型 <span class="text-danger">*</span></label>
+                            <select class="form-select" id="transactionType" required>
+                                <option value="">選擇類型</option>
+                                <option value="買入">買入</option>
+                                <option value="賣出">賣出</option>
+                                <option value="股息">股息</option>
+                            </select>
+                            <div class="invalid-feedback">請選擇交易類型</div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">股票代號 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="transactionSymbol" required maxlength="20">
+                            <div class="invalid-feedback">請輸入股票代號</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">交易日期 <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="transactionDate" required>
+                            <div class="invalid-feedback">請選擇交易日期</div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-4">
+                            <label class="form-label">數量 <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="transactionQuantity" step="1" min="1" required>
+                            <div class="invalid-feedback">請輸入有效的數量</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">價格 <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="transactionPrice" step="0.01" min="0" required>
+                            <div class="invalid-feedback">請輸入有效的價格</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">手續費</label>
+                            <input type="number" class="form-control" id="transactionFee" step="0.01" value="0" min="0">
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <label class="form-label">備註</label>
+                            <textarea class="form-control" id="transactionNote" rows="3" maxlength="500"></textarea>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <strong>總金額：</strong><span id="calculatedAmount">$0</span>
+                                <span class="ms-3"><strong>淨金額：</strong><span id="calculatedNet">$0</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="saveTransaction">
+                    <span class="spinner-border spinner-border-sm d-none" id="saveTransactionSpinner"></span>
+                    儲存
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 確認刪除模態框 -->
+<div class="modal fade" id="confirmDeleteTransactionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">確認刪除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>確定要刪除這筆交易記錄嗎？</p>
+                <div class="alert alert-warning">
+                    <strong>注意：</strong>刪除交易記錄可能會影響相關持倉的平均成本計算。
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteTransaction">
+                    <span class="spinner-border spinner-border-sm d-none" id="deleteTransactionSpinner"></span>
+                    確認刪除
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/investment-transactions.js" asp-append-version="true"></script>
+}

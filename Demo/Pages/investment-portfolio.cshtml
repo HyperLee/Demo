@@ -1,0 +1,218 @@
+@page
+@model InvestmentPortfolioModel
+@{
+    ViewData["Title"] = "投資組合總覽";
+}
+
+<div class="container mt-4">
+    <!-- 頂部統計卡片 -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">總資產</h4>
+                            <h2 id="totalAssets">$0</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-chart-line fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card text-white bg-success" id="gainLossCard">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">總損益</h4>
+                            <h2 id="totalGainLoss">$0</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-dollar-sign fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card text-white bg-info" id="returnCard">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">報酬率</h4>
+                            <h2 id="totalReturn">0%</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-percentage fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">持倉數量</h4>
+                            <h2 id="totalHoldings">0</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-briefcase fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 圖表區域 -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-area me-2"></i>投資組合價值趨勢</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="portfolioTrendChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-pie me-2"></i>資產配置</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="assetAllocationChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 投資組合列表 -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5><i class="fas fa-folder me-2"></i>投資組合</h5>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPortfolioModal">
+                <i class="fas fa-plus"></i> 新增組合
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="portfolioTable">
+                    <thead>
+                        <tr>
+                            <th>名稱</th>
+                            <th>總價值</th>
+                            <th>總成本</th>
+                            <th>損益</th>
+                            <th>報酬率</th>
+                            <th>更新時間</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- 動態載入投資組合 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 新增投資組合模態框 -->
+<div class="modal fade" id="addPortfolioModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">新增投資組合</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addPortfolioForm">
+                    <div class="mb-3">
+                        <label class="form-label">組合名稱 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="portfolioName" required maxlength="100">
+                        <div class="invalid-feedback">請輸入組合名稱</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">描述</label>
+                        <textarea class="form-control" id="portfolioDescription" rows="3" maxlength="500"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="savePortfolio">
+                    <span class="spinner-border spinner-border-sm d-none" id="savePortfolioSpinner"></span>
+                    儲存
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 編輯投資組合模態框 -->
+<div class="modal fade" id="editPortfolioModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">編輯投資組合</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editPortfolioForm">
+                    <input type="hidden" id="editPortfolioId">
+                    <div class="mb-3">
+                        <label class="form-label">組合名稱 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="editPortfolioName" required maxlength="100">
+                        <div class="invalid-feedback">請輸入組合名稱</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">描述</label>
+                        <textarea class="form-control" id="editPortfolioDescription" rows="3" maxlength="500"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="updatePortfolio">
+                    <span class="spinner-border spinner-border-sm d-none" id="updatePortfolioSpinner"></span>
+                    更新
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 確認刪除模態框 -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">確認刪除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2">確定要刪除投資組合「<span id="deletePortfolioName"></span>」嗎？</p>
+                <p class="text-danger small mb-0">此操作會同時刪除所有相關的持倉和交易記錄，且無法復原。</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" id="confirmDeletePortfolio">
+                    <span class="spinner-border spinner-border-sm d-none" id="deletePortfolioSpinner"></span>
+                    確認刪除
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="~/js/investment-portfolio.js" asp-append-version="true"></script>
+}

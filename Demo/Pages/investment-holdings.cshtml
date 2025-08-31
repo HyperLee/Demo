@@ -1,0 +1,297 @@
+@page
+@model InvestmentHoldingsModel
+@{
+    ViewData["Title"] = "持倉管理";
+}
+
+<div class="container mt-4">
+    <!-- 搜尋和篩選 -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control" id="searchSymbol" placeholder="搜尋股票代號或名稱">
+                        <button class="btn btn-primary" id="searchBtn">搜尋</button>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="typeFilter">
+                        <option value="">全部類型</option>
+                        <option value="股票">股票</option>
+                        <option value="ETF">ETF</option>
+                        <option value="基金">基金</option>
+                        <option value="債券">債券</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="portfolioFilter">
+                        <option value="">全部組合</option>
+                        <!-- 動態載入組合 -->
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#addHoldingModal">
+                        <i class="fas fa-plus"></i> 新增持倉
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 持倉列表 -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5><i class="fas fa-chart-bar me-2"></i>持倉明細</h5>
+            <div class="btn-group">
+                <button class="btn btn-outline-primary btn-sm" id="refreshPricesBtn">
+                    <i class="fas fa-sync-alt"></i> 更新股價
+                </button>
+                <button class="btn btn-outline-success btn-sm" id="exportBtn">
+                    <i class="fas fa-download"></i> 匯出
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="holdingsTable">
+                    <thead>
+                        <tr>
+                            <th>股票代號</th>
+                            <th>名稱</th>
+                            <th>類型</th>
+                            <th>持股數量</th>
+                            <th>平均成本</th>
+                            <th>目前股價</th>
+                            <th>市值</th>
+                            <th>損益</th>
+                            <th>報酬率</th>
+                            <th>更新時間</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- 動態載入持倉 -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="noHoldingsMessage" class="text-center py-4 d-none">
+                <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">尚無持倉資料</h5>
+                <p class="text-muted">點選「新增持倉」開始追蹤您的投資</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 新增持倉模態框 -->
+<div class="modal fade" id="addHoldingModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">新增持倉</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addHoldingForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">投資組合 <span class="text-danger">*</span></label>
+                            <select class="form-select" id="holdingPortfolioId" required>
+                                <option value="">選擇投資組合</option>
+                                <!-- 動態載入 -->
+                            </select>
+                            <div class="invalid-feedback">請選擇投資組合</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">投資類型 <span class="text-danger">*</span></label>
+                            <select class="form-select" id="holdingType" required>
+                                <option value="">選擇類型</option>
+                                <option value="股票">股票</option>
+                                <option value="ETF">ETF</option>
+                                <option value="基金">基金</option>
+                                <option value="債券">債券</option>
+                            </select>
+                            <div class="invalid-feedback">請選擇投資類型</div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">股票代號 <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="holdingSymbol" required maxlength="20">
+                                <button type="button" class="btn btn-outline-primary" id="lookupSymbol">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                            <div class="invalid-feedback">請輸入股票代號</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">名稱 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="holdingName" required maxlength="100">
+                            <div class="invalid-feedback">請輸入股票名稱</div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-4">
+                            <label class="form-label">持股數量 <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="holdingQuantity" step="1" min="1" required>
+                            <div class="invalid-feedback">請輸入有效的持股數量</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">平均成本 <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="holdingAvgCost" step="0.01" min="0" required>
+                            <div class="invalid-feedback">請輸入有效的平均成本</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">目前股價</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="holdingCurrentPrice" step="0.01" min="0">
+                                <button type="button" class="btn btn-outline-secondary" id="fetchCurrentPrice">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">留空將自動取得最新價格</small>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="alert alert-info d-none" id="holdingPreview">
+                                <strong>預覽：</strong>
+                                <div id="holdingPreviewContent"></div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="saveHolding">
+                    <span class="spinner-border spinner-border-sm d-none" id="saveHoldingSpinner"></span>
+                    儲存
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 編輯持倉模態框 -->
+<div class="modal fade" id="editHoldingModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">編輯持倉</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editHoldingForm">
+                    <input type="hidden" id="editHoldingId">
+                    <input type="hidden" id="editHoldingPortfolioId">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">股票代號</label>
+                            <input type="text" class="form-control" id="editHoldingSymbol" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">名稱</label>
+                            <input type="text" class="form-control" id="editHoldingName" maxlength="100">
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">投資類型</label>
+                            <select class="form-select" id="editHoldingType">
+                                <option value="股票">股票</option>
+                                <option value="ETF">ETF</option>
+                                <option value="基金">基金</option>
+                                <option value="債券">債券</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">持股數量 <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="editHoldingQuantity" step="1" min="1" required>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">平均成本 <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="editHoldingAvgCost" step="0.01" min="0" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">目前股價</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="editHoldingCurrentPrice" step="0.01" min="0">
+                                <button type="button" class="btn btn-outline-secondary" id="fetchEditCurrentPrice">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="updateHolding">
+                    <span class="spinner-border spinner-border-sm d-none" id="updateHoldingSpinner"></span>
+                    更新
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 股票搜尋模態框 -->
+<div class="modal fade" id="stockSearchModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">搜尋股票</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="stockSearchInput" placeholder="輸入股票代號或名稱">
+                    <button type="button" class="btn btn-primary" id="stockSearchBtn">
+                        <i class="fas fa-search"></i> 搜尋
+                    </button>
+                </div>
+                <div id="stockSearchResults">
+                    <!-- 搜尋結果 -->
+                </div>
+                <div id="stockSearchLoading" class="text-center d-none">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">搜尋中...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 確認刪除模態框 -->
+<div class="modal fade" id="confirmDeleteHoldingModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">確認刪除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>確定要刪除持倉「<span id="deleteHoldingName"></span>」嗎？</p>
+                <p class="text-danger small">此操作無法復原。</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteHolding">
+                    <span class="spinner-border spinner-border-sm d-none" id="deleteHoldingSpinner"></span>
+                    確認刪除
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/investment-holdings.js" asp-append-version="true"></script>
+}

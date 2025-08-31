@@ -59,6 +59,11 @@ public class Program
         builder.Services.AddScoped<CsvExportService>();
         builder.Services.AddScoped<ExportService>();
 
+        // 註冊投資相關服務
+        builder.Services.AddHttpClient<StockPriceService>();
+        builder.Services.AddScoped<StockPriceService>();
+        builder.Services.AddScoped<InvestmentService>();
+
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.

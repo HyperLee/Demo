@@ -1,0 +1,32 @@
+{
+  "holdings": [
+    {
+      "id": 1,
+      "portfolioId": 1,
+      "symbol": "2330.TW",
+      "name": "台積電",
+      "type": "股票",
+      "quantity": 100,
+      "averageCost": 500.00,
+      "currentPrice": 520.00,
+      "marketValue": 52000.00,
+      "gainLoss": 2000.00,
+      "gainLossPercentage": 4.00,
+      "lastUpdated": "2024-12-31T12:00:00Z"
+    },
+    {
+      "id": 2,
+      "portfolioId": 1,
+      "symbol": "2317.TW",
+      "name": "鴻海",
+      "type": "股票",
+      "quantity": 200,
+      "averageCost": 105.00,
+      "currentPrice": 108.50,
+      "marketValue": 21700.00,
+      "gainLoss": 700.00,
+      "gainLossPercentage": 3.33,
+      "lastUpdated": "2024-12-31T12:00:00Z"
+    }
+  ]
+}
