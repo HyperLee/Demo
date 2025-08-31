@@ -136,6 +136,27 @@
     - [🛡️ 安全與效能](#️-安全與效能)
       - [安全控制](#安全控制)
       - [效能優化](#效能優化)
+  - [投資追蹤器系統（investment-*.cshtml）](#投資追蹤器系統investment-cshtml)
+    - [📈 核心投資功能](#-核心投資功能)
+      - [投資組合管理](#投資組合管理)
+      - [持倉追蹤系統](#持倉追蹤系統)
+      - [交易記錄管理](#交易記錄管理)
+    - [📊 股價監控與分析](#-股價監控與分析)
+      - [即時股價更新](#即時股價更新)
+      - [損益自動計算](#損益自動計算)
+      - [投資分析視覺化](#投資分析視覺化)
+    - [🎯 使用者介面設計](#-使用者介面設計-2)
+      - [響應式投資儀表板](#響應式投資儀表板)
+      - [互動式圖表分析](#互動式圖表分析)
+    - [🏗️ 技術架構設計](#️-技術架構設計-2)
+      - [服務層設計](#服務層設計-1)
+      - [API 整合架構](#api-整合架構)
+    - [📈 投資分析算法](#-投資分析算法)
+      - [投資組合統計](#投資組合統計)
+      - [風險評估指標](#風險評估指標)
+    - [🚀 資料管理與擴展](#-資料管理與擴展)
+      - [JSON 資料持久化](#json-資料持久化)
+      - [股價 API 整合](#股價-api-整合)
   - [設定說明](#設定說明)
     - [📝 註記功能設定](#-註記功能設定)
     - [🗂️ 備忘錄系統設定](#️-備忘錄系統設定)
@@ -169,6 +190,7 @@
 - **📊 財務儀表板系統**，動態圖表分析、多時間範圍統計、收支趨勢預測和分類支出視覺化
 - **📋 習慣追蹤系統**，每日習慣打卡、進度視覺化、連續性統計、成就系統和分析報表
 - **📤 全方位資料匯出**，支援 PDF/Excel/CSV/JSON 多格式匯出，整合所有模組資料的統一匯出平台
+- **📈 投資追蹤器系統**，投資組合管理、持倉追蹤、交易記錄、股價監控和投資分析視覺化
 - **JSON 檔案儲存**，支援個人化資料持久化，無需資料庫設定
 
 ## 快速開始
@@ -197,6 +219,9 @@ $ dotnet run --project Demo/Demo.csproj
 # 待辦清單: http://localhost:5000/todo
 # 習慣追蹤: http://localhost:5000/habits
 # 資料匯出: http://localhost:5000/export
+# 投資組合: http://localhost:5000/investment-portfolio
+# 持倉管理: http://localhost:5000/investment-holdings
+# 交易記錄: http://localhost:5000/investment-transactions
 ```
 
 > [!TIP]
@@ -215,6 +240,8 @@ Demo/
 │   ├── AccountingService.cs # 記帳資料服務（JSON 檔案 I/O）
 │   ├── TodoService.cs # 待辦事項資料服務（JSON 檔案 I/O）
 │   ├── HabitService.cs # 習慣追蹤資料服務（JSON 檔案 I/O）
+│   ├── InvestmentService.cs # 投資追蹤資料服務（JSON 檔案 I/O）
+│   ├── StockPriceService.cs # 股價資料服務（API 整合）
 │   ├── ExportService.cs # 統一資料匯出服務
 │   ├── PdfExportService.cs # PDF 匯出專業服務
 │   ├── ExcelExportService.cs # Excel 匯出專業服務
@@ -231,6 +258,7 @@ Demo/
 │   ├── DashboardModels.cs # 財務儀表板資料模型
 │   ├── TodoModels.cs # 待辦事項資料模型
 │   ├── HabitModels.cs # 習慣追蹤資料模型
+│   ├── InvestmentModels.cs # 投資追蹤資料模型
 │   ├── ExportModels.cs # 資料匯出模型
 │   ├── StatisticsModels.cs # 統計分析模型
 │   ├── InsightsModels.cs # 洞察分析模型
@@ -263,6 +291,12 @@ Demo/
 │   ├── todo.cshtml.cs    # todo 頁面 Model（任務管理、統計分析）
 │   ├── habits.cshtml     # 📋 習慣追蹤系統頁面
 │   ├── habits.cshtml.cs  # habits 頁面 Model（習慣管理、進度追蹤）
+│   ├── investment-portfolio.cshtml     # 📈 投資組合頁面
+│   ├── investment-portfolio.cshtml.cs  # investment-portfolio 頁面 Model（組合管理、統計分析）
+│   ├── investment-holdings.cshtml      # 📊 持倉管理頁面
+│   ├── investment-holdings.cshtml.cs   # investment-holdings 頁面 Model（持倉追蹤、損益計算）
+│   ├── investment-transactions.cshtml  # 💼 交易記錄頁面
+│   ├── investment-transactions.cshtml.cs # investment-transactions 頁面 Model（交易管理、統計資料）
 │   ├── export.cshtml     # 📤 資料匯出系統頁面
 │   ├── export.cshtml.cs  # export 頁面 Model（匯出設定、進度管理）
 │   └── ...
@@ -280,6 +314,9 @@ Demo/
 │   ├── habit-records.json # 📋 習慣記錄資料檔案（重要備份目標）
 │   ├── habit-categories.json # 📋 習慣分類資料檔案（重要備份目標）
 │   ├── habits.json # 📋 習慣定義資料檔案（重要備份目標）
+│   ├── portfolios.json # 📈 投資組合資料檔案（重要備份目標）
+│   ├── holdings.json # 📊 投資持倉資料檔案（重要備份目標）
+│   ├── transactions.json # 💼 投資交易記錄檔案（重要備份目標）
 │   ├── export-history.json # 📤 匯出歷史記錄檔案（重要備份目標）
 │   ├── budget-settings.json # 💰 預算設定資料檔案（重要備份目標）
 │   ├── spending-patterns.json # 💰 消費模式資料檔案（重要備份目標）
@@ -1494,6 +1531,220 @@ public class ExportService
 
 ---
 
+## 投資追蹤器系統（investment-*.cshtml）
+
+### 📈 核心投資功能
+
+#### 投資組合管理
+
+**📊 投資組合總覽**：
+- **多組合管理**：支援建立多個投資組合，分別追蹤不同投資策略
+- **即時統計**：自動計算總資產、總成本、損益金額和報酬率
+- **視覺化分析**：使用 Chart.js 提供圓餅圖資產配置和折線圖趨勢分析
+- **組合比較**：並列顯示多個投資組合的績效比較
+
+**🎯 關鍵指標監控**：
+```csharp
+// 投資組合統計指標
+public class Portfolio 
+{
+    public decimal TotalValue { get; set; }          // 總市值
+    public decimal TotalCost { get; set; }           // 總成本
+    public decimal TotalGainLoss { get; set; }       // 總損益
+    public decimal TotalGainLossPercentage { get; set; } // 總報酬率
+}
+```
+
+#### 持倉追蹤系統
+
+**💼 持倉明細管理**：
+- **全方位持股資訊**：股票代號、名稱、數量、平均成本、現價、市值
+- **多維度篩選**：支援依投資組合、投資類型、股票代號快速篩選
+- **即時損益計算**：自動計算每檔股票的損益金額和報酬率
+- **股價監控**：整合股價更新功能，支援批次或個別股票價格更新
+
+**📊 持倉分析特色**：
+```javascript
+// 持倉損益視覺化
+function updateHoldingColor(gainLoss) {
+    return gainLoss >= 0 ? 'text-success' : 'text-danger';
+}
+```
+
+#### 交易記錄管理
+
+**📝 交易紀錄系統**：
+- **完整交易資訊**：買賣類型、數量、價格、手續費、交易日期
+- **自動持倉更新**：交易記錄自動同步更新相關持倉資訊和平均成本
+- **交易統計分析**：提供交易次數、總成交金額、手續費統計
+- **快速交易輸入**：支援批次交易記錄和重複交易快速建立
+
+**💰 交易處理邏輯**：
+```csharp
+// 交易記錄自動更新持倉
+private async Task UpdateHoldingFromTransactionAsync(Transaction transaction)
+{
+    if (transaction.Type == "買入") {
+        // 加權平均成本計算
+        var totalCost = (holding.Quantity * holding.AverageCost) + 
+                       (transaction.Quantity * transaction.Price);
+        holding.Quantity += transaction.Quantity;
+        holding.AverageCost = totalCost / holding.Quantity;
+    }
+}
+```
+
+### 📊 股價監控與分析
+
+#### 即時股價更新
+
+**🔄 股價資料服務**：
+- **多市場支援**：支援台股（XXXX.TW）和美股（AAPL）格式
+- **模擬 API 整合**：現階段提供模擬股價，架構支援真實 API 整合
+- **智慧快取機制**：5分鐘快取避免頻繁 API 呼叫
+- **股票搜尋功能**：支援股票代號模糊搜尋和自動完成
+
+**📈 股價更新機制**：
+```csharp
+public class StockPriceService 
+{
+    // 支援台股與美股不同格式
+    private async Task<StockPrice?> GetTaiwanStockPriceAsync(string symbol)
+    private async Task<StockPrice?> GetUSStockPriceAsync(string symbol) 
+    
+    // 智慧快取減少 API 呼叫
+    private readonly Dictionary<string, StockPrice> _priceCache;
+}
+```
+
+#### 損益自動計算
+
+**🧮 損益計算引擎**：
+- **即時損益更新**：股價異動時自動重新計算所有相關損益
+- **多層級統計**：個股損益、組合損益、總體損益三個層級
+- **百分比報酬率**：提供金額和百分比兩種損益顯示方式
+- **成本基礎追蹤**：精確追蹤每檔股票的平均成本基礎
+
+#### 投資分析視覺化
+
+**📊 Chart.js 圖表整合**：
+- **資產配置圓餅圖**：顯示投資組合中各股票的權重分佈
+- **投資趨勢折線圖**：追蹤投資組合價值的時間變化趨勢
+- **損益比較柱狀圖**：比較各檔股票的績效表現
+- **響應式圖表**：支援桌面和行動裝置的互動體驗
+
+### 🎯 使用者介面設計
+
+#### 響應式投資儀表板
+
+**💻 現代化設計**：
+- **Bootstrap 5 響應式布局**：完全適配桌面、平板、手機螢幕
+- **統計卡片設計**：清晰展示關鍵投資指標
+- **色彩語言**：綠色獲利、紅色虧損的直觀色彩區分
+- **載入狀態指示**：提供清晰的操作回饋和載入狀態
+
+#### 互動式圖表分析
+
+**🎨 Chart.js 視覺化**：
+```javascript
+// 資產配置圓餅圖
+this.allocationChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: allocation.labels,
+        datasets: [{
+            data: allocation.values,
+            backgroundColor: ['#ff6384', '#36a2eb', '#ffce56']
+        }]
+    }
+});
+```
+
+### 🏗️ 技術架構設計
+
+#### 服務層設計
+
+**🔧 核心服務架構**：
+- **InvestmentService**：投資組合、持倉、交易記錄的 CRUD 操作
+- **StockPriceService**：股價資料擷取、快取管理、搜尋功能
+- **依賴注入整合**：完整的 ASP.NET Core 依賴注入支援
+- **非同步設計**：所有 I/O 操作採用 async/await 模式
+
+#### API 整合架構
+
+**🌐 RESTful API 設計**：
+- **統一錯誤處理**：標準化的 API 錯誤回應格式
+- **資料驗證機制**：前後端雙重資料驗證
+- **HTTP 狀態碼**：正確使用 REST API 狀態碼規範
+- **JSON 序列化**：優化的 JSON 資料傳輸格式
+
+```csharp
+// API 控制器標準化錯誤處理
+try {
+    var portfolios = await _investmentService.GetPortfoliosAsync();
+    return Ok(portfolios);
+} catch (Exception ex) {
+    return StatusCode(500, new { 
+        message = "取得投資組合失敗", 
+        error = ex.Message 
+    });
+}
+```
+
+### 📈 投資分析算法
+
+#### 投資組合統計
+
+**📊 統計計算引擎**：
+- **加權平均成本**：精確計算多次買入的平均成本
+- **總投資報酬率**：(市值 - 成本) / 成本 × 100%
+- **資產權重分析**：計算各檔股票在組合中的權重占比
+- **風險分散指標**：分析投資組合的集中度風險
+
+#### 風險評估指標
+
+**⚡ 風險管理機制**：
+- **集中度風險**：監控單一股票占比過高的風險
+- **波動性追蹤**：追蹤投資組合的價格波動狀況
+- **成本基礎保護**：防止成本基礎計算錯誤的資料驗證
+- **異常交易偵測**：識別可能的異常交易記錄
+
+### 🚀 資料管理與擴展
+
+#### JSON 資料持久化
+
+**💾 檔案儲存架構**：
+- **portfolios.json**：投資組合基本資訊和統計資料
+- **holdings.json**：持股明細和計算結果資料  
+- **transactions.json**：完整的交易歷史記錄
+- **自動備份建議**：建議定期備份投資資料檔案
+
+#### 股價 API 整合
+
+**🔌 擴展性設計**：
+- **Alpha Vantage 整合準備**：架構支援 Alpha Vantage API
+- **配置管理系統**：透過 appsettings.json 管理 API 金鑰
+- **多 API 支援**：設計支援多個股價資料來源
+- **錯誤處理機制**：API 失敗時的優雅降級機制
+
+```csharp
+// 股價 API 配置範例
+"StockApi": {
+    "ApiKey": "YOUR_ALPHA_VANTAGE_KEY",
+    "BaseUrl": "https://www.alphavantage.co/query",
+    "CacheExpiryMinutes": 5
+}
+```
+
+**🎯 未來擴展規劃**：
+- 整合真實股價 API（Alpha Vantage、Yahoo Finance）
+- 支援更多投資工具（基金、債券、加密貨幣）  
+- 新增技術分析指標和圖表
+- 實作投資警報和通知系統
+- 提供投資建議和智慧分析
+
+---
+
 ## 設定說明
 
 - **appsettings.json**：全域設定檔，適用於所有環境。
@@ -1685,7 +1936,82 @@ public class ExportService
 ]
 ```
 
-### 📤 資料匯出系統設定
+### � 投資追蹤器系統設定
+
+**主要資料檔案**: `App_Data/portfolios.json`
+**持倉資料檔案**: `App_Data/holdings.json`  
+**交易資料檔案**: `App_Data/transactions.json`
+
+**資料格式說明**：
+
+**portfolios.json**：
+```json
+[
+  {
+    "Id": 1,
+    "Name": "核心投資組合",
+    "Description": "長期價值投資策略", 
+    "CreatedAt": "2025-08-01T00:00:00",
+    "TotalValue": 150000.00,
+    "TotalCost": 120000.00,
+    "TotalGainLoss": 30000.00,
+    "TotalGainLossPercentage": 25.00
+  }
+]
+```
+
+**holdings.json**：
+```json
+[
+  {
+    "Id": 1,
+    "PortfolioId": 1,
+    "Symbol": "2330.TW",
+    "Name": "台積電",
+    "Type": "股票",
+    "Quantity": 100,
+    "AverageCost": 500.00,
+    "CurrentPrice": 600.00,
+    "MarketValue": 60000.00,
+    "GainLoss": 10000.00,
+    "GainLossPercentage": 20.00,
+    "LastUpdated": "2025-08-31T14:30:00"
+  }
+]
+```
+
+**transactions.json**：
+```json
+[
+  {
+    "Id": 1,
+    "PortfolioId": 1,
+    "Symbol": "2330.TW",
+    "Type": "買入",
+    "Quantity": 100,
+    "Price": 500.00,
+    "TotalAmount": 50000.00,
+    "Fee": 71.00,
+    "Date": "2025-08-01T09:30:00",
+    "Note": "分批建倉",
+    "CreatedAt": "2025-08-01T09:35:00"
+  }
+]
+```
+
+**股價 API 設定**：
+```json
+{
+  "StockApi": {
+    "ApiKey": "demo",
+    "BaseUrl": "https://www.alphavantage.co/query",
+    "CacheExpiryMinutes": 5,
+    "RequestDelayMs": 1000
+  }
+}
+```
+
+### �📤 資料匯出系統設定
 
 **匯出歷史檔案**: `App_Data/export-history.json`  
 **匯出暫存目錄**: `wwwroot/exports/`  
