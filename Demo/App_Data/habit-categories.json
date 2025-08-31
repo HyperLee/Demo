@@ -1,0 +1,58 @@
+[
+  {
+    "id": "health",
+    "name": "健康",
+    "description": "與身體健康相關的習慣，如飲食、睡眠等",
+    "iconClass": "fas fa-heart",
+    "color": "#e74c3c",
+    "sortOrder": 1
+  },
+  {
+    "id": "fitness",
+    "name": "運動",
+    "description": "體能訓練和運動相關的習慣",
+    "iconClass": "fas fa-dumbbell",
+    "color": "#f39c12",
+    "sortOrder": 2
+  },
+  {
+    "id": "learning",
+    "name": "學習",
+    "description": "知識學習、技能提升相關的習慣",
+    "iconClass": "fas fa-graduation-cap",
+    "color": "#3498db",
+    "sortOrder": 3
+  },
+  {
+    "id": "work",
+    "name": "工作",
+    "description": "職業發展和工作效率相關的習慣",
+    "iconClass": "fas fa-briefcase",
+    "color": "#2ecc71",
+    "sortOrder": 4
+  },
+  {
+    "id": "personal",
+    "name": "個人",
+    "description": "個人發展和自我提升的習慣",
+    "iconClass": "fas fa-user",
+    "color": "#9b59b6",
+    "sortOrder": 5
+  },
+  {
+    "id": "social",
+    "name": "社交",
+    "description": "人際關係和社交活動相關的習慣",
+    "iconClass": "fas fa-users",
+    "color": "#1abc9c",
+    "sortOrder": 6
+  },
+  {
+    "id": "other",
+    "name": "其他",
+    "description": "其他類型的習慣",
+    "iconClass": "fas fa-star",
+    "color": "#95a5a6",
+    "sortOrder": 99
+  }
+]

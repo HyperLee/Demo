@@ -35,6 +35,9 @@ public class Program
         // 註冊待辦清單服務
         builder.Services.AddSingleton<TodoService>();
 
+        // 註冊習慣追蹤服務
+        builder.Services.AddSingleton<HabitService>();
+
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.

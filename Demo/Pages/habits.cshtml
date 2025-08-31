@@ -1,0 +1,350 @@
+@page "/habits"
+@model Demo.Pages.HabitsModel
+@{
+    ViewData["Title"] = "習慣追蹤器";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/habits.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+}
+
+<div class="container-fluid">
+    <!-- 頁面標題 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="display-6">
+            <i class="fas fa-calendar-check text-primary"></i>
+            習慣追蹤器
+        </h1>
+        <button class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#addHabitModal">
+            <i class="fas fa-plus"></i> 新增習慣
+        </button>
+    </div>
+
+    <!-- 成功/錯誤訊息 -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i>
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i>
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- 統計儀表板 -->
+    <div class="habit-dashboard mb-4">
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-center mb-2">
+                            <i class="fas fa-check-circle text-success me-2" style="font-size: 1.5rem;"></i>
+                            <h5 class="card-title mb-0">今日完成</h5>
+                        </div>
+                        <h2 class="text-success mb-0">@Model.PageData.TodayCompleted/@Model.PageData.TotalHabits</h2>
+                        <small class="text-muted">個習慣</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-center mb-2">
+                            <i class="fas fa-chart-line text-primary me-2" style="font-size: 1.5rem;"></i>
+                            <h5 class="card-title mb-0">本週成功率</h5>
+                        </div>
+                        <h2 class="text-primary mb-0">@Model.PageData.WeeklySuccessRate.ToString("F1")%</h2>
+                        <small class="text-muted">完成度</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-center mb-2">
+                            <i class="fas fa-fire text-warning me-2" style="font-size: 1.5rem;"></i>
+                            <h5 class="card-title mb-0">最長連續</h5>
+                        </div>
+                        <h2 class="text-warning mb-0">@Model.PageData.LongestStreak</h2>
+                        <small class="text-muted">天</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-center mb-2">
+                            <i class="fas fa-list text-info me-2" style="font-size: 1.5rem;"></i>
+                            <h5 class="card-title mb-0">總習慣數</h5>
+                        </div>
+                        <h2 class="text-info mb-0">@Model.PageData.TotalHabits</h2>
+                        <small class="text-muted">個習慣</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 週進度圖表 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-chart-area text-primary"></i>
+                週進度趨勢
+            </h5>
+        </div>
+        <div class="card-body">
+            <canvas id="weeklyProgressChart" height="100"></canvas>
+        </div>
+    </div>
+
+    <!-- 習慣分類篩選 -->
+    <div class="habit-categories mb-4">
+        <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-outline-primary active category-filter-btn" data-category="all">
+                <i class="fas fa-th-large"></i>
+                全部 (@Model.PageData.TotalHabits)
+            </button>
+            @foreach (var category in Model.PageData.Categories)
+            {
+                var habitCount = Model.PageData.TodayHabits.Count(h => h.Category.Id == category.Id);
+                <button type="button" class="btn btn-outline-primary category-filter-btn" data-category="@category.Id">
+                    <i class="@category.IconClass"></i>
+                    @category.Name (@habitCount)
+                </button>
+            }
+        </div>
+    </div>
+
+    <!-- 今日習慣清單 -->
+    <div class="today-habits">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3>
+                <i class="fas fa-calendar-day text-primary"></i> 
+                今日習慣 <small class="text-muted">(@DateTime.Today.ToString("yyyy/MM/dd"))</small>
+            </h3>
+        </div>
+        
+        @if (Model.PageData.TodayHabits.Any())
+        {
+            <div class="habit-grid" id="habitGrid">
+                @foreach (var habit in Model.PageData.TodayHabits)
+                {
+                    <partial name="_HabitCard" model="habit" />
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty-state text-center py-5">
+                <i class="fas fa-plus-circle text-muted" style="font-size: 4rem;"></i>
+                <h4 class="text-muted mt-3">還沒有任何習慣</h4>
+                <p class="text-muted">點擊上方「新增習慣」按鈕開始建立您的第一個習慣！</p>
+                <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#addHabitModal">
+                    <i class="fas fa-plus"></i> 新增第一個習慣
+                </button>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- 新增習慣 Modal -->
+<div class="modal fade" id="addHabitModal" tabindex="-1" aria-labelledby="addHabitModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addHabitModalLabel">
+                    <i class="fas fa-plus-circle"></i>
+                    新增習慣
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" asp-page-handler="CreateHabit">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label asp-for="NewHabit.Name" class="form-label">習慣名稱 <span class="text-danger">*</span></label>
+                            <input asp-for="NewHabit.Name" class="form-control" placeholder="例如：每天喝8杯水" maxlength="100" required>
+                            <span asp-validation-for="NewHabit.Name" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="NewHabit.CategoryId" class="form-label">分類 <span class="text-danger">*</span></label>
+                            <select asp-for="NewHabit.CategoryId" class="form-select" required>
+                                <option value="">請選擇分類</option>
+                                @foreach (var category in Model.PageData.Categories)
+                                {
+                                    <option value="@category.Id">@category.Name</option>
+                                }
+                            </select>
+                            <span asp-validation-for="NewHabit.CategoryId" class="text-danger"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="NewHabit.Description" class="form-label">描述</label>
+                            <textarea asp-for="NewHabit.Description" class="form-control" rows="2" placeholder="簡單描述這個習慣的目標和好處" maxlength="500"></textarea>
+                            <span asp-validation-for="NewHabit.Description" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="NewHabit.IconClass" class="form-label">圖標</label>
+                            <select asp-for="NewHabit.IconClass" class="form-select">
+                                <option value="fas fa-star">⭐ 星星</option>
+                                <option value="fas fa-heart">❤️ 愛心</option>
+                                <option value="fas fa-dumbbell">🏋️ 啞鈴</option>
+                                <option value="fas fa-book">📚 書本</option>
+                                <option value="fas fa-coffee">☕ 咖啡</option>
+                                <option value="fas fa-running">🏃 跑步</option>
+                                <option value="fas fa-bed">🛏️ 床</option>
+                                <option value="fas fa-apple-alt">🍎 蘋果</option>
+                                <option value="fas fa-guitar">🎸 吉他</option>
+                                <option value="fas fa-paint-brush">🎨 畫筆</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="NewHabit.Color" class="form-label">顏色</label>
+                            <input asp-for="NewHabit.Color" type="color" class="form-control form-control-color" value="#007bff">
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="NewHabit.TargetCount" class="form-label">每日目標次數</label>
+                            <input asp-for="NewHabit.TargetCount" type="number" class="form-control" min="1" max="10" value="1">
+                            <span asp-validation-for="NewHabit.TargetCount" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="NewHabit.Frequency" class="form-label">頻率</label>
+                            <select asp-for="NewHabit.Frequency" class="form-select">
+                                <option value="1">每日</option>
+                                <option value="2">每週</option>
+                                <option value="3">每月</option>
+                                <option value="4">自訂</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="NewHabit.TargetEndDate" class="form-label">目標結束日期</label>
+                            <input asp-for="NewHabit.TargetEndDate" type="date" class="form-control" min="@DateTime.Today.ToString("yyyy-MM-dd")">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-plus"></i> 新增習慣
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 習慣詳情 Modal -->
+<div class="modal fade" id="habitDetailModal" tabindex="-1" aria-labelledby="habitDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="habitDetailModalLabel">
+                    <i class="fas fa-chart-line"></i>
+                    習慣詳情
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="habitDetailContent">
+                    <!-- 動態載入內容 -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="~/js/habits.js"></script>
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        // 初始化頁面
+        $(document).ready(function() {
+            // 載入週進度圖表
+            loadWeeklyProgressChart();
+            
+            // 綁定分類篩選事件
+            $('.category-filter-btn').on('click', function() {
+                var category = $(this).data('category');
+                filterHabitsByCategory(category);
+                
+                // 更新按鈕狀態
+                $('.category-filter-btn').removeClass('active');
+                $(this).addClass('active');
+            });
+        });
+
+        // 載入週進度圖表
+        async function loadWeeklyProgressChart() {
+            try {
+                const response = await fetch('/habits?handler=WeeklyProgress');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const ctx = document.getElementById('weeklyProgressChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: result.data,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return value + '%';
+                                        }
+                                    }
+                                }
+                            },
+                            plugins: {
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return '完成率: ' + context.parsed.y + '%';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    console.error('載入週進度資料失敗:', result.message);
+                }
+            } catch (error) {
+                console.error('載入週進度圖表時發生錯誤:', error);
+            }
+        }
+
+        // 根據分類篩選習慣
+        function filterHabitsByCategory(categoryId) {
+            const habitCards = document.querySelectorAll('.habit-card');
+            
+            habitCards.forEach(card => {
+                const cardCategory = card.getAttribute('data-category');
+                
+                if (categoryId === 'all' || cardCategory === categoryId) {
+                    card.style.display = 'block';
+                    // 添加淡入效果
+                    card.style.opacity = '0';
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                    }, 50);
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+    </script>
+}

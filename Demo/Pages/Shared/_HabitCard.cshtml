@@ -1,0 +1,174 @@
+@model Demo.Models.HabitViewModel
+
+<div class="habit-card @(Model.IsTodayCompleted ? "completed" : "")" 
+     data-habit-id="@Model.Id" 
+     data-category="@Model.Category.Id"
+     style="border-left: 4px solid @Model.Color;">
+    
+    <div class="habit-header">
+        <div class="d-flex align-items-center">
+            <div class="habit-icon me-3" style="background-color: @Model.Color;">
+                <i class="@Model.IconClass"></i>
+            </div>
+            <div class="habit-info flex-grow-1">
+                <h5 class="habit-name mb-1">@Model.Name</h5>
+                <small class="text-muted d-flex align-items-center">
+                    <i class="@Model.Category.IconClass me-1"></i>
+                    @Model.Category.Name
+                </small>
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <small class="text-muted d-block mt-1" style="font-size: 0.8rem;">
+                        @Model.Description.Substring(0, Math.Min(60, Model.Description.Length))@(Model.Description.Length > 60 ? "..." : "")
+                    </small>
+                }
+            </div>
+        </div>
+        
+        <div class="habit-actions">
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item" href="javascript:void(0)" onclick="showHabitDetail('@Model.Id')">
+                            <i class="fas fa-chart-line me-2"></i>查看詳情
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="javascript:void(0)" onclick="editHabit('@Model.Id')">
+                            <i class="fas fa-edit me-2"></i>編輯習慣
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item text-danger" href="javascript:void(0)" onclick="deleteHabit('@Model.Id', '@Model.Name')">
+                            <i class="fas fa-trash me-2"></i>刪除習慣
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="habit-progress mb-3">
+        @if (Model.TargetCount > 1)
+        {
+            <div class="progress mb-2" style="height: 10px;">
+                @{
+                    var progressPercentage = Math.Min(100, (Model.TodayCompleted * 100.0) / Model.TargetCount);
+                }
+                <div class="progress-bar bg-success" role="progressbar" 
+                     style="width: @(progressPercentage)%" 
+                     aria-valuenow="@progressPercentage" 
+                     aria-valuemin="0" aria-valuemax="100">
+                </div>
+            </div>
+            <small class="text-muted">
+                進度：@Model.TodayCompleted / @Model.TargetCount 次
+            </small>
+        }
+        else
+        {
+            <div class="progress mb-2" style="height: 10px;">
+                <div class="progress-bar @(Model.IsTodayCompleted ? "bg-success" : "bg-light")" 
+                     role="progressbar" 
+                     style="width: @(Model.IsTodayCompleted ? 100 : 0)%" 
+                     aria-valuenow="@(Model.IsTodayCompleted ? 100 : 0)" 
+                     aria-valuemin="0" aria-valuemax="100">
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="habit-stats mb-3">
+        <div class="row g-2">
+            <div class="col-4">
+                <div class="stat-item text-center">
+                    <div class="stat-number text-warning fw-bold">@Model.CurrentStreak</div>
+                    <div class="stat-label">連續天數</div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="stat-item text-center">
+                    <div class="stat-number text-info fw-bold">@Model.TotalCompletions</div>
+                    <div class="stat-label">總完成</div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="stat-item text-center">
+                    <div class="stat-number text-success fw-bold">@Model.CompletionRate.ToString("F0")%</div>
+                    <div class="stat-label">成功率</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.Tags.Any())
+    {
+        <div class="habit-tags mb-3">
+            @foreach (var tag in Model.Tags.Take(3))
+            {
+                <span class="badge bg-light text-dark me-1">#@tag</span>
+            }
+            @if (Model.Tags.Count > 3)
+            {
+                <span class="badge bg-light text-muted">+@(Model.Tags.Count - 3)</span>
+            }
+        </div>
+    }
+    
+    <div class="habit-actions-bottom">
+        @if (Model.IsTodayCompleted && Model.TargetCount == 1)
+        {
+            <button class="btn btn-success btn-sm w-100" disabled>
+                <i class="fas fa-check"></i> 今日已完成
+            </button>
+        }
+        else if (Model.TodayCompleted >= Model.TargetCount)
+        {
+            <button class="btn btn-success btn-sm w-100" disabled>
+                <i class="fas fa-check"></i> 目標已達成 (@Model.TodayCompleted/@Model.TargetCount)
+            </button>
+        }
+        else
+        {
+            <div class="d-flex gap-2">
+                @if (Model.TargetCount > 1)
+                {
+                    <button class="btn btn-outline-primary btn-sm" onclick="decrementHabit('@Model.Id')" 
+                            @(Model.TodayCompleted <= 0 ? "disabled" : "")>
+                        <i class="fas fa-minus"></i>
+                    </button>
+                }
+                
+                <button class="btn btn-primary btn-sm flex-grow-1" onclick="markComplete('@Model.Id')">
+                    <i class="fas fa-plus"></i> 
+                    @if (Model.TargetCount > 1)
+                    {
+                        <span>完成一次 (@(Model.TodayCompleted + 1)/@Model.TargetCount)</span>
+                    }
+                    else
+                    {
+                        <span>標記完成</span>
+                    }
+                </button>
+                
+                @if (Model.TargetCount > 1)
+                {
+                    <button class="btn btn-outline-success btn-sm" onclick="completeAllRemaining('@Model.Id', @Model.TargetCount, @Model.TodayCompleted)">
+                        <i class="fas fa-check-double"></i>
+                    </button>
+                }
+            </div>
+        }
+    </div>
+
+    @if (Model.IsTodayCompleted)
+    {
+        <div class="completion-indicator">
+            <i class="fas fa-check-circle text-success"></i>
+        </div>
+    }
+</div>

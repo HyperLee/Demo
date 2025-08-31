@@ -1,0 +1,313 @@
+@model Demo.Models.HabitViewModel
+
+<div class="habit-progress-container">
+    <!-- 習慣基本資訊 -->
+    <div class="habit-progress-header mb-4">
+        <div class="d-flex align-items-center mb-3">
+            <div class="habit-icon me-3" style="background-color: @Model.Color; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <i class="@Model.IconClass text-white" style="font-size: 1.5rem;"></i>
+            </div>
+            <div>
+                <h4 class="mb-1">@Model.Name</h4>
+                <small class="text-muted">
+                    <i class="@Model.Category.IconClass me-1"></i>
+                    @Model.Category.Name
+                </small>
+            </div>
+        </div>
+        
+        @if (!string.IsNullOrEmpty(Model.Description))
+        {
+            <p class="text-muted mb-3">@Model.Description</p>
+        }
+    </div>
+
+    <!-- 核心統計 -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <div class="stat-icon mb-2">
+                        <i class="fas fa-fire text-warning" style="font-size: 2rem;"></i>
+                    </div>
+                    <h3 class="text-warning mb-1">@Model.CurrentStreak</h3>
+                    <small class="text-muted">目前連續天數</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <div class="stat-icon mb-2">
+                        <i class="fas fa-check-circle text-success" style="font-size: 2rem;"></i>
+                    </div>
+                    <h3 class="text-success mb-1">@Model.TotalCompletions</h3>
+                    <small class="text-muted">總完成次數</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <div class="stat-icon mb-2">
+                        <i class="fas fa-chart-line text-primary" style="font-size: 2rem;"></i>
+                    </div>
+                    <h3 class="text-primary mb-1">@Model.CompletionRate.ToString("F1")%</h3>
+                    <small class="text-muted">30天成功率</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <div class="stat-icon mb-2">
+                        <i class="fas fa-target text-info" style="font-size: 2rem;"></i>
+                    </div>
+                    <h3 class="text-info mb-1">@Model.TargetCount</h3>
+                    <small class="text-muted">每日目標次數</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 今日進度 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h6 class="mb-0">
+                <i class="fas fa-calendar-day text-primary"></i>
+                今日進度 (@DateTime.Today.ToString("yyyy/MM/dd"))
+            </h6>
+        </div>
+        <div class="card-body">
+            @if (Model.TargetCount > 1)
+            {
+                <div class="progress mb-3" style="height: 25px;">
+                    @{
+                        var todayProgressPercentage = Math.Min(100, (Model.TodayCompleted * 100.0) / Model.TargetCount);
+                    }
+                    <div class="progress-bar bg-gradient" 
+                         style="width: @(todayProgressPercentage)%; background: linear-gradient(45deg, @Model.Color, #ffffff);" 
+                         role="progressbar" 
+                         aria-valuenow="@todayProgressPercentage" 
+                         aria-valuemin="0" 
+                         aria-valuemax="100">
+                        <span class="fw-bold">@Model.TodayCompleted / @Model.TargetCount</span>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <span>已完成：@Model.TodayCompleted 次</span>
+                    <span>還需要：@Math.Max(0, Model.TargetCount - Model.TodayCompleted) 次</span>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-3">
+                    @if (Model.IsTodayCompleted)
+                    {
+                        <div class="text-success">
+                            <i class="fas fa-check-circle" style="font-size: 3rem;"></i>
+                            <h5 class="mt-2 mb-0">今日已完成！</h5>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-muted">
+                            <i class="fas fa-clock" style="font-size: 3rem;"></i>
+                            <h5 class="mt-2 mb-0">今日尚未完成</h5>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- 7天進度圖表 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h6 class="mb-0">
+                <i class="fas fa-chart-area text-primary"></i>
+                7天進度趨勢
+            </h6>
+        </div>
+        <div class="card-body">
+            <canvas id="habitProgressChart-@Model.Id" height="100"></canvas>
+        </div>
+    </div>
+
+    <!-- 標籤 -->
+    @if (Model.Tags.Any())
+    {
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-tags text-primary"></i>
+                    標籤
+                </h6>
+            </div>
+            <div class="card-body">
+                @foreach (var tag in Model.Tags)
+                {
+                    <span class="badge bg-light text-dark me-2 mb-2 p-2">#@tag</span>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- 習慣設定資訊 -->
+    <div class="card">
+        <div class="card-header">
+            <h6 class="mb-0">
+                <i class="fas fa-cog text-primary"></i>
+                習慣設定
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="setting-item">
+                        <label class="form-label text-muted">頻率</label>
+                        <div class="fw-bold">
+                            @switch (Model.Frequency)
+                            {
+                                case Demo.Models.HabitFrequency.Daily:
+                                    <span>每日</span>
+                                    break;
+                                case Demo.Models.HabitFrequency.Weekly:
+                                    <span>每週</span>
+                                    break;
+                                case Demo.Models.HabitFrequency.Monthly:
+                                    <span>每月</span>
+                                    break;
+                                case Demo.Models.HabitFrequency.Custom:
+                                    <span>自訂</span>
+                                    break;
+                                default:
+                                    <span>每日</span>
+                                    break;
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="setting-item">
+                        <label class="form-label text-muted">每日目標</label>
+                        <div class="fw-bold">@Model.TargetCount 次</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="setting-item">
+                        <label class="form-label text-muted">習慣顏色</label>
+                        <div class="d-flex align-items-center">
+                            <div class="color-indicator me-2" style="width: 20px; height: 20px; border-radius: 3px; background-color: @Model.Color; border: 1px solid #dee2e6;"></div>
+                            <span class="text-uppercase">@Model.Color</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="setting-item">
+                        <label class="form-label text-muted">分類</label>
+                        <div class="fw-bold">
+                            <i class="@Model.Category.IconClass me-1" style="color: @Model.Category.Color;"></i>
+                            @Model.Category.Name
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 載入單個習慣的進度圖表
+    $(document).ready(function() {
+        loadHabitProgressChart('@Model.Id');
+    });
+
+    async function loadHabitProgressChart(habitId) {
+        try {
+            const response = await fetch(`/habits?handler=HabitProgress&habitId=${habitId}&days=7`);
+            const result = await response.json();
+            
+            if (result.success) {
+                const ctx = document.getElementById(`habitProgressChart-${habitId}`).getContext('2d');
+                
+                const labels = result.data.map(d => {
+                    const date = new Date(d.date);
+                    return date.toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' });
+                });
+                
+                const completedData = result.data.map(d => d.completed);
+                const isCompletedData = result.data.map(d => d.isCompleted);
+                
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: '完成次數',
+                            data: completedData,
+                            backgroundColor: isCompletedData.map(completed => 
+                                completed ? '@Model.Color' : '#e9ecef'
+                            ),
+                            borderColor: '@Model.Color',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: Math.max(@Model.TargetCount, 1),
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const isCompleted = isCompletedData[context.dataIndex];
+                                        const status = isCompleted ? '已完成' : '未完成';
+                                        return `完成次數: ${context.parsed.y} (${status})`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            } else {
+                console.error('載入習慣進度資料失敗:', result.message);
+            }
+        } catch (error) {
+            console.error('載入習慣進度圖表時發生錯誤:', error);
+        }
+    }
+</script>
+
+<style>
+    .habit-progress-container .card {
+        border: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .habit-progress-container .stat-icon {
+        opacity: 0.8;
+    }
+    
+    .habit-progress-container .setting-item .form-label {
+        font-size: 0.85rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .habit-progress-container .color-indicator {
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+</style>

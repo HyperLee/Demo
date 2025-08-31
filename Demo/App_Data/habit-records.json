@@ -1,0 +1,82 @@
+[
+  {
+    "id": "record-1",
+    "habitId": "drink-water",
+    "date": "2024-08-31T00:00:00",
+    "completedCount": 8,
+    "notes": "達成每日目標",
+    "createdAt": "2024-08-31T20:00:00"
+  },
+  {
+    "id": "record-2",
+    "habitId": "morning-exercise",
+    "date": "2024-08-31T00:00:00",
+    "completedCount": 1,
+    "notes": "完成30分鐘跑步",
+    "createdAt": "2024-08-31T07:30:00"
+  },
+  {
+    "id": "record-3",
+    "habitId": "read-book",
+    "date": "2024-08-31T00:00:00",
+    "completedCount": 1,
+    "notes": "閱讀技術書籍",
+    "createdAt": "2024-08-31T21:30:00"
+  },
+  {
+    "id": "record-4",
+    "habitId": "meditation",
+    "date": "2024-08-30T00:00:00",
+    "completedCount": 1,
+    "notes": "晨間冥想10分鐘",
+    "createdAt": "2024-08-30T07:15:00"
+  },
+  {
+    "id": "record-5",
+    "habitId": "drink-water",
+    "date": "2024-08-30T00:00:00",
+    "completedCount": 6,
+    "notes": "未達到目標",
+    "createdAt": "2024-08-30T23:00:00"
+  },
+  {
+    "id": "record-6",
+    "habitId": "morning-exercise",
+    "date": "2024-08-30T00:00:00",
+    "completedCount": 1,
+    "notes": "完成瑜伽練習",
+    "createdAt": "2024-08-30T07:00:00"
+  },
+  {
+    "id": "record-7",
+    "habitId": "code-practice",
+    "date": "2024-08-30T00:00:00",
+    "completedCount": 1,
+    "notes": "練習演算法",
+    "createdAt": "2024-08-30T14:00:00"
+  },
+  {
+    "id": "record-8",
+    "habitId": "family-time",
+    "date": "2024-08-29T00:00:00",
+    "completedCount": 1,
+    "notes": "和家人一起晚餐",
+    "createdAt": "2024-08-29T19:30:00"
+  },
+  {
+    "id": "record-9",
+    "habitId": "read-book",
+    "date": "2024-08-29T00:00:00",
+    "completedCount": 1,
+    "notes": "閱讀歷史小說",
+    "createdAt": "2024-08-29T22:00:00"
+  },
+  {
+    "id": "record-10",
+    "habitId": "meditation",
+    "date": "2024-08-29T00:00:00",
+    "completedCount": 1,
+    "notes": "睡前冥想",
+    "createdAt": "2024-08-29T23:00:00"
+  }
+]
