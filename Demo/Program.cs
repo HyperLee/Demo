@@ -44,6 +44,12 @@ public class Program
         builder.Services.AddScoped<SmartCategoryService>();
         builder.Services.AddScoped<CategoryLearningService>();
 
+        // 註冊匯出相關服務
+        builder.Services.AddScoped<PdfExportService>();
+        builder.Services.AddScoped<ExcelExportService>();
+        builder.Services.AddScoped<CsvExportService>();
+        builder.Services.AddScoped<ExportService>();
+
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.

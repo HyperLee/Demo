@@ -1,0 +1,290 @@
+@page
+@model Demo.Pages.ExportModel
+@using Demo.Models
+@{
+    ViewData["Title"] = "資料匯出";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">
+                <i class="fas fa-download text-primary me-2"></i>
+                資料匯出
+            </h2>
+        </div>
+    </div>
+
+    <!-- 匯出功能選擇區 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cog me-2"></i>
+                        匯出設定
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="exportForm">
+                        <!-- 資料類型選擇 -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">選擇要匯出的資料類型：</label>
+                            <div class="row g-3 mt-2">
+                                @foreach (var dataType in Model.DataTypes)
+                                {
+                                    <div class="col-md-6 col-lg-3">
+                                        <div class="export-option">
+                                            <input type="checkbox" class="btn-check" id="dataType-@dataType.Value" 
+                                                   name="dataTypes" value="@dataType.Value" autocomplete="off">
+                                            <label class="btn btn-outline-@dataType.Color w-100 h-100 d-flex flex-column align-items-center p-3" 
+                                                   for="dataType-@dataType.Value">
+                                                <i class="@dataType.Icon fa-2x mb-2"></i>
+                                                <span class="fw-bold">@dataType.Label</span>
+                                                <small class="text-muted mt-1">@dataType.Description</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- 匯出格式選擇 -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">選擇匯出格式：</label>
+                            <div class="row g-3 mt-2">
+                                @foreach (var format in Model.Formats)
+                                {
+                                    <div class="col-md-6 col-lg-3">
+                                        <input type="radio" class="btn-check" id="format-@format.Value" 
+                                               name="exportFormat" value="@format.Value" autocomplete="off">
+                                        <label class="btn btn-outline-@format.Color w-100 h-100 d-flex flex-column align-items-center p-3" 
+                                               for="format-@format.Value">
+                                            <i class="@format.Icon fa-2x mb-2"></i>
+                                            <span class="fw-bold">@format.Label</span>
+                                            <small class="text-muted mt-1">@format.Description</small>
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- 日期範圍選擇 -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">選擇日期範圍：</label>
+                            <div class="row g-3 mt-2">
+                                <div class="col-md-4">
+                                    <div class="quick-date-buttons">
+                                        <button type="button" class="btn btn-outline-secondary me-2 mb-2" data-range="7">最近7天</button>
+                                        <button type="button" class="btn btn-outline-secondary me-2 mb-2" data-range="30">最近30天</button>
+                                        <button type="button" class="btn btn-outline-secondary me-2 mb-2" data-range="90">最近90天</button>
+                                        <button type="button" class="btn btn-outline-secondary me-2 mb-2" data-range="all">全部資料</button>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="startDate" class="form-label">開始日期</label>
+                                    <input type="date" class="form-control" id="startDate" name="startDate">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="endDate" class="form-label">結束日期</label>
+                                    <input type="date" class="form-control" id="endDate" name="endDate">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 匯出預覽 -->
+                        <div class="alert alert-info mb-4">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <span id="exportPreview">請選擇要匯出的資料類型和格式</span>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer">
+                    <button type="button" id="startExport" class="btn btn-primary btn-lg me-2" disabled>
+                        <i class="fas fa-download me-2"></i>
+                        開始匯出
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                        <i class="fas fa-redo me-2"></i>
+                        重設
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 匯出歷史記錄 -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history text-secondary me-2"></i>
+                        匯出歷史記錄
+                    </h5>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="refreshHistory()">
+                        <i class="fas fa-sync-alt me-1"></i>
+                        重新整理
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="exportHistoryTable">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>匯出時間</th>
+                                    <th>資料類型</th>
+                                    <th>格式</th>
+                                    <th>檔案名稱</th>
+                                    <th>檔案大小</th>
+                                    <th>狀態</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.ExportHistory.Any())
+                                {
+                                    @foreach (var history in Model.ExportHistory.OrderByDescending(h => h.CreatedAt))
+                                    {
+                                        <tr>
+                                            <td>@history.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                            <td>
+                                                @foreach (var dataType in history.Request.DataTypes)
+                                                {
+                                                    var option = Model.DataTypes.FirstOrDefault(dt => dt.Value == dataType);
+                                                    if (option != null)
+                                                    {
+                                                        <span class="badge bg-@(option.Color) me-1">@option.Label</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-secondary me-1">@dataType</span>
+                                                    }
+                                                }
+                                            </td>
+                                            <td>
+                                                @{
+                                                    var formatOption = Model.Formats.FirstOrDefault(f => f.Value == history.Request.Format);
+                                                }
+                                                @if (formatOption != null)
+                                                {
+                                                    <span class="badge bg-@(formatOption.Color)">
+                                                        <i class="@(formatOption.Icon) me-1"></i>
+                                                        @formatOption.Label
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">@history.Request.Format</span>
+                                                }
+                                            </td>
+                                            <td>@history.Result.FileName</td>
+                                            <td>@Demo.Pages.ExportModel.FormatFileSize(history.Result.FileSize)</td>
+                                            <td>
+                                                <span class="@Demo.Pages.ExportModel.GetStatusBadgeClass(history.Result.Status)">
+                                                    @Demo.Pages.ExportModel.GetStatusDisplayName(history.Result.Status)
+                                                </span>
+                                            </td>
+                                            <td>
+                                                @if (history.Result.Status == ExportStatus.Completed)
+                                                {
+                                                    <button class="btn btn-success btn-sm me-1" 
+                                                            onclick="downloadExport('@history.Id')">
+                                                        <i class="fas fa-download"></i>
+                                                    </button>
+                                                }
+                                                <button class="btn btn-danger btn-sm" 
+                                                        onclick="deleteExport('@history.Id')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted py-4">
+                                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                                            <br>
+                                            尚無匯出記錄
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 匯出進度模態框 -->
+<div class="modal fade" id="exportProgressModal" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-cog fa-spin me-2"></i>
+                    資料匯出中
+                </h5>
+            </div>
+            <div class="modal-body">
+                <div class="export-progress-info mb-3">
+                    <div class="row">
+                        <div class="col-4"><strong>資料類型：</strong></div>
+                        <div class="col-8" id="exportDataType">-</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-4"><strong>匯出格式：</strong></div>
+                        <div class="col-8" id="exportFormat">-</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-4"><strong>日期範圍：</strong></div>
+                        <div class="col-8" id="exportRange">-</div>
+                    </div>
+                </div>
+                
+                <div class="export-details">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span id="currentStep">準備匯出...</span>
+                        <span id="progressPercent">0%</span>
+                    </div>
+                    <div class="progress mb-3">
+                        <div id="exportProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                             role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <div id="exportResult" style="display: none;">
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong>匯出完成！</strong>
+                            <div class="mt-2">
+                                <div>檔案名稱：<span id="resultFileName">-</span></div>
+                                <div>檔案大小：<span id="resultFileSize">-</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="exportError" style="display: none;">
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            <strong>匯出失敗</strong>
+                            <div class="mt-2" id="errorMessage">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="display: none;" id="exportComplete">
+                <button type="button" class="btn btn-success" id="downloadExportFile">
+                    <i class="fas fa-download me-2"></i>
+                    下載檔案
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/export.js"></script>
+}
