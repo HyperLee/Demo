@@ -57,6 +57,24 @@
                                 <i class="fas fa-chart-line me-1"></i>財務儀表板
                             </a>
                         </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-dark" href="#" id="familyDropdown" role="button" 
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-users me-1"></i>家庭共享
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" asp-area="" asp-page="/family-management">
+                                        <i class="fas fa-home me-2"></i>家庭管理
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-area="" asp-page="/family-accounting">
+                                        <i class="fas fa-calculator me-2"></i>共享記帳
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
                     </ul>
                     
                     <!-- 主題切換按鈕 -->

@@ -1,0 +1,328 @@
+@page
+@model Demo.Pages.FamilyAccountingModel
+@{
+    ViewData["Title"] = "家庭共享記帳";
+}
+
+<div class="container mt-4">
+    <!-- 錯誤和成功訊息 -->
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @Model.ErrorMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @Model.SuccessMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- 群組資訊 -->
+    @if (Model.CurrentFamily != null)
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0"><i class="fas fa-calculator me-2"></i>@Model.CurrentFamily.Name - 家庭記帳</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <div class="card text-white bg-success">
+                                    <div class="card-body">
+                                        <h4>$@Model.Statistics.TotalIncome.ToString("N0")</h4>
+                                        <p class="mb-0">本月收入</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-white bg-danger">
+                                    <div class="card-body">
+                                        <h4>$@Model.Statistics.TotalExpense.ToString("N0")</h4>
+                                        <p class="mb-0">本月支出</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-white bg-info">
+                                    <div class="card-body">
+                                        <h4>@Model.Statistics.BudgetUsage.ToString("F1")%</h4>
+                                        <p class="mb-0">預算使用率</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-white bg-warning">
+                                    <div class="card-body">
+                                        <h4>@Model.Statistics.PendingApprovals</h4>
+                                        <p class="mb-0">待審核項目</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 快速記帳區域 -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>快速新增家庭支出</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" asp-page-handler="QuickExpense">
+                    <div class="row">
+                        <div class="col-md-2">
+                            <select class="form-select" name="request.Type" required>
+                                <option value="支出">支出</option>
+                                <option value="收入">收入</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="number" class="form-control" name="request.Amount" placeholder="金額" step="0.01" required>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" name="request.Category" required>
+                                <option value="">選擇類別</option>
+                                @foreach (var category in Model.Categories)
+                                {
+                                    <option value="@category.Name">@category.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" class="form-control" name="request.Description" placeholder="描述" required>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" name="request.SplitType">
+                                <option value="我支付">我支付</option>
+                                <option value="平均分攤">平均分攤</option>
+                                <option value="自訂分攤">自訂分攤</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <input type="hidden" name="request.Date" value="@DateTime.Today.ToString("yyyy-MM-dd")">
+                </form>
+            </div>
+        </div>
+
+        <!-- 待審核項目 (管理員可見) -->
+        @if (Model.IsCurrentUserAdmin() && Model.PendingApprovals.Any())
+        {
+            <div class="card mb-4">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="fas fa-clock me-2"></i>待審核項目</h5>
+                </div>
+                <div class="card-body">
+                    @foreach (var record in Model.PendingApprovals)
+                    {
+                        <div class="card mb-2 border-warning">
+                            <div class="card-body py-2">
+                                <div class="row align-items-center">
+                                    <div class="col-md-6">
+                                        <strong>@record.Description</strong> - @record.UserNickname
+                                        <br><small class="text-muted">@record.Category | @record.Date.ToString("MM/dd") | $@record.Amount.ToString("N0")</small>
+                                    </div>
+                                    <div class="col-md-6 text-end">
+                                        <form method="post" asp-page-handler="ApproveRecord" class="d-inline">
+                                            <input type="hidden" name="recordId" value="@record.Id" />
+                                            <input type="hidden" name="approved" value="true" />
+                                            <button type="submit" class="btn btn-sm btn-success me-2">
+                                                <i class="fas fa-check"></i> 通過
+                                            </button>
+                                        </form>
+                                        <form method="post" asp-page-handler="ApproveRecord" class="d-inline">
+                                            <input type="hidden" name="recordId" value="@record.Id" />
+                                            <input type="hidden" name="approved" value="false" />
+                                            <input type="hidden" name="reason" value="需要更多資訊" />
+                                            <button type="submit" class="btn btn-sm btn-danger" 
+                                                    onclick="return confirm('確定要拒絕這筆記錄嗎？')">
+                                                <i class="fas fa-times"></i> 拒絕
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- 記帳記錄列表 -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-list me-2"></i>家庭記帳記錄</h5>
+                <div class="btn-group">
+                    <button class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-filter"></i> 篩選
+                    </button>
+                    <button class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-download"></i> 匯出
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                @if (Model.Records.Any())
+                {
+                    @foreach (var group in Model.Records.GroupBy(r => r.Date.Date))
+                    {
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-3">@group.Key.ToString("yyyy年MM月dd日")</h6>
+                            @foreach (var record in group.OrderByDescending(r => r.CreatedAt))
+                            {
+                                <div class="card mb-2">
+                                    <div class="card-body py-3">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-1 text-center">
+                                                <div class="@(record.Type == "收入" ? "text-success" : "text-danger")">
+                                                    <i class="@(record.Type == "收入" ? "fas fa-arrow-up" : "fas fa-arrow-down")"></i>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <strong>@record.Description</strong>
+                                                <br><small class="text-muted">@record.Category</small>
+                                            </div>
+                                            <div class="col-md-2 @(record.Type == "收入" ? "text-success" : "text-danger")">
+                                                <strong>@(record.Type == "支出" ? "-" : "+")$@record.Amount.ToString("N0")</strong>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <small class="text-muted">@record.UserNickname</small>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <span class="badge @Model.GetStatusBadgeClass(record.Status)">@record.Status</span>
+                                            </div>
+                                            <div class="col-md-1">
+                                                @if (Model.CanDeleteRecord(record))
+                                                {
+                                                    <form method="post" asp-page-handler="DeleteRecord" class="d-inline">
+                                                        <input type="hidden" name="recordId" value="@record.Id" />
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                                onclick="return confirm('確定要刪除這筆記錄嗎？')"
+                                                                title="刪除記錄">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+                        <h5>尚無記帳記錄</h5>
+                        <p class="text-muted">開始記錄您的家庭收支吧！</p>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="fas fa-home fa-3x text-muted mb-3"></i>
+            <h5>請先加入家庭群組</h5>
+            <p class="text-muted">您需要先建立或加入一個家庭群組才能使用共享記帳功能</p>
+            <a href="/family-management" class="btn btn-primary">
+                <i class="fas fa-arrow-right"></i> 前往家庭管理
+            </a>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+    <script>
+        // SignalR 連接
+        let connection = null;
+
+        if ('@Model.CurrentFamily?.Id' !== '') {
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl("/familyHub")
+                .build();
+
+            connection.start().then(function () {
+                console.log('SignalR 連接成功');
+                // 加入家庭群組
+                connection.invoke("JoinFamily", '@Model.CurrentFamily?.Id');
+            }).catch(function (err) {
+                console.error('SignalR 連接失敗:', err.toString());
+            });
+
+            // 監聽新記錄通知
+            connection.on("ExpenseAdded", function (notification) {
+                showNotification(notification.message, 'success');
+                // 重新載入頁面以顯示新記錄
+                setTimeout(() => location.reload(), 2000);
+            });
+
+            // 監聽記錄更新通知
+            connection.on("ExpenseUpdated", function (notification) {
+                showNotification(notification.message, 'info');
+            });
+
+            // 監聽記錄刪除通知
+            connection.on("ExpenseDeleted", function (notification) {
+                showNotification(notification.message, 'warning');
+                // 重新載入頁面以移除刪除的記錄
+                setTimeout(() => location.reload(), 2000);
+            });
+
+            // 監聽審核結果通知
+            connection.on("RecordApproval", function (notification) {
+                showNotification(notification.message, notification.data.approved ? 'success' : 'danger');
+                // 重新載入頁面以更新記錄狀態
+                setTimeout(() => location.reload(), 2000);
+            });
+        }
+
+        // 顯示通知
+        function showNotification(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(alertDiv);
+            
+            // 3秒後自動關閉
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 3000);
+        }
+
+        // 自動關閉 alert
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(function(alert) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                });
+            }, 5000);
+        });
+    </script>
+}

@@ -1,0 +1,15 @@
+{
+  "familyInvites": [
+    {
+      "id": "invite-001",
+      "familyId": "test-family-001",
+      "inviteCode": "TESTFAM123",
+      "createdBy": "test-user-001",
+      "maxUses": 0,
+      "currentUses": 0,
+      "expiryDate": "2025-01-31T23:59:59Z",
+      "createdAt": "2024-12-31T10:00:00Z",
+      "isActive": true
+    }
+  ]
+}

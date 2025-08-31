@@ -1,0 +1,51 @@
+{
+  "sharedRecords": [
+    {
+      "id": "record-001",
+      "familyId": "test-family-001",
+      "userId": "test-user-001",
+      "userNickname": "爸爸",
+      "amount": 500.0,
+      "type": "支出",
+      "category": "餐飲",
+      "description": "家庭聚餐",
+      "date": "2024-12-30T12:00:00Z",
+      "status": "已通過",
+      "splitType": "平均分攤",
+      "splitDetails": {
+        "member-001": { "amount": 250.0, "paid": true },
+        "member-002": { "amount": 250.0, "paid": false }
+      },
+      "createdAt": "2024-12-30T12:30:00Z",
+      "updatedAt": "2024-12-30T13:00:00Z",
+      "approvals": [
+        {
+          "memberId": "member-001",
+          "approved": true,
+          "approvedAt": "2024-12-30T13:00:00Z",
+          "reason": "自動通過"
+        }
+      ]
+    },
+    {
+      "id": "record-002",
+      "familyId": "test-family-001",
+      "userId": "test-user-002",
+      "userNickname": "媽媽",
+      "amount": 1200.0,
+      "type": "支出",
+      "category": "購物",
+      "description": "日用品採購",
+      "date": "2024-12-30T15:00:00Z",
+      "status": "待審核",
+      "splitType": "自訂分攤",
+      "splitDetails": {
+        "member-001": { "amount": 800.0, "paid": false },
+        "member-002": { "amount": 400.0, "paid": true }
+      },
+      "createdAt": "2024-12-30T15:30:00Z",
+      "updatedAt": "2024-12-30T15:30:00Z",
+      "approvals": []
+    }
+  ]
+}

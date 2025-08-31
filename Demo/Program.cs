@@ -1,4 +1,5 @@
 using Demo.Services;
+using Demo.Hubs;
 
 namespace Demo;
 
@@ -11,6 +12,10 @@ public class Program
         // Add services to the container.
         builder.Services.AddRazorPages();
         builder.Services.AddControllers(); // 添加控制器支援
+        
+        // 註冊 SignalR
+        builder.Services.AddSignalR();
+        
         builder.Services.AddSingleton<INoteService, JsonNoteService>();
         builder.Services.AddSingleton<IEnhancedMemoNoteService, JsonMemoNoteService>();
         builder.Services.AddSingleton<IMemoNoteService>(provider => 
@@ -22,6 +27,10 @@ public class Program
         
         // 註冊會計服務
         builder.Services.AddScoped<IAccountingService, AccountingService>();
+        
+        // 註冊家庭共享服務
+        builder.Services.AddScoped<IFamilyService, FamilyService>();
+        builder.Services.AddScoped<ISharedAccountingService, SharedAccountingService>();
         
         // 註冊 AI 分析服務
         builder.Services.AddScoped<AnomalyDetectionService>();
@@ -69,6 +78,7 @@ public class Program
 
         app.MapRazorPages();
         app.MapControllers(); // 添加控制器路由
+        app.MapHub<FamilyHub>("/familyHub"); // 註冊 SignalR Hub
 
         app.Run();
     }

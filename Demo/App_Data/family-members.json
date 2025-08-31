@@ -1,0 +1,44 @@
+{
+  "familyMembers": [
+    {
+      "id": "member-001",
+      "familyId": "test-family-001",
+      "userId": "test-user-001",
+      "nickname": "爸爸",
+      "role": "admin",
+      "permissions": {
+        "canViewRecords": true,
+        "canAddRecords": true,
+        "canEditRecords": true,
+        "canDeleteRecords": true,
+        "canApproveRecords": true,
+        "canManageMembers": true,
+        "canManageBudgets": true,
+        "canExportData": true,
+        "canViewReports": true
+      },
+      "joinedAt": "2024-12-31T10:00:00Z",
+      "isActive": true
+    },
+    {
+      "id": "member-002",
+      "familyId": "test-family-001",
+      "userId": "test-user-002",
+      "nickname": "媽媽",
+      "role": "member",
+      "permissions": {
+        "canViewRecords": true,
+        "canAddRecords": true,
+        "canEditRecords": true,
+        "canDeleteRecords": false,
+        "canApproveRecords": false,
+        "canManageMembers": false,
+        "canManageBudgets": true,
+        "canExportData": true,
+        "canViewReports": true
+      },
+      "joinedAt": "2024-12-31T10:30:00Z",
+      "isActive": true
+    }
+  ]
+}

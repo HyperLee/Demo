@@ -1,0 +1,404 @@
+@page
+@model Demo.Pages.FamilyManagementModel
+@{
+    ViewData["Title"] = "家庭群組管理";
+}
+
+<div class="container mt-4">
+    <!-- 錯誤和成功訊息 -->
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @Model.ErrorMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @Model.SuccessMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- 群組總覽卡片 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-home me-2"></i>家庭群組管理</h4>
+                    @if (Model.CurrentFamily == null)
+                    {
+                        <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#createFamilyModal">
+                            <i class="fas fa-plus"></i> 建立新群組
+                        </button>
+                    }
+                </div>
+                <div class="card-body">
+                    @if (Model.CurrentFamily != null)
+                    {
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5 class="text-primary">@Model.CurrentFamily.Name</h5>
+                                <p class="text-muted mb-2">@Model.CurrentFamily.Description</p>
+                                <small class="text-muted">建立於 @Model.CurrentFamily.CreatedAt.ToString("yyyy/MM/dd")</small>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex justify-content-end">
+                                    @if (Model.IsCurrentUserAdmin())
+                                    {
+                                        <button class="btn btn-outline-primary btn-sm me-2" data-bs-toggle="modal" data-bs-target="#familySettingsModal">
+                                            <i class="fas fa-cog"></i> 設定
+                                        </button>
+                                        <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#generateInviteModal">
+                                            <i class="fas fa-link"></i> 邀請連結
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <h5>尚未加入任何家庭群組</h5>
+                            <p class="text-muted">建立新群組或使用邀請連結加入現有群組</p>
+                            <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#createFamilyModal">
+                                <i class="fas fa-plus"></i> 建立群組
+                            </button>
+                            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#joinFamilyModal">
+                                <i class="fas fa-sign-in-alt"></i> 加入群組
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.CurrentFamily != null)
+    {
+        <!-- 成員管理 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-users me-2"></i>成員管理</h5>
+                        <span class="badge bg-primary">@Model.Members.Count 位成員</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            @foreach (var member in Model.Members)
+                            {
+                                <div class="col-md-4 mb-3">
+                                    <div class="card @(member.IsActive ? "" : "opacity-50")">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h6 class="card-title mb-1">@member.Nickname</h6>
+                                                    <small class="text-muted">
+                                                        @(member.Role == "admin" ? "管理員" : "成員")
+                                                    </small>
+                                                </div>
+                                                @if (Model.IsCurrentUserAdmin() && member.Role != "admin")
+                                                {
+                                                    <div class="dropdown">
+                                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                                            <i class="fas fa-ellipsis-v"></i>
+                                                        </button>
+                                                        <ul class="dropdown-menu">
+                                                            <li>
+                                                                <form method="post" asp-page-handler="RemoveMember" class="d-inline">
+                                                                    <input type="hidden" name="memberId" value="@member.Id" />
+                                                                    <button type="submit" class="dropdown-item text-danger" 
+                                                                            onclick="return confirm('確定要移除這位成員嗎？')">
+                                                                        移除成員
+                                                                    </button>
+                                                                </form>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                }
+                                            </div>
+                                            <div class="mt-2">
+                                                @if (member.Permissions.CanAddExpense)
+                                                {
+                                                    <span class="badge bg-success me-1">記帳</span>
+                                                }
+                                                @if (member.Permissions.CanViewReports)
+                                                {
+                                                    <span class="badge bg-info me-1">報表</span>
+                                                }
+                                                @if (member.Permissions.CanManageUsers)
+                                                {
+                                                    <span class="badge bg-warning">管理</span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 邀請管理 (僅管理員可見) -->
+        @if (Model.IsCurrentUserAdmin())
+        {
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-link me-2"></i>邀請管理</h5>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.Invites.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>邀請碼</th>
+                                                <th>建立時間</th>
+                                                <th>過期時間</th>
+                                                <th>使用狀況</th>
+                                                <th>狀態</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var invite in Model.Invites)
+                                            {
+                                                <tr>
+                                                    <td><code>@invite.InviteCode</code></td>
+                                                    <td>@invite.CreatedAt.ToString("yyyy/MM/dd HH:mm")</td>
+                                                    <td>@invite.ExpiresAt.ToString("yyyy/MM/dd HH:mm")</td>
+                                                    <td>
+                                                        @invite.UsedCount
+                                                        @if (invite.MaxUses > 0)
+                                                        {
+                                                            <text>/@invite.MaxUses</text>
+                                                        }
+                                                        else
+                                                        {
+                                                            <text>/無限制</text>
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        @if (invite.IsValid)
+                                                        {
+                                                            <span class="badge bg-success">有效</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-danger">已過期</span>
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        @if (invite.IsValid)
+                                                        {
+                                                            <form method="post" asp-page-handler="RevokeInvite" class="d-inline">
+                                                                <input type="hidden" name="inviteId" value="@invite.Id" />
+                                                                <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                                        onclick="return confirm('確定要撤銷這個邀請嗎？')">
+                                                                    撤銷
+                                                                </button>
+                                                            </form>
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center py-3">
+                                    <p class="text-muted">尚無邀請記錄</p>
+                                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#generateInviteModal">
+                                        <i class="fas fa-plus"></i> 產生邀請連結
+                                    </button>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- 群組統計 -->
+        <div class="row mt-4">
+            <div class="col-md-3">
+                <div class="card text-white bg-success">
+                    <div class="card-body text-center">
+                        <h4>$0</h4>
+                        <p class="mb-0">本月收入</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-danger">
+                    <div class="card-body text-center">
+                        <h4>$0</h4>
+                        <p class="mb-0">本月支出</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-info">
+                    <div class="card-body text-center">
+                        <h4>0%</h4>
+                        <p class="mb-0">預算使用率</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-warning">
+                    <div class="card-body text-center">
+                        <h4>0</h4>
+                        <p class="mb-0">待審核項目</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- 建立家庭群組模態框 -->
+<div class="modal fade" id="createFamilyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" asp-page-handler="CreateFamily">
+                <div class="modal-header">
+                    <h5 class="modal-title">建立家庭群組</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">群組名稱 *</label>
+                        <input type="text" class="form-control" name="request.Name" required>
+                        <div class="form-text">例如：王家庭、小明家等</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">群組描述</label>
+                        <textarea class="form-control" name="request.Description" rows="2" placeholder="簡單描述這個群組的用途"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">預設幣別</label>
+                        <select class="form-select" name="request.Currency">
+                            <option value="TWD">新台幣 (TWD)</option>
+                            <option value="USD">美元 (USD)</option>
+                            <option value="CNY">人民幣 (CNY)</option>
+                            <option value="JPY">日圓 (JPY)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="request.RequireApproval" id="requireApproval">
+                            <label class="form-check-label" for="requireApproval">
+                                大額支出需要審核
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3" id="thresholdSection" style="display: none;">
+                        <label class="form-label">大額支出門檻</label>
+                        <input type="number" class="form-control" name="request.ApprovalThreshold" value="5000" min="0">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">建立群組</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 加入家庭群組模態框 -->
+<div class="modal fade" id="joinFamilyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" asp-page-handler="JoinFamily">
+                <div class="modal-header">
+                    <h5 class="modal-title">加入家庭群組</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">邀請連結或邀請碼</label>
+                        <input type="text" class="form-control" name="request.InviteCode" placeholder="貼上邀請連結或輸入邀請碼" required>
+                        <div class="form-text">請向家庭管理員索取邀請連結</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">您的暱稱</label>
+                        <input type="text" class="form-control" name="request.Nickname" placeholder="在群組中顯示的名稱" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">加入群組</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 產生邀請連結模態框 -->
+<div class="modal fade" id="generateInviteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" asp-page-handler="GenerateInvite">
+                <div class="modal-header">
+                    <h5 class="modal-title">產生邀請連結</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">最大使用次數</label>
+                        <input type="number" class="form-control" name="request.MaxUses" value="1" min="0">
+                        <div class="form-text">設為 0 表示無限制使用次數</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">過期天數</label>
+                        <input type="number" class="form-control" name="request.ExpiryDays" value="7" min="1" max="30">
+                        <div class="form-text">邀請連結的有效期限 (1-30 天)</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">產生邀請</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // 當勾選大額支出審核時，顯示門檻設定
+        document.getElementById('requireApproval').addEventListener('change', function() {
+            const thresholdSection = document.getElementById('thresholdSection');
+            if (this.checked) {
+                thresholdSection.style.display = 'block';
+            } else {
+                thresholdSection.style.display = 'none';
+            }
+        });
+
+        // 自動關閉 alert
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(function(alert) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                });
+            }, 5000);
+        });
+    </script>
+}

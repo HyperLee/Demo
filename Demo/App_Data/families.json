@@ -1,0 +1,21 @@
+{
+  "families": [
+    {
+      "id": "test-family-001",
+      "name": "測試家庭",
+      "description": "這是一個用於測試的家庭群組",
+      "createdBy": "test-user-001",
+      "createdAt": "2024-12-31T10:00:00Z",
+      "settings": {
+        "defaultCurrency": "TWD",
+        "requireApproval": true,
+        "approvalThreshold": 1000.0,
+        "autoSplit": true,
+        "budgetAlert": true,
+        "budgetAlertThreshold": 80.0,
+        "allowGuestView": false,
+        "allowGuestEdit": false
+      }
+    }
+  ]
+}
