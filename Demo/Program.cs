@@ -10,6 +10,7 @@ public class Program
 
         // Add services to the container.
         builder.Services.AddRazorPages();
+        builder.Services.AddControllers(); // 添加控制器支援
         builder.Services.AddSingleton<INoteService, JsonNoteService>();
         builder.Services.AddSingleton<IEnhancedMemoNoteService, JsonMemoNoteService>();
         builder.Services.AddSingleton<IMemoNoteService>(provider => 
@@ -38,6 +39,11 @@ public class Program
         // 註冊習慣追蹤服務
         builder.Services.AddSingleton<HabitService>();
 
+        // 註冊智能分類相關服務
+        builder.Services.AddSingleton<TextAnalysisService>();
+        builder.Services.AddScoped<SmartCategoryService>();
+        builder.Services.AddScoped<CategoryLearningService>();
+
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
@@ -56,6 +62,7 @@ public class Program
         app.UseAuthorization();
 
         app.MapRazorPages();
+        app.MapControllers(); // 添加控制器路由
 
         app.Run();
     }

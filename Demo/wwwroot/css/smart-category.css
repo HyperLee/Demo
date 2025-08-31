@@ -1,0 +1,454 @@
+/* 智能分類樣式 */
+.smart-category-section {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border-left: 5px solid #007bff;
+    box-shadow: 0 2px 10px rgba(0,123,255,0.1);
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.smart-category-section:hover {
+    box-shadow: 0 4px 20px rgba(0,123,255,0.15);
+}
+
+.category-suggestions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+/* 分類建議卡片 */
+.suggestion-card {
+    background: white;
+    border: 2px solid #dee2e6;
+    border-radius: 10px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.suggestion-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #007bff, #0056b3);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+}
+
+.suggestion-card:hover {
+    border-color: #007bff;
+    box-shadow: 0 4px 15px rgba(0,123,255,0.2);
+    transform: translateY(-2px);
+}
+
+.suggestion-card:hover::before {
+    transform: scaleX(1);
+}
+
+.suggestion-card.selected {
+    border-color: #28a745;
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    box-shadow: 0 4px 15px rgba(40,167,69,0.2);
+}
+
+.suggestion-card.selected::before {
+    background: linear-gradient(90deg, #28a745, #1e7e34);
+    transform: scaleX(1);
+}
+
+/* 建議卡片內容 */
+.suggestion-content {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    gap: 1rem;
+}
+
+.suggestion-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.3);
+    transition: all 0.3s ease;
+}
+
+.suggestion-card:hover .suggestion-icon {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0,123,255,0.4);
+}
+
+.suggestion-card.selected .suggestion-icon {
+    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+}
+
+.suggestion-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.suggestion-name {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+    color: #495057;
+}
+
+.suggestion-reason {
+    font-size: 0.85rem;
+    color: #6c757d;
+    opacity: 0.8;
+}
+
+/* 信心度顯示 */
+.suggestion-confidence {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 70px;
+    margin-left: 1rem;
+}
+
+.confidence-bar {
+    width: 50px;
+    height: 6px;
+    background: #e9ecef;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 0.25rem;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.confidence-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ffc107 0%, #fd7e14 50%, #28a745 100%);
+    border-radius: 3px;
+    transition: width 0.6s ease;
+    position: relative;
+}
+
+.confidence-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 25%, rgba(255,255,255,0.2) 25%, rgba(255,255,255,0.2) 50%, transparent 50%, transparent 75%, rgba(255,255,255,0.2) 75%);
+    background-size: 10px 10px;
+    animation: confidence-stripe 1s linear infinite;
+}
+
+@keyframes confidence-stripe {
+    0% { background-position: 0 0; }
+    100% { background-position: 10px 0; }
+}
+
+.confidence-bar + small {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+/* 採用按鈕 */
+.apply-suggestion {
+    margin-left: 1rem;
+    min-width: 70px;
+    border-radius: 25px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.apply-suggestion:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(13,110,253,0.3);
+}
+
+/* 回饋區域 */
+.smart-category-feedback {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.smart-category-feedback button {
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.smart-category-feedback button:hover {
+    transform: scale(1.1);
+}
+
+#feedbackCorrect:hover {
+    background: #28a745;
+    border-color: #28a745;
+    box-shadow: 0 4px 12px rgba(40,167,69,0.3);
+}
+
+#feedbackIncorrect:hover {
+    background: #dc3545;
+    border-color: #dc3545;
+    box-shadow: 0 4px 12px rgba(220,53,69,0.3);
+}
+
+/* 載入狀態 */
+.smart-category-loading {
+    text-align: center;
+    padding: 2rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.smart-category-loading .spinner-border {
+    width: 2rem;
+    height: 2rem;
+    margin-right: 0.75rem;
+    color: #007bff;
+}
+
+/* 學習提醒動畫 */
+#learningAlert {
+    animation: slideInDown 0.5s ease, pulse 2s ease-in-out infinite;
+    border: none;
+    background: linear-gradient(135deg, #d1ecf1 0%, #b8daff 100%);
+    color: #0c5460;
+    border-left: 5px solid #17a2b8;
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+}
+
+/* 空狀態樣式 */
+.category-suggestions .text-muted {
+    background: white;
+    border: 2px dashed #dee2e6;
+    border-radius: 10px;
+    padding: 2rem;
+    font-style: italic;
+}
+
+.category-suggestions .text-muted i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+/* 智能分類按鈕樣式 */
+#smartCategoryBtn {
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    border-color: transparent;
+}
+
+#smartCategoryBtn:hover {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    transform: rotate(360deg) scale(1.1);
+    box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .smart-category-section {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .suggestion-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1rem;
+    }
+    
+    .suggestion-content {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .suggestion-confidence {
+        align-self: flex-end;
+        margin-left: 0;
+        margin-top: 0.5rem;
+    }
+    
+    .apply-suggestion {
+        align-self: stretch;
+        margin-left: 0;
+        margin-top: 0.5rem;
+    }
+
+    .category-suggestions .text-muted {
+        padding: 1.5rem;
+    }
+
+    .category-suggestions .text-muted i {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .smart-category-section {
+        padding: 0.75rem;
+        border-left-width: 3px;
+    }
+
+    .suggestion-icon {
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+    }
+
+    .suggestion-name {
+        font-size: 1rem;
+    }
+
+    .suggestion-reason {
+        font-size: 0.8rem;
+    }
+
+    .confidence-bar {
+        width: 40px;
+        height: 5px;
+    }
+}
+
+/* 深色模式支援 */
+@media (prefers-color-scheme: dark) {
+    .smart-category-section {
+        background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+        border-left-color: #4299e1;
+    }
+
+    .suggestion-card {
+        background: #4a5568;
+        border-color: #2d3748;
+        color: #e2e8f0;
+    }
+
+    .suggestion-card:hover {
+        border-color: #4299e1;
+    }
+
+    .suggestion-card.selected {
+        background: linear-gradient(135deg, #2d5a3d 0%, #22543d 100%);
+        border-color: #38a169;
+    }
+
+    .suggestion-name {
+        color: #e2e8f0;
+    }
+
+    .suggestion-reason {
+        color: #a0aec0;
+    }
+
+    .smart-category-feedback {
+        background: linear-gradient(135deg, #744210 0%, #975a16 100%);
+        border-color: #d69e2e;
+    }
+
+    #learningAlert {
+        background: linear-gradient(135deg, #2c5282 0%, #2b6cb0 100%);
+        color: #bee3f8;
+        border-left-color: #4299e1;
+    }
+
+    .category-suggestions .text-muted {
+        background: #4a5568;
+        border-color: #2d3748;
+        color: #a0aec0;
+    }
+}
+
+/* 特殊效果 */
+.suggestion-card {
+    position: relative;
+}
+
+.suggestion-card::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,123,255,0.3) 0%, transparent 70%);
+    transform: translate(-50%, -50%);
+    transition: all 0.6s ease;
+    pointer-events: none;
+}
+
+.suggestion-card:active::after {
+    width: 200px;
+    height: 200px;
+}
+
+/* 載入動畫增強 */
+.smart-category-loading {
+    position: relative;
+}
+
+.smart-category-loading::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(0,123,255,0.1), transparent);
+    animation: loading-shimmer 2s ease-in-out infinite;
+    border-radius: 8px;
+}
+
+@keyframes loading-shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}

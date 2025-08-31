@@ -1,0 +1,137 @@
+[
+  {
+    "id": "merchant-7eleven",
+    "merchantName": "7-ELEVEN",
+    "standardName": "便利商店",
+    "categoryId": "daily",
+    "merchantType": "便利商店",
+    "aliases": [
+      "7-11",
+      "小七",
+      "7eleven"
+    ],
+    "confidence": 0.9,
+    "isVerified": true
+  },
+  {
+    "id": "merchant-familymart",
+    "merchantName": "FamilyMart",
+    "standardName": "便利商店",
+    "categoryId": "daily",
+    "merchantType": "便利商店",
+    "aliases": [
+      "全家",
+      "family",
+      "fm"
+    ],
+    "confidence": 0.9,
+    "isVerified": true
+  },
+  {
+    "id": "merchant-mcdonalds",
+    "merchantName": "McDonald's",
+    "standardName": "速食店",
+    "categoryId": "food",
+    "merchantType": "速食店",
+    "aliases": [
+      "麥當勞",
+      "mcdonald",
+      "mcD"
+    ],
+    "confidence": 0.95,
+    "isVerified": true
+  },
+  {
+    "id": "merchant-kfc",
+    "merchantName": "KFC",
+    "standardName": "速食店",
+    "categoryId": "food",
+    "merchantType": "速食店",
+    "aliases": [
+      "肯德基",
+      "kentucky"
+    ],
+    "confidence": 0.95,
+    "isVerified": true
+  },
+  {
+    "id": "merchant-starbucks",
+    "merchantName": "Starbucks",
+    "standardName": "咖啡廳",
+    "categoryId": "food",
+    "merchantType": "咖啡廳",
+    "aliases": [
+      "星巴克",
+      "星巴"
+    ],
+    "confidence": 0.95,
+    "isVerified": true
+  },
+  {
+    "id": "merchant-carrefour",
+    "merchantName": "Carrefour",
+    "standardName": "超市",
+    "categoryId": "daily",
+    "merchantType": "超市",
+    "aliases": [
+      "家樂福",
+      "家福"
+    ],
+    "confidence": 0.9,
+    "isVerified": true
+  },
+  {
+    "id": "merchant-pxmart",
+    "merchantName": "PX-Mart",
+    "standardName": "超市",
+    "categoryId": "daily",
+    "merchantType": "超市",
+    "aliases": [
+      "全聯",
+      "全聯福利中心"
+    ],
+    "confidence": 0.9,
+    "isVerified": true
+  },
+  {
+    "id": "merchant-costco",
+    "merchantName": "Costco",
+    "standardName": "量販店",
+    "categoryId": "shopping",
+    "merchantType": "量販店",
+    "aliases": [
+      "好市多",
+      "costco"
+    ],
+    "confidence": 0.9,
+    "isVerified": true
+  },
+  {
+    "id": "merchant-mrt",
+    "merchantName": "台北捷運",
+    "standardName": "大眾運輸",
+    "categoryId": "transport",
+    "merchantType": "大眾運輸",
+    "aliases": [
+      "捷運",
+      "mrt",
+      "metro"
+    ],
+    "confidence": 0.95,
+    "isVerified": true
+  },
+  {
+    "id": "merchant-cpc",
+    "merchantName": "中油",
+    "standardName": "加油站",
+    "categoryId": "transport",
+    "merchantType": "加油站",
+    "aliases": [
+      "中國石油",
+      "cpc",
+      "中油"
+    ],
+    "confidence": 0.9,
+    "isVerified": true
+  }
+]

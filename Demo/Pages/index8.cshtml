@@ -112,6 +112,22 @@
                             </div>
                         </div>
 
+                        <!-- 智能分類推薦區域 -->
+                        <div class="smart-category-section mb-3" id="smartCategorySection" style="display: none;">
+                            <label class="form-label">
+                                <i class="fas fa-magic text-primary"></i> 智能分類建議
+                            </label>
+                            <div id="categorySuggestions" class="category-suggestions">
+                                <!-- 動態載入分類建議 -->
+                            </div>
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-lightbulb"></i> 
+                                    點選建議的分類或手動選擇分類
+                                </small>
+                            </div>
+                        </div>
+
                         <!-- 分類區塊 -->
                         <div class="row mb-5">
                             <div class="col-12">
@@ -133,8 +149,23 @@
                                             onclick="showAddCategoryModal()" title="新增大分類">
                                         <i class="fas fa-plus"></i>
                                     </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm flex-shrink-0" id="smartCategoryBtn" 
+                                            data-bs-toggle="tooltip" title="智能分類建議">
+                                        <i class="fas fa-magic"></i>
+                                    </button>
                                 </div>
                                 <span asp-validation-for="Record.Category" class="text-danger"></span>
+                                <div class="smart-category-feedback mt-2" id="categoryFeedback" style="display: none;">
+                                    <div class="d-flex align-items-center">
+                                        <small class="text-muted me-2">分類是否正確？</small>
+                                        <button type="button" class="btn btn-sm btn-success me-1" id="feedbackCorrect">
+                                            <i class="fas fa-thumbs-up"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger" id="feedbackIncorrect">
+                                            <i class="fas fa-thumbs-down"></i>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                             
                             <!-- 細分類 -->
@@ -154,6 +185,45 @@
                                 <span asp-validation-for="Record.SubCategory" class="text-danger"></span>
                                 <div class="form-text">請先選擇大分類</div>
                             </div>
+                        </div>
+
+                        <!-- 交易描述區塊 -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="border-bottom pb-2 mb-3">
+                                    <i class="fas fa-file-text text-primary"></i> 交易資訊
+                                </h6>
+                            </div>
+                            
+                            <!-- 交易描述 -->
+                            <div class="col-md-8 mb-3">
+                                <label for="description" class="form-label">
+                                    <i class="fas fa-edit"></i> 交易描述 <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" id="description" name="description" class="form-control" 
+                                       placeholder="例如: 早餐、午餐、加油、購物等" required />
+                                <div class="form-text">
+                                    詳細描述有助於智能分類更加準確
+                                </div>
+                            </div>
+                            
+                            <!-- 商家名稱 -->
+                            <div class="col-md-4 mb-3">
+                                <label for="merchant" class="form-label">
+                                    <i class="fas fa-store"></i> 商家名稱
+                                </label>
+                                <input type="text" id="merchant" name="merchant" class="form-control" 
+                                       placeholder="例如: 7-11、麥當勞" />
+                                <div class="form-text">
+                                    選填，有助於智能分類
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 自動學習提示 -->
+                        <div class="alert alert-info" id="learningAlert" style="display: none;">
+                            <i class="fas fa-graduation-cap"></i>
+                            <strong>學習中...</strong> 系統正在從您的操作中學習，下次會提供更準確的建議！
                         </div>
 
                         <!-- 備註區塊 -->
@@ -985,3 +1055,31 @@
         }
     </style>
 }
+
+<!-- 分類建議卡片樣板 -->
+<script type="text/template" id="suggestionCardTemplate">
+    <div class="suggestion-card" data-category-id="{{categoryId}}" data-confidence="{{confidence}}">
+        <div class="suggestion-content">
+            <div class="suggestion-icon">
+                <i class="{{iconClass}}"></i>
+            </div>
+            <div class="suggestion-info">
+                <div class="suggestion-name">{{categoryName}}</div>
+                <div class="suggestion-reason">{{reason}}</div>
+            </div>
+            <div class="suggestion-confidence">
+                <div class="confidence-bar">
+                    <div class="confidence-fill" style="width: {{confidencePercent}}%"></div>
+                </div>
+                <small>{{confidencePercent}}%</small>
+            </div>
+        </div>
+        <button type="button" class="btn btn-sm btn-primary apply-suggestion">
+            採用
+        </button>
+    </div>
+</script>
+
+<!-- 引入智能分類樣式和腳本 -->
+<link rel="stylesheet" href="~/css/smart-category.css" asp-append-version="true" />
+<script src="~/js/smart-category.js" asp-append-version="true"></script>
