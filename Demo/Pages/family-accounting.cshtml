@@ -4,6 +4,10 @@
     ViewData["Title"] = "家庭共享記帳";
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/voice-styles.css" asp-append-version="true" />
+}
+
 <div class="container mt-4">
     <!-- 錯誤和成功訊息 -->
     @if (!string.IsNullOrEmpty(Model.ErrorMessage))
@@ -73,9 +77,57 @@
 
         <!-- 快速記帳區域 -->
         <div class="card mb-4">
-            <div class="card-header bg-success text-white">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>快速新增家庭支出</h5>
+                <button type="button" id="voiceInputToggle" class="btn voice-toggle-btn">
+                    <i class="fas fa-microphone me-1"></i>語音輸入
+                </button>
             </div>
+            
+            <!-- 語音輸入區塊（預設隱藏） -->
+            <div id="familyVoiceInputArea" class="d-none">
+                <div class="voice-input-area" style="border-radius: 0; margin: 0;">
+                    <div class="voice-status voice-status-idle" id="voiceStatus">
+                        <div id="voiceIcon">
+                            <i class="fas fa-microphone voice-icon"></i>
+                        </div>
+                        <p id="statusText" class="mb-3">點擊開始語音輸入家庭支出</p>
+                        
+                        <div class="voice-controls mb-3">
+                            <button type="button" id="startVoiceBtn" class="btn voice-btn voice-btn-primary me-2">
+                                <i class="fas fa-microphone me-1"></i>開始錄音
+                            </button>
+                            <button type="button" id="stopVoiceBtn" class="btn voice-btn voice-btn-danger d-none">
+                                <i class="fas fa-stop me-1"></i>停止錄音
+                            </button>
+                        </div>
+                        
+                        <!-- 家庭語音提示 -->
+                        <div class="voice-hint">
+                            <div class="hint-title">家庭語音輸入範例：</div>
+                            <div class="hint-examples">
+                                <small>
+                                    • "大家一起吃飯花了 600 元平均分攤"<br>
+                                    • "我買菜花了 200 元"<br>
+                                    • "今天搭車花了 50 元我支付"
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 語音識別結果顯示 -->
+                    <div id="speechResult" class="alert alert-info mt-3 d-none">
+                        <h6><i class="fas fa-volume-up me-2"></i>語音識別結果：</h6>
+                        <p id="speechText" class="mb-0 speech-text"></p>
+                    </div>
+                    
+                    <!-- 解析結果預覽 -->
+                    <div id="parsedPreview" class="mt-3 d-none">
+                        <!-- 動態填入解析結果 -->
+                    </div>
+                </div>
+            </div>
+            
             <div class="card-body">
                 <form method="post" asp-page-handler="QuickExpense">
                     <div class="row">
@@ -250,48 +302,201 @@
 
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+    <script src="~/js/voice-input.js" asp-append-version="true"></script>
     <script>
-        // SignalR 連接
+        // SignalR 連接和語音輸入實例
         let connection = null;
+        let familyVoiceInput = null;
 
-        if ('@Model.CurrentFamily?.Id' !== '') {
-            connection = new signalR.HubConnectionBuilder()
-                .withUrl("/familyHub")
-                .build();
+        // 頁面載入後初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化 SignalR 連接
+            initSignalRConnection();
+            
+            // 語音切換按鈕事件
+            const voiceToggleBtn = document.getElementById('voiceInputToggle');
+            if (voiceToggleBtn) {
+                voiceToggleBtn.addEventListener('click', handleVoiceToggle);
+            }
+            
+            // 自動關閉 alert
+            setTimeout(function() {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(function(alert) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                });
+            }, 5000);
+        });
 
-            connection.start().then(function () {
-                console.log('SignalR 連接成功');
-                // 加入家庭群組
-                connection.invoke("JoinFamily", '@Model.CurrentFamily?.Id');
-            }).catch(function (err) {
-                console.error('SignalR 連接失敗:', err.toString());
+        // 語音切換處理
+        function handleVoiceToggle() {
+            const voiceArea = document.getElementById('familyVoiceInputArea');
+            const toggleBtn = document.getElementById('voiceInputToggle');
+            
+            if (voiceArea.classList.contains('d-none')) {
+                // 顯示語音輸入區域
+                voiceArea.classList.remove('d-none');
+                toggleBtn.classList.add('active');
+                toggleBtn.innerHTML = '<i class="fas fa-keyboard me-1"></i>手動輸入';
+                
+                // 初始化語音輸入
+                initFamilyVoiceInput();
+            } else {
+                // 隱藏語音輸入區域
+                voiceArea.classList.add('d-none');
+                toggleBtn.classList.remove('active');
+                toggleBtn.innerHTML = '<i class="fas fa-microphone me-1"></i>語音輸入';
+                
+                // 停止語音輸入
+                if (familyVoiceInput) {
+                    familyVoiceInput.clearResult();
+                }
+            }
+        }
+
+        // 初始化家庭語音輸入
+        function initFamilyVoiceInput() {
+            familyVoiceInput = new VoiceInput({
+                context: 'family',
+                container: '#familyVoiceInputArea',
+                targetForm: 'form[asp-page-handler="QuickExpense"]',
+                onResult: function(result) {
+                    console.log('家庭語音解析結果:', result);
+                    
+                    // 語音解析完成後，可以直接提交家庭記帳
+                    if (result.isSuccess && result.amount && result.category) {
+                        submitVoiceFamilyRecord(result);
+                    }
+                },
+                onError: function(error) {
+                    console.error('家庭語音輸入錯誤:', error);
+                }
             });
 
-            // 監聽新記錄通知
-            connection.on("ExpenseAdded", function (notification) {
-                showNotification(notification.message, 'success');
-                // 重新載入頁面以顯示新記錄
-                setTimeout(() => location.reload(), 2000);
-            });
+            // 覆寫語音輸入組件的填寫表單方法以適應家庭記帳
+            if (familyVoiceInput) {
+                familyVoiceInput.fillForm = function(result) {
+                    const form = $('form[asp-page-handler="QuickExpense"]');
+                    
+                    // 填寫類型
+                    if (result.type) {
+                        form.find('select[name="request.Type"]').val(result.type === 'Income' ? '收入' : '支出');
+                    }
+                    
+                    // 填寫金額
+                    if (result.amount) {
+                        form.find('input[name="request.Amount"]').val(result.amount);
+                    }
+                    
+                    // 填寫類別
+                    if (result.category) {
+                        form.find('select[name="request.Category"]').val(result.category);
+                    }
+                    
+                    // 填寫描述
+                    if (result.description) {
+                        form.find('input[name="request.Description"]').val(result.description);
+                    }
+                    
+                    // 填寫分攤方式
+                    if (result.splitType) {
+                        form.find('select[name="request.SplitType"]').val(result.splitType);
+                    }
+                    
+                    // 填寫日期（預設今天）
+                    form.find('input[name="request.Date"]').val('@DateTime.Today.ToString("yyyy-MM-dd")');
+                    
+                    // 觸發相關事件
+                    form.find('input, select').trigger('change');
+                };
+            }
+        }
 
-            // 監聽記錄更新通知
-            connection.on("ExpenseUpdated", function (notification) {
-                showNotification(notification.message, 'info');
-            });
+        // 提交語音家庭記帳記錄
+        async function submitVoiceFamilyRecord(parseResult) {
+            try {
+                const voiceRequest = {
+                    type: parseResult.type === 'Income' ? '收入' : '支出',
+                    amount: parseResult.amount,
+                    category: parseResult.category,
+                    description: parseResult.description,
+                    date: '@DateTime.Today.ToString("yyyy-MM-dd")',
+                    splitType: parseResult.splitType || '我支付',
+                    voiceText: parseResult.originalText,
+                    parseConfidence: parseResult.parseConfidence
+                };
 
-            // 監聽記錄刪除通知
-            connection.on("ExpenseDeleted", function (notification) {
-                showNotification(notification.message, 'warning');
-                // 重新載入頁面以移除刪除的記錄
-                setTimeout(() => location.reload(), 2000);
-            });
+                const response = await fetch('/family-accounting?handler=QuickExpenseVoice', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    body: JSON.stringify(voiceRequest)
+                });
 
-            // 監聽審核結果通知
-            connection.on("RecordApproval", function (notification) {
-                showNotification(notification.message, notification.data.approved ? 'success' : 'danger');
-                // 重新載入頁面以更新記錄狀態
-                setTimeout(() => location.reload(), 2000);
-            });
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification(result.message, 'success');
+                    // 重新載入頁面以顯示新記錄
+                    setTimeout(() => location.reload(), 2000);
+                    
+                    // 發送 SignalR 通知（如果連接可用）
+                    if (connection) {
+                        connection.invoke("NotifyVoiceRecord", '@Model.CurrentFamily?.Id', parseResult);
+                    }
+                } else {
+                    showNotification(result.message || '語音記帳失敗', 'danger');
+                }
+            } catch (error) {
+                console.error('提交語音家庭記帳失敗:', error);
+                showNotification('提交語音記帳記錄失敗，請重試', 'danger');
+            }
+        }
+
+        // 初始化 SignalR 連接
+        function initSignalRConnection() {
+            if ('@Model.CurrentFamily?.Id' !== '') {
+                connection = new signalR.HubConnectionBuilder()
+                    .withUrl("/familyHub")
+                    .build();
+
+                connection.start().then(function () {
+                    console.log('SignalR 連接成功');
+                    // 加入家庭群組
+                    connection.invoke("JoinFamily", '@Model.CurrentFamily?.Id');
+                }).catch(function (err) {
+                    console.error('SignalR 連接失敗:', err.toString());
+                });
+
+                // 監聽新記錄通知
+                connection.on("ExpenseAdded", function (notification) {
+                    showNotification(notification.message, 'success');
+                    // 重新載入頁面以顯示新記錄
+                    setTimeout(() => location.reload(), 2000);
+                });
+
+                // 監聽記錄更新通知
+                connection.on("ExpenseUpdated", function (notification) {
+                    showNotification(notification.message, 'info');
+                });
+
+                // 監聽記錄刪除通知
+                connection.on("ExpenseDeleted", function (notification) {
+                    showNotification(notification.message, 'warning');
+                    // 重新載入頁面以移除刪除的記錄
+                    setTimeout(() => location.reload(), 2000);
+                });
+
+                // 監聽審核結果通知
+                connection.on("RecordApproval", function (notification) {
+                    showNotification(notification.message, notification.data.approved ? 'success' : 'danger');
+                    // 重新載入頁面以更新記錄狀態
+                    setTimeout(() => location.reload(), 2000);
+                });
+            }
         }
 
         // 顯示通知
@@ -313,16 +518,5 @@
                 }
             }, 3000);
         }
-
-        // 自動關閉 alert
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(function() {
-                const alerts = document.querySelectorAll('.alert');
-                alerts.forEach(function(alert) {
-                    const bsAlert = new bootstrap.Alert(alert);
-                    bsAlert.close();
-                });
-            }, 5000);
-        });
     </script>
 }

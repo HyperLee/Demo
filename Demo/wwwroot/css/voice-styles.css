@@ -1,0 +1,391 @@
+/* 語音記帳專用樣式 */
+
+/* 語音輸入區域 */
+.voice-input-area {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    padding: 2rem;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.voice-input-area::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    z-index: 1;
+}
+
+.voice-input-area > * {
+    position: relative;
+    z-index: 2;
+}
+
+/* 語音狀態樣式 */
+.voice-status {
+    text-align: center;
+    padding: 1rem;
+}
+
+.voice-status-idle {
+    color: #6c757d;
+}
+
+.voice-status-listening {
+    color: #dc3545;
+}
+
+.voice-status-processing {
+    color: #ffc107;
+}
+
+.voice-status-completed {
+    color: #28a745;
+}
+
+.voice-status-error {
+    color: #dc3545;
+}
+
+/* 語音圖示 */
+.voice-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+.voice-status-listening .voice-icon {
+    animation: voicePulse 1.5s infinite;
+    color: #dc3545;
+}
+
+.voice-status-processing .voice-icon {
+    animation: voiceRotate 2s linear infinite;
+    color: #ffc107;
+}
+
+/* 語音動畫效果 */
+@keyframes voicePulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes voiceRotate {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* 語音波形動畫 */
+.voice-wave {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 60px;
+    margin: 1rem 0;
+}
+
+.voice-wave::before,
+.voice-wave::after {
+    content: '';
+    width: 4px;
+    height: 30px;
+    background: #dc3545;
+    margin: 0 2px;
+    border-radius: 2px;
+    animation: voiceWave 1s infinite;
+}
+
+.voice-wave::before {
+    animation-delay: -0.2s;
+}
+
+.voice-wave::after {
+    animation-delay: 0.2s;
+}
+
+@keyframes voiceWave {
+    0%, 100% {
+        height: 20px;
+    }
+    50% {
+        height: 40px;
+    }
+}
+
+/* 語音結果預覽 */
+.voice-result {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+    color: #333;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.voice-result h6 {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.voice-result .result-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.voice-result .result-item:last-child {
+    border-bottom: none;
+}
+
+.voice-result .result-label {
+    font-weight: 600;
+    color: #6c757d;
+    min-width: 80px;
+}
+
+.voice-result .result-value {
+    font-weight: 500;
+    color: #333;
+    flex: 1;
+    text-align: right;
+}
+
+/* 語音按鈕樣式 */
+.voice-btn {
+    border-radius: 50px;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.voice-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.voice-btn:active {
+    transform: translateY(0);
+}
+
+.voice-btn-primary {
+    background: linear-gradient(45deg, #007bff, #0056b3);
+    border: none;
+    color: white;
+}
+
+.voice-btn-danger {
+    background: linear-gradient(45deg, #dc3545, #c82333);
+    border: none;
+    color: white;
+}
+
+.voice-btn-success {
+    background: linear-gradient(45deg, #28a745, #1e7e34);
+    border: none;
+    color: white;
+}
+
+/* 語音切換按鈕 */
+.voice-toggle-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    border-radius: 25px;
+    padding: 0.4rem 1rem;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.voice-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    color: white;
+}
+
+.voice-toggle-btn.active {
+    background: rgba(255, 255, 255, 0.9);
+    color: #333;
+}
+
+/* 語音識別文字顯示 */
+.speech-text {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.9);
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.speech-text.has-content {
+    justify-content: flex-start;
+    align-items: flex-start;
+    text-align: left;
+}
+
+/* 解析進度指示器 */
+.parsing-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.parsing-indicator .spinner-border {
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-right: 0.5rem;
+}
+
+/* 語音提示訊息 */
+.voice-hint {
+    background: rgba(255, 255, 255, 0.1);
+    border-left: 4px solid rgba(255, 255, 255, 0.5);
+    padding: 0.75rem 1rem;
+    margin: 1rem 0;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.voice-hint .hint-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.voice-hint .hint-examples {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.85rem;
+}
+
+.voice-hint .hint-examples li {
+    margin-bottom: 0.25rem;
+}
+
+/* 錯誤狀態樣式 */
+.voice-error {
+    background: rgba(220, 53, 69, 0.1);
+    border: 1px solid rgba(220, 53, 69, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    color: #dc3545;
+}
+
+.voice-error .error-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .voice-input-area {
+        padding: 1.5rem 1rem;
+    }
+    
+    .voice-icon {
+        font-size: 2.5rem;
+    }
+    
+    .voice-btn {
+        padding: 0.6rem 1.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .voice-result {
+        padding: 1rem;
+    }
+    
+    .voice-result .result-item {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 0.75rem 0;
+    }
+    
+    .voice-result .result-value {
+        text-align: left;
+        margin-top: 0.25rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .voice-input-area {
+        margin: 0 -15px;
+        border-radius: 0;
+    }
+    
+    .voice-toggle-btn {
+        padding: 0.3rem 0.8rem;
+        font-size: 0.8rem;
+    }
+    
+    .voice-btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .voice-wave {
+        height: 40px;
+    }
+}
+
+/* 可訪問性增強 */
+@media (prefers-reduced-motion: reduce) {
+    .voice-icon,
+    .voice-wave::before,
+    .voice-wave::after,
+    .voice-btn {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+/* 高對比模式支援 */
+@media (prefers-contrast: high) {
+    .voice-input-area {
+        background: #000;
+        border: 2px solid #fff;
+    }
+    
+    .voice-result {
+        background: #fff;
+        border: 2px solid #000;
+    }
+    
+    .voice-btn {
+        border: 2px solid;
+    }
+}

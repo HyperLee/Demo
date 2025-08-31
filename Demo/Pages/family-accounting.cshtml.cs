@@ -352,5 +352,371 @@ namespace Demo.Pages
             // 為測試目的使用固定的用戶 ID
             return "test-user-001";
         }
+
+        #region 語音記帳處理方法
+
+        /// <summary>
+        /// 語音家庭記帳快速新增
+        /// </summary>
+        public async Task<IActionResult> OnPostQuickExpenseVoiceAsync()
+        {
+            try
+            {
+                // 從請求體讀取 JSON 資料
+                using var reader = new StreamReader(Request.Body);
+                var body = await reader.ReadToEndAsync();
+                var request = System.Text.Json.JsonSerializer.Deserialize<VoiceFamilyExpenseRequest>(body);
+
+                if (request == null)
+                {
+                    return new JsonResult(new { success = false, message = "請求資料為空" });
+                }
+
+                var userId = GetCurrentUserId();
+                var family = await _familyService.GetUserFamilyAsync(userId);
+
+                if (family == null)
+                {
+                    return new JsonResult(new { success = false, message = "請先加入家庭群組" });
+                }
+
+                var members = await _familyService.GetFamilyMembersAsync(family.Id);
+                var currentMember = members.FirstOrDefault(m => m.UserId == userId);
+
+                if (currentMember == null)
+                {
+                    return new JsonResult(new { success = false, message = "您不是此家庭的成員" });
+                }
+
+                // 建立語音記帳記錄
+                var record = new SharedAccountingRecord
+                {
+                    FamilyId = family.Id,
+                    UserId = userId,
+                    Type = request.Type,
+                    Amount = request.Amount,
+                    Category = request.Category,
+                    Description = request.Description,
+                    Date = DateTime.Parse(request.Date),
+                    SplitType = request.SplitType,
+                    Status = "待審核", // 語音記帳預設為待審核
+                    SplitDetails = new Dictionary<string, decimal>()
+                };
+
+                // 處理分攤邏輯
+                if (request.SplitType == "我支付")
+                {
+                    record.SplitDetails[userId] = request.Amount;
+                }
+                else if (request.SplitType == "平均分攤")
+                {
+                    var activeMembers = members.Where(m => m.IsActive).ToList();
+                    var equalAmount = request.Amount / activeMembers.Count;
+                    
+                    foreach (var member in activeMembers)
+                    {
+                        record.SplitDetails[member.UserId] = equalAmount;
+                    }
+                }
+
+                // 儲存記錄
+                var recordId = await _sharedAccountingService.CreateRecordAsync(record);
+
+                if (!string.IsNullOrEmpty(recordId))
+                {
+                    _logger.LogInformation("語音家庭記帳成功: 用戶={UserId}, 金額={Amount}, 類別={Category}", 
+                        userId, request.Amount, request.Category);
+
+                    // 發送 SignalR 通知
+                    await _hubContext.Clients.Group($"Family_{family.Id}")
+                        .SendAsync("ExpenseAdded", new
+                        {
+                            message = $"{currentMember.Nickname} 透過語音新增了一筆 {request.Type} 記錄",
+                            data = record
+                        });
+
+                    return new JsonResult(new 
+                    { 
+                        success = true, 
+                        message = "語音記帳記錄已成功建立", 
+                        recordId = recordId 
+                    });
+                }
+                else
+                {
+                    return new JsonResult(new { success = false, message = "建立語音記帳記錄失敗" });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "語音家庭記帳時發生錯誤");
+                return new JsonResult(new { success = false, message = "語音記帳失敗，請重試" });
+            }
+        }
+
+        /// <summary>
+        /// 解析家庭語音輸入
+        /// </summary>
+        public async Task<IActionResult> OnPostParseFamilyVoiceAsync()
+        {
+            try
+            {
+                // 從請求體讀取 JSON 資料
+                using var reader = new StreamReader(Request.Body);
+                var body = await reader.ReadToEndAsync();
+                var request = System.Text.Json.JsonSerializer.Deserialize<VoiceParseRequest>(body);
+
+                if (request == null || string.IsNullOrWhiteSpace(request.VoiceText))
+                {
+                    return new JsonResult(new VoiceParseResult
+                    {
+                        IsSuccess = false,
+                        ErrorMessage = "語音文字不可為空"
+                    });
+                }
+
+                var parseResult = await ParseFamilyVoiceTextAsync(request.VoiceText);
+                return new JsonResult(parseResult);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "解析家庭語音輸入時發生錯誤");
+                return new JsonResult(new VoiceParseResult
+                {
+                    IsSuccess = false,
+                    ErrorMessage = "語音解析發生錯誤，請重試"
+                });
+            }
+        }
+
+        /// <summary>
+        /// 解析家庭語音文字
+        /// </summary>
+        private async Task<VoiceParseResult> ParseFamilyVoiceTextAsync(string voiceText)
+        {
+            var result = new VoiceParseResult
+            {
+                OriginalText = voiceText,
+                Type = "支出",
+                Description = voiceText.Trim(),
+                SplitType = "我支付",
+                ParsedAt = DateTime.Now
+            };
+
+            try
+            {
+                // 載入類別資料
+                var categories = await _accountingService.GetCategoriesAsync("Expense");
+
+                // 1. 解析金額
+                result.Amount = ExtractAmountFromVoice(voiceText);
+
+                // 2. 判斷收支類型
+                result.Type = DetermineVoiceTransactionType(voiceText);
+
+                // 3. 解析分攤方式
+                result.SplitType = DetermineSplitType(voiceText);
+
+                // 4. 推測類別
+                result.Category = PredictVoiceCategory(voiceText, categories);
+
+                // 5. 清理描述
+                result.Description = CleanVoiceDescription(voiceText, result.Amount);
+
+                // 6. 計算解析信心度
+                result.ParseConfidence = CalculateVoiceConfidence(result);
+
+                result.IsSuccess = true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "家庭語音文字解析過程發生錯誤: {VoiceText}", voiceText);
+                result.IsSuccess = false;
+                result.ErrorMessage = "語音解析發生錯誤";
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 從語音文字中解析分攤方式
+        /// </summary>
+        private string DetermineSplitType(string text)
+        {
+            if (text.Contains("平均分攤") || text.Contains("大家分") || text.Contains("一起分") || 
+                text.Contains("平分") || text.Contains("均分"))
+            {
+                return "平均分攤";
+            }
+
+            if (text.Contains("自訂分攤") || text.Contains("按比例") || text.Contains("各付"))
+            {
+                return "自訂分攤";
+            }
+
+            // 預設為我支付
+            return "我支付";
+        }
+
+        /// <summary>
+        /// 家庭語音記帳的金額提取
+        /// </summary>
+        private decimal? ExtractAmountFromVoice(string text)
+        {
+            // 與個人記帳相同的邏輯，但可以針對家庭場景優化
+            var patterns = new[]
+            {
+                @"(\d+(?:\.\d{1,2})?)\s*[元塊]",
+                @"花[了費]*\s*(\d+(?:\.\d{1,2})?)",
+                @"(\d+(?:\.\d{1,2})?)\s*塊錢",
+                @"[收入支出]\s*(\d+(?:\.\d{1,2})?)",
+                @"一共\s*(\d+(?:\.\d{1,2})?)", // 家庭常用
+                @"總共\s*(\d+(?:\.\d{1,2})?)", // 家庭常用
+            };
+
+            foreach (var pattern in patterns)
+            {
+                var match = System.Text.RegularExpressions.Regex.Match(text, pattern, 
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                if (match.Success && decimal.TryParse(match.Groups[1].Value, out var amount))
+                {
+                    return amount;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 判斷家庭語音的交易類型
+        /// </summary>
+        private string DetermineVoiceTransactionType(string text)
+        {
+            var incomeKeywords = new[] { "收入", "賺", "薪水", "獎金", "返現", "回饋" };
+
+            if (incomeKeywords.Any(keyword => text.Contains(keyword)))
+            {
+                return "收入";
+            }
+
+            // 預設為支出
+            return "支出";
+        }
+
+        /// <summary>
+        /// 家庭語音類別預測
+        /// </summary>
+        private string? PredictVoiceCategory(string text, List<AccountingCategory> categories)
+        {
+            // 家庭場景的類別關鍵字
+            var familyCategoryKeywords = new Dictionary<string, string[]>
+            {
+                ["餐飲"] = new[] { "吃", "喝", "咖啡", "午餐", "晚餐", "早餐", "餐廳", "飲料", "外食", "聚餐", "請客" },
+                ["交通"] = new[] { "車", "計程車", "公車", "捷運", "油錢", "停車", "接送", "出門", "回家" },
+                ["購物"] = new[] { "買", "購買", "採買", "血拼", "逛街", "網購", "團購" },
+                ["家庭用品"] = new[] { "日用品", "清潔用品", "廚房用品", "衛生紙", "洗衣精", "家用" },
+                ["醫療"] = new[] { "看病", "藥", "醫院", "診所", "健檢", "掛號" },
+                ["娛樂"] = new[] { "電影", "遊戲", "出遊", "玩", "娛樂", "旅遊", "度假" },
+                ["其他"] = new[] { "雜項", "其他", "臨時" }
+            };
+
+            foreach (var (categoryName, keywords) in familyCategoryKeywords)
+            {
+                if (keywords.Any(keyword => text.Contains(keyword, StringComparison.OrdinalIgnoreCase)))
+                {
+                    var existingCategory = categories.FirstOrDefault(c => 
+                        c.Name.Equals(categoryName, StringComparison.OrdinalIgnoreCase));
+                    
+                    if (existingCategory != null)
+                    {
+                        return existingCategory.Name;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 清理家庭語音描述
+        /// </summary>
+        private string CleanVoiceDescription(string originalText, decimal? amount)
+        {
+            string cleaned = originalText;
+
+            // 移除金額和分攤相關文字
+            if (amount.HasValue)
+            {
+                var removePatterns = new[]
+                {
+                    $@"{amount.Value}\s*[元塊]",
+                    $@"花[了費]*\s*{amount.Value}",
+                    $@"{amount.Value}\s*塊錢",
+                    $@"一共\s*{amount.Value}",
+                    $@"總共\s*{amount.Value}"
+                };
+
+                foreach (var pattern in removePatterns)
+                {
+                    cleaned = System.Text.RegularExpressions.Regex.Replace(
+                        cleaned, pattern, "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                }
+            }
+
+            // 移除分攤相關字詞
+            var splitWords = new[] { "平均分攤", "大家分", "一起分", "我支付", "各付" };
+            foreach (var word in splitWords)
+            {
+                cleaned = cleaned.Replace(word, "");
+            }
+
+            // 清理常見動詞
+            var commonWords = new[] { "花了", "花費", "支出", "買了", "購買", "去", "今天", "昨天", "剛才" };
+            foreach (var word in commonWords)
+            {
+                cleaned = cleaned.Replace(word, "");
+            }
+
+            // 清理空白字符
+            cleaned = System.Text.RegularExpressions.Regex.Replace(cleaned, @"\s+", " ").Trim();
+
+            // 如果描述太短或為空，返回預設值
+            if (string.IsNullOrWhiteSpace(cleaned) || cleaned.Length < 2)
+            {
+                cleaned = "語音家庭記帳";
+            }
+
+            return cleaned;
+        }
+
+        /// <summary>
+        /// 計算家庭語音解析信心度
+        /// </summary>
+        private double CalculateVoiceConfidence(VoiceParseResult result)
+        {
+            double confidence = 0.4; // 家庭模式基礎信心度稍高
+
+            // 有金額增加信心度
+            if (result.Amount.HasValue && result.Amount.Value > 0)
+            {
+                confidence += 0.3;
+            }
+
+            // 有類別增加信心度
+            if (!string.IsNullOrEmpty(result.Category))
+            {
+                confidence += 0.2;
+            }
+
+            // 有分攤方式增加信心度
+            if (!string.IsNullOrEmpty(result.SplitType) && result.SplitType != "我支付")
+            {
+                confidence += 0.1;
+            }
+
+            return Math.Min(confidence, 1.0);
+        }
+
+        #endregion
     }
 }

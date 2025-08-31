@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Demo.Models;
 using Demo.Services;
 using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
 
 namespace Demo.Pages;
 
@@ -214,6 +215,259 @@ public class index8 : PageModel
         }
     }
 
+    #endregion
+
+    #region 語音記帳處理方法
+
+    /// <summary>
+    /// 解析語音輸入
+    /// </summary>
+    public async Task<IActionResult> OnPostParseVoiceInputAsync([FromBody] VoiceParseRequest request)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.VoiceText))
+            {
+                return new JsonResult(new VoiceParseResult
+                {
+                    IsSuccess = false,
+                    ErrorMessage = "語音文字不可為空"
+                });
+            }
+
+            var parseResult = await ParseVoiceTextAsync(request.VoiceText);
+            return new JsonResult(parseResult);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "解析語音輸入時發生錯誤");
+            return new JsonResult(new VoiceParseResult
+            {
+                IsSuccess = false,
+                ErrorMessage = "語音解析失敗，請重試"
+            });
+        }
+    }
+
+    /// <summary>
+    /// 語音記帳記錄提交
+    /// </summary>
+    public async Task<IActionResult> OnPostVoiceRecordAsync([FromBody] VoiceRecordRequest voiceRequest)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(voiceRequest.Type) || voiceRequest.Amount <= 0 || string.IsNullOrEmpty(voiceRequest.Category))
+            {
+                return new JsonResult(new { success = false, message = "語音記錄資料不完整" });
+            }
+
+            // 建立記帳記錄
+            var record = new AccountingRecord
+            {
+                Date = DateTime.Today,
+                Type = voiceRequest.Type,
+                Amount = voiceRequest.Amount,
+                Category = voiceRequest.Category,
+                SubCategory = "",
+                PaymentMethod = "現金",
+                Note = $"語音記帳：{voiceRequest.Description}"
+            };
+
+            var recordId = await _accountingService.CreateRecordAsync(record);
+
+            if (recordId > 0)
+            {
+                return new JsonResult(new { success = true, message = "語音記帳成功", recordId = recordId });
+            }
+            else
+            {
+                return new JsonResult(new { success = false, message = "儲存記錄失敗" });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "語音記帳時發生錯誤");
+            return new JsonResult(new { success = false, message = "語音記帳失敗，請重試" });
+        }
+    }
+
+    /// <summary>
+    /// 解析語音文字為記帳資料
+    /// </summary>
+    private async Task<VoiceParseResult> ParseVoiceTextAsync(string voiceText)
+    {
+        var result = new VoiceParseResult
+        {
+            OriginalText = voiceText,
+            IsSuccess = false
+        };
+
+        try
+        {
+            // 解析金額
+            var amountPattern = @"(\d+(?:\.\d+)?)\s*(?:元|塊|塊錢)?";
+            var amountMatch = Regex.Match(voiceText, amountPattern);
+            
+            if (amountMatch.Success && decimal.TryParse(amountMatch.Groups[1].Value, out decimal amount))
+            {
+                result.Amount = amount;
+            }
+            else
+            {
+                result.ErrorMessage = "未能識別金額";
+                return result;
+            }
+
+            // 判斷收支類型
+            if (voiceText.Contains("收入") || voiceText.Contains("賺") || voiceText.Contains("薪水") || voiceText.Contains("獎金"))
+            {
+                result.Type = "Income";
+            }
+            else
+            {
+                result.Type = "Expense";
+            }
+
+            // 解析類別
+            result.Category = await ParseCategoryFromTextAsync(voiceText, result.Type);
+            if (string.IsNullOrEmpty(result.Category))
+            {
+                result.Category = result.Type == "Income" ? "其他收入" : "其他支出";
+            }
+
+            // 解析描述
+            result.Description = ParseDescriptionFromText(voiceText);
+
+            // 計算解析信心度
+            result.ParseConfidence = CalculateParseConfidence(result);
+            result.IsSuccess = result.ParseConfidence >= 0.6; // 信心度閾值
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "語音文字解析時發生錯誤");
+            result.ErrorMessage = "語音解析過程中發生錯誤";
+            return result;
+        }
+    }
+
+    /// <summary>
+    /// 從文字中解析類別
+    /// </summary>
+    private async Task<string> ParseCategoryFromTextAsync(string text, string type)
+    {
+        try
+        {
+            var categories = await _accountingService.GetCategoriesAsync(type);
+            
+            // 直接匹配類別名稱
+            foreach (var category in categories)
+            {
+                if (text.Contains(category.Name))
+                {
+                    return category.Name;
+                }
+                
+                // 檢查子類別
+                if (category.SubCategories != null)
+                {
+                    foreach (var subCategory in category.SubCategories)
+                    {
+                        if (text.Contains(subCategory.Name))
+                        {
+                            return category.Name;
+                        }
+                    }
+                }
+            }
+
+            // 關鍵字匹配
+            var categoryKeywords = new Dictionary<string, string>
+            {
+                {"吃", "餐飲美食"}, {"喝", "餐飲美食"}, {"早餐", "餐飲美食"}, {"午餐", "餐飲美食"}, {"晚餐", "餐飲美食"},
+                {"加油", "交通運輸"}, {"停車", "交通運輸"}, {"計程車", "交通運輸"}, {"公車", "交通運輸"},
+                {"電影", "娛樂休閒"}, {"唱歌", "娛樂休閒"}, {"遊戲", "娛樂休閒"},
+                {"衣服", "服飾美容"}, {"鞋子", "服飾美容"}, {"化妝品", "服飾美容"},
+                {"藥", "醫療保健"}, {"看醫生", "醫療保健"}, {"健檢", "醫療保健"},
+                {"水電", "居家生活"}, {"房租", "居家生活"}, {"瓦斯", "居家生活"}
+            };
+
+            foreach (var keyword in categoryKeywords)
+            {
+                if (text.Contains(keyword.Key))
+                {
+                    return keyword.Value;
+                }
+            }
+
+            return "";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "解析類別時發生錯誤");
+            return "";
+        }
+    }
+
+    /// <summary>
+    /// 從文字中解析描述
+    /// </summary>
+    private string ParseDescriptionFromText(string text)
+    {
+        // 移除金額部分
+        var cleanText = Regex.Replace(text, @"\d+(?:\.\d+)?\s*(?:元|塊|塊錢)?", "").Trim();
+        
+        // 移除常見的動詞
+        var commonWords = new[] { "買", "花了", "支出", "付", "給", "用了", "消費" };
+        foreach (var word in commonWords)
+        {
+            cleanText = cleanText.Replace(word, "").Trim();
+        }
+
+        return string.IsNullOrWhiteSpace(cleanText) ? "語音記帳" : cleanText;
+    }
+
+    /// <summary>
+    /// 計算解析信心度
+    /// </summary>
+    private double CalculateParseConfidence(VoiceParseResult result)
+    {
+        double confidence = 0.0;
+
+        // 基礎分數：有金額就給 0.4
+        if (result.Amount > 0)
+        {
+            confidence += 0.4;
+        }
+
+        // 有類別增加信心度
+        if (!string.IsNullOrEmpty(result.Category) && result.Category != "其他收入" && result.Category != "其他支出")
+        {
+            confidence += 0.3;
+        }
+
+        // 類型判斷合理性
+        if (!string.IsNullOrEmpty(result.Type))
+        {
+            confidence += 0.2;
+        }
+
+        // 有有意義的描述增加信心度
+        if (!string.IsNullOrEmpty(result.Description) && 
+            result.Description != "語音記帳" && 
+            result.Description.Length > 2)
+        {
+            confidence += 0.1;
+        }
+
+        return Math.Min(confidence, 1.0);
+    }
+
+    #endregion
+
+    #region AJAX 處理方法
+
     /// <summary>
     /// 取得分類 AJAX 處理
     /// </summary>
@@ -408,6 +662,8 @@ public class index8 : PageModel
     #endregion
 }
 
+#region 檢視模型和請求模型
+
 /// <summary>
 /// 記帳記錄檢視模型
 /// </summary>
@@ -445,6 +701,18 @@ public class AccountingRecordViewModel
 }
 
 /// <summary>
+/// 語音記錄請求模型
+/// </summary>
+public class VoiceRecordRequest
+{
+    public string Type { get; set; } = string.Empty;
+    public decimal Amount { get; set; }
+    public string Category { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string VoiceText { get; set; } = string.Empty;
+}
+
+/// <summary>
 /// 驗證金額請求模型
 /// </summary>
 public class ValidateAmountRequest
@@ -471,3 +739,5 @@ public class CreateSubCategoryRequest
     public string SubCategoryName { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
 }
+
+#endregion
