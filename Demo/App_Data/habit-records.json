@@ -78,5 +78,53 @@
     "completedCount": 1,
     "notes": "睡前冥想",
     "createdAt": "2024-08-29T23:00:00"
+  },
+  {
+    "id": "3120eb21-0a36-47ed-b36f-19af905fd108",
+    "habitId": "drink-water",
+    "date": "2025-08-31T00:00:00Z",
+    "completedCount": 11,
+    "notes": "",
+    "createdAt": "2025-08-31T23:45:53.749998+08:00"
+  },
+  {
+    "id": "d95e1247-2901-498f-9200-742b30f4a73f",
+    "habitId": "read-book",
+    "date": "2025-08-31T00:00:00Z",
+    "completedCount": 1,
+    "notes": "",
+    "createdAt": "2025-08-31T23:46:04.737516+08:00"
+  },
+  {
+    "id": "a461ddd0-d7b3-4f35-a600-09ea9eb26e75",
+    "habitId": "meditation",
+    "date": "2025-08-31T00:00:00Z",
+    "completedCount": 1,
+    "notes": "",
+    "createdAt": "2025-08-31T23:46:08.159864+08:00"
+  },
+  {
+    "id": "8db1f093-baec-45e6-b870-f09914ea9581",
+    "habitId": "morning-exercise",
+    "date": "2025-08-31T00:00:00Z",
+    "completedCount": 1,
+    "notes": "",
+    "createdAt": "2025-08-31T23:46:12.835806+08:00"
+  },
+  {
+    "id": "9b957209-eebc-4757-96b5-1259e7e04c3b",
+    "habitId": "code-practice",
+    "date": "2025-08-31T00:00:00Z",
+    "completedCount": 1,
+    "notes": "",
+    "createdAt": "2025-08-31T23:46:17.014899+08:00"
+  },
+  {
+    "id": "8f606c92-3770-431c-9cf5-070c2ea43cb3",
+    "habitId": "family-time",
+    "date": "2025-08-31T00:00:00Z",
+    "completedCount": 1,
+    "notes": "",
+    "createdAt": "2025-08-31T23:46:21.242044+08:00"
   }
 ]
