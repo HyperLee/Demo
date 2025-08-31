@@ -100,11 +100,49 @@
     - [🚀 擴展性設計](#-擴展性設計)
       - [模組化架構](#模組化架構)
       - [升級路徑](#升級路徑)
+  - [習慣追蹤系統（habits.cshtml）](#習慣追蹤系統habitscshtml)
+    - [📋 核心功能特色](#-核心功能特色-2)
+      - [習慣管理功能](#習慣管理功能)
+      - [打卡追蹤系統](#打卡追蹤系統)
+      - [進度視覺化](#進度視覺化)
+    - [🎨 使用者介面設計](#-使用者介面設計-2)
+      - [儀表板布局](#儀表板布局)
+      - [互動設計](#互動設計)
+    - [🏗️ 技術架構設計](#️-技術架構設計-1)
+      - [後端服務設計](#後端服務設計)
+      - [前端技術整合](#前端技術整合-1)
+    - [📊 統計分析功能](#-統計分析功能)
+      - [數據分析](#數據分析)
+      - [成就系統](#成就系統)
+    - [🚀 資料管理](#-資料管理)
+      - [儲存結構](#儲存結構)
+      - [備份與還原](#備份與還原)
+  - [全方位資料匯出系統（export.cshtml）](#全方位資料匯出系統exportcshtml)
+    - [📤 核心匯出功能](#-核心匯出功能)
+      - [資料來源整合](#資料來源整合)
+      - [多格式支援](#多格式支援)
+    - [🎯 匯出配置系統](#-匯出配置系統)
+      - [靈活的匯出選項](#靈活的匯出選項)
+      - [匯出樣板系統](#匯出樣板系統)
+    - [🔧 技術架構特色](#-技術架構特色)
+      - [統一匯出服務](#統一匯出服務)
+      - [專業匯出服務](#專業匯出服務)
+    - [🎨 使用者體驗設計](#-使用者體驗設計-1)
+      - [直觀的匯出流程](#直觀的匯出流程)
+      - [進度追蹤系統](#進度追蹤系統)
+    - [📊 匯出歷史管理](#-匯出歷史管理)
+      - [歷史記錄功能](#歷史記錄功能)
+      - [統計分析](#統計分析)
+    - [🛡️ 安全與效能](#️-安全與效能)
+      - [安全控制](#安全控制)
+      - [效能優化](#效能優化)
   - [設定說明](#設定說明)
     - [📝 註記功能設定](#-註記功能設定)
     - [🗂️ 備忘錄系統設定](#️-備忘錄系統設定)
     - [🏦 匯率系統設定](#-匯率系統設定)
     - [✅ 待辦清單系統設定](#-待辦清單系統設定)
+    - [📋 習慣追蹤系統設定](#-習慣追蹤系統設定)
+    - [📤 資料匯出系統設定](#-資料匯出系統設定)
   - [常見問題](#常見問題)
 
 ---
@@ -129,6 +167,8 @@
 - **💰 個人記帳系統**，月曆檢視記帳記錄、收支統計分析、多格式報表匯出（CSV/Excel/PDF）
 - **✅ 智慧待辦清單系統**，時間智慧分組、拖拽排序、進階篩選、標籤管理和完成率統計
 - **📊 財務儀表板系統**，動態圖表分析、多時間範圍統計、收支趨勢預測和分類支出視覺化
+- **📋 習慣追蹤系統**，每日習慣打卡、進度視覺化、連續性統計、成就系統和分析報表
+- **📤 全方位資料匯出**，支援 PDF/Excel/CSV/JSON 多格式匯出，整合所有模組資料的統一匯出平台
 - **JSON 檔案儲存**，支援個人化資料持久化，無需資料庫設定
 
 ## 快速開始
@@ -155,6 +195,8 @@ $ dotnet run --project Demo/Demo.csproj
 # 記帳記錄編輯: http://localhost:5000/index8
 # 財務儀表板: http://localhost:5000/index9
 # 待辦清單: http://localhost:5000/todo
+# 習慣追蹤: http://localhost:5000/habits
+# 資料匯出: http://localhost:5000/export
 ```
 
 > [!TIP]
@@ -171,12 +213,30 @@ Demo/
 │   ├── NoteService.cs    # 註記功能服務（JSON 檔案 I/O）+ 備忘錄管理服務
 │   ├── ExchangeRateService.cs # 匯率資料服務（台銀 API 整合）
 │   ├── AccountingService.cs # 記帳資料服務（JSON 檔案 I/O）
-│   └── TodoService.cs # 待辦事項資料服務（JSON 檔案 I/O）
+│   ├── TodoService.cs # 待辦事項資料服務（JSON 檔案 I/O）
+│   ├── HabitService.cs # 習慣追蹤資料服務（JSON 檔案 I/O）
+│   ├── ExportService.cs # 統一資料匯出服務
+│   ├── PdfExportService.cs # PDF 匯出專業服務
+│   ├── ExcelExportService.cs # Excel 匯出專業服務
+│   ├── CsvExportService.cs # CSV 匯出專業服務
+│   ├── StatisticsService.cs # 統計分析服務
+│   ├── FinancialInsightsService.cs # 財務洞察分析服務
+│   ├── SmartCategoryService.cs # 智慧分類服務
+│   ├── AnomalyDetectionService.cs # 異常偵測服務
+│   ├── PredictiveAnalysisService.cs # 預測分析服務
+│   └── BudgetManagementService.cs # 預算管理服務
 ├── Models/               # 資料模型
 │   ├── ExchangeRate.cs   # 匯率資料模型
 │   ├── AccountingModels.cs # 記帳資料模型
 │   ├── DashboardModels.cs # 財務儀表板資料模型
-│   └── TodoModels.cs # 待辦事項資料模型
+│   ├── TodoModels.cs # 待辦事項資料模型
+│   ├── HabitModels.cs # 習慣追蹤資料模型
+│   ├── ExportModels.cs # 資料匯出模型
+│   ├── StatisticsModels.cs # 統計分析模型
+│   ├── InsightsModels.cs # 洞察分析模型
+│   ├── SmartCategoryModels.cs # 智慧分類模型
+│   ├── AnomalyModels.cs # 異常偵測模型
+│   └── BudgetModels.cs # 預算管理模型
 ├── Utilities/            # 工具類別
 │   ├── DataFixUtility.cs # 資料修正工具
 │   └── PdfExportUtility.cs # PDF 匯出工具
@@ -201,6 +261,10 @@ Demo/
 │   ├── index9.cshtml.cs  # index9 頁面 Model（儀表板統計、圖表資料）
 │   ├── todo.cshtml       # ✅ 智慧待辦清單頁面
 │   ├── todo.cshtml.cs    # todo 頁面 Model（任務管理、統計分析）
+│   ├── habits.cshtml     # 📋 習慣追蹤系統頁面
+│   ├── habits.cshtml.cs  # habits 頁面 Model（習慣管理、進度追蹤）
+│   ├── export.cshtml     # 📤 資料匯出系統頁面
+│   ├── export.cshtml.cs  # export 頁面 Model（匯出設定、進度管理）
 │   └── ...
 ├── wwwroot/              # 靜態資源 (CSS, JS, 圖片)
 ├── App_Data/             # 應用程式資料檔案
@@ -209,10 +273,20 @@ Demo/
 │   ├── exchange_rates.json # 🏦 匯率快取檔案（重要備份目標）
 │   ├── tags.json         # 🏷️ 標籤資料儲存檔案
 │   ├── categories.json   # 📁 分類資料儲存檔案
-│   └── accounting-records.json # 💰 記帳記錄檔案（重要備份目標）
+│   ├── accounting-records.json # 💰 記帳記錄檔案（重要備份目標）
 │   ├── accounting-categories.json # 💰 記帳分類檔案（重要備份目標）
 │   ├── todo-tasks.json # ✅ 待辦任務資料檔案（重要備份目標）
-│   └── todo-categories.json # ✅ 待辦分類資料檔案（重要備份目標）
+│   ├── todo-categories.json # ✅ 待辦分類資料檔案（重要備份目標）
+│   ├── habit-records.json # 📋 習慣記錄資料檔案（重要備份目標）
+│   ├── habit-categories.json # 📋 習慣分類資料檔案（重要備份目標）
+│   ├── habits.json # 📋 習慣定義資料檔案（重要備份目標）
+│   ├── export-history.json # 📤 匯出歷史記錄檔案（重要備份目標）
+│   ├── budget-settings.json # 💰 預算設定資料檔案（重要備份目標）
+│   ├── spending-patterns.json # 💰 消費模式資料檔案（重要備份目標）
+│   ├── category-rules.json # 💰 分類規則資料檔案（重要備份目標）
+│   ├── category-training.json # 💰 分類訓練資料檔案（重要備份目標）
+│   ├── merchant-mapping.json # 💰 商家對應資料檔案（重要備份目標）
+│   └── keyword-dictionary.json # 💰 關鍵字字典檔案（重要備份目標）
 ├── appsettings.json      # 全域設定檔
 ├── appsettings.Development.json # 開發環境設定
 ├── Program.cs            # 進入點與服務設定
@@ -1205,6 +1279,221 @@ private List<MonthlyTrend> CalculateTrendData(List<AccountingRecord> records)
 
 ---
 
+## 習慣追蹤系統（habits.cshtml）
+
+`habits.cshtml` 為完整的習慣追蹤與管理系統，提供習慣建立、每日打卡、進度追蹤和統計分析功能。此系統結合了現代化介面設計、智慧統計算法，以及完整的成就系統。
+
+### 📋 核心功能特色
+
+#### 習慣管理功能
+- **習慣建立**：支援自訂習慣名稱、描述、目標和顏色主題
+- **習慣分類**：多層級分類系統，便於習慣組織管理
+- **目標設定**：支援每日、每週、每月不同週期目標
+- **優先級管理**：高、中、低優先級設定，影響顯示順序
+
+#### 打卡追蹤系統
+- **一鍵打卡**：簡單快速的打卡操作
+- **歷史記錄**：完整的打卡歷史追蹤和查看
+- **連續天數統計**：自動計算習慣連續完成天數
+- **完成率計算**：動態計算週期內完成率
+
+#### 進度視覺化
+- **進度條顯示**：直觀的進度條展示完成情況
+- **日曆熱力圖**：以日曆形式顯示打卡密度
+- **統計圖表**：趨勢線圖、圓餅圖展示習慣統計
+- **成就徽章**：達成里程碑自動獲得成就徽章
+
+### 🎨 使用者介面設計
+
+#### 儀表板布局
+- **統計卡片**：今日完成、本週目標、總習慣數等關鍵指標
+- **習慣卡片網格**：響應式卡片布局，支援不同裝置
+- **快速操作**：卡片上直接支援打卡、編輯、刪除操作
+- **搜尋篩選**：支援按名稱、分類、狀態篩選習慣
+
+#### 互動設計
+- **拖拽排序**：支援習慣卡片拖拽重新排序
+- **模態框編輯**：流暢的模態框編輯體驗
+- **即時反饋**：操作後即時更新界面和統計
+- **響應式設計**：完美適配桌面和行動裝置
+
+### 🏗️ 技術架構設計
+
+#### 後端服務設計
+- **HabitService.cs**：核心習慣管理服務
+- **資料模型**：`HabitModels.cs` 定義完整資料結構
+- **JSON 儲存**：輕量級檔案儲存，易於備份和遷移
+- **依賴注入**：標準 ASP.NET Core DI 容器管理
+
+#### 前端技術整合
+- **Bootstrap 5**：響應式界面框架
+- **Font Awesome**：豐富的圖示支援
+- **Chart.js**：專業圖表繪製函式庫
+- **jQuery**：DOM 操作和 AJAX 通信
+
+### 📊 統計分析功能
+
+#### 數據分析
+- **完成率統計**：按日、週、月計算完成率
+- **趨勢分析**：長期趨勢變化分析
+- **習慣排名**：根據完成率和連續天數排名
+- **時間分析**：分析習慣完成的時間模式
+
+#### 成就系統
+- **里程碑追蹤**：7天、30天、100天等里程碑
+- **完成率徽章**：不同完成率等級的成就徽章
+- **連續記錄**：連續完成天數的成就認定
+- **分類精通**：在特定分類達成專家級別
+
+### 🚀 資料管理
+
+#### 儲存結構
+```json
+{
+  "Id": 1,
+  "Name": "晨間運動",
+  "Description": "每天早上進行30分鐘運動",
+  "Category": "健康",
+  "Priority": "High",
+  "Color": "#007bff",
+  "TargetFrequency": "Daily",
+  "CreatedDate": "2025-08-01T00:00:00",
+  "Records": [
+    {
+      "Date": "2025-08-31",
+      "Completed": true,
+      "Notes": "完成慢跑30分鐘"
+    }
+  ]
+}
+```
+
+#### 備份與還原
+- **自動備份**：定期自動備份習慣資料
+- **匯出功能**：支援匯出為 CSV、PDF 格式
+- **資料還原**：支援從備份檔案還原資料
+- **跨裝置同步**：（預留擴展功能）
+
+---
+
+## 全方位資料匯出系統（export.cshtml）
+
+`export.cshtml` 為統一的資料匯出平台，整合系統內所有模組的資料，提供多格式匯出功能。支援 PDF、Excel、CSV、JSON 四種主流格式，滿足不同場景的匯出需求。
+
+### 📤 核心匯出功能
+
+#### 資料來源整合
+- **記帳系統資料**：收支記錄、分類統計、時間範圍分析
+- **習慣追蹤資料**：習慣定義、打卡記錄、統計報表
+- **待辦事項資料**：任務列表、完成狀態、分類資訊
+- **備忘錄資料**：筆記內容、標籤分類、建立時間
+- **註記資料**：日期註記、月曆標記資訊
+- **匯率資料**：匯率歷史、計算記錄
+
+#### 多格式支援
+- **PDF 報表**：專業級報表，支援圖表、統計表格
+- **Excel 工作簿**：多工作表、公式計算、圖表整合
+- **CSV 檔案**：標準格式，便於資料分析和匯入
+- **JSON 資料**：完整資料結構，便於程式處理
+
+### 🎯 匯出配置系統
+
+#### 靈活的匯出選項
+- **資料類型選擇**：多選框選擇要匯出的資料模組
+- **時間範圍篩選**：支援自訂開始和結束日期
+- **快速時間選擇**：今日、本週、本月、本年等快速選項
+- **格式個別設定**：不同格式支援不同的詳細設定
+
+#### 匯出樣板系統
+- **預設樣板**：內建多種常用匯出樣板
+- **自訂樣板**：支援使用者建立個人化匯出格式
+- **樣板管理**：樣板的儲存、修改、刪除功能
+- **樣板分享**：（預留功能）樣板匯入匯出
+
+### 🔧 技術架構特色
+
+#### 統一匯出服務
+```csharp
+public class ExportService
+{
+    // 統一匯出入口
+    public async Task<ExportResult> ExportDataAsync(ExportRequest request)
+    {
+        var data = await CollectDataAsync(request);
+        
+        return request.Format switch
+        {
+            "pdf" => await _pdfService.ExportAsync(data, request),
+            "excel" => await _excelService.ExportAsync(data, request),
+            "csv" => await _csvService.ExportAsync(data, request),
+            "json" => await _jsonService.ExportAsync(data, request),
+            _ => throw new NotSupportedException($"不支援的格式: {request.Format}")
+        };
+    }
+}
+```
+
+#### 專業匯出服務
+- **PdfExportService**：使用 iText 7 製作專業 PDF 報表
+- **ExcelExportService**：使用 ClosedXML 建立 Excel 工作簿
+- **CsvExportService**：使用 CsvHelper 產生標準 CSV 檔案
+- **JSON 匯出**：原生 .NET JSON 序列化
+
+### 🎨 使用者體驗設計
+
+#### 直觀的匯出流程
+1. **選擇資料**：勾選要匯出的資料類型
+2. **設定範圍**：選擇時間範圍和篩選條件
+3. **選擇格式**：選擇匯出格式和樣板
+4. **開始匯出**：一鍵開始匯出流程
+5. **下載檔案**：匯出完成後立即下載
+
+#### 進度追蹤系統
+- **即時進度**：顯示匯出進度百分比
+- **狀態更新**：顯示當前處理的資料類型
+- **預估時間**：根據資料量預估完成時間
+- **錯誤處理**：友善的錯誤訊息和重試機制
+
+### 📊 匯出歷史管理
+
+#### 歷史記錄功能
+- **匯出記錄**：保存每次匯出的詳細記錄
+- **檔案管理**：已匯出檔案的儲存和管理
+- **重新下載**：支援重新下載歷史匯出檔案
+- **自動清理**：過期檔案自動清理機制
+
+#### 統計分析
+- **匯出統計**：匯出頻率、格式偏好統計
+- **使用分析**：最常匯出的資料類型分析
+- **效能監控**：匯出時間、檔案大小等效能指標
+- **錯誤追蹤**：匯出失敗原因統計和分析
+
+### 🛡️ 安全與效能
+
+#### 安全控制
+- **檔案權限**：匯出檔案的存取權限控制
+- **資料敏感性**：敏感資料的特殊處理
+- **檔案加密**：（預留功能）重要資料加密匯出
+- **存取日誌**：完整的匯出存取日誌
+
+#### 效能優化
+- **非同步處理**：大量資料非同步匯出處理
+- **分批處理**：超大資料集分批匯出
+- **記憶體管理**：合理控制記憶體使用
+- **快取策略**：常用資料的智慧快取
+
+**相關檔案**：
+- `Pages/export.cshtml`：資料匯出主頁面
+- `Pages/export.cshtml.cs`：匯出邏輯和設定處理
+- `Services/ExportService.cs`：統一匯出服務
+- `Services/PdfExportService.cs`：PDF 專業匯出服務
+- `Services/ExcelExportService.cs`：Excel 匯出服務
+- `Services/CsvExportService.cs`：CSV 匯出服務
+- `Models/ExportModels.cs`：匯出相關資料模型
+- 整合所有 `App_Data/*.json` 資料檔案 🔴
+
+---
+
 ## 設定說明
 
 - **appsettings.json**：全域設定檔，適用於所有環境。
@@ -1352,10 +1641,88 @@ private List<MonthlyTrend> CalculateTrendData(List<AccountingRecord> records)
 ]
 ```
 
+### 📋 習慣追蹤系統設定
+
+**主要資料檔案**: `App_Data/habits.json`  
+**記錄資料檔案**: `App_Data/habit-records.json`  
+**分類資料檔案**: `App_Data/habit-categories.json`
+
+**資料格式說明**：
+
+**habits.json**：
+```json
+[
+  {
+    "Id": 1,
+    "Name": "晨間運動",
+    "Description": "每天早上進行30分鐘運動",
+    "Category": "健康",
+    "Priority": "High",
+    "Color": "#007bff",
+    "Icon": "fas fa-running",
+    "TargetFrequency": "Daily",
+    "TargetValue": 1,
+    "Unit": "次",
+    "IsActive": true,
+    "CreatedDate": "2025-08-01T00:00:00",
+    "Order": 1
+  }
+]
+```
+
+**habit-records.json**：
+```json
+[
+  {
+    "Id": 1,
+    "HabitId": 1,
+    "Date": "2025-08-31T00:00:00",
+    "Completed": true,
+    "Value": 1,
+    "Notes": "完成慢跑30分鐘",
+    "CreatedDate": "2025-08-31T07:30:00"
+  }
+]
+```
+
+### 📤 資料匯出系統設定
+
+**匯出歷史檔案**: `App_Data/export-history.json`  
+**匯出暫存目錄**: `wwwroot/exports/`  
+**匯出樣板目錄**: `App_Data/export-templates/`
+
+**匯出歷史格式**：
+```json
+[
+  {
+    "Id": "guid-string",
+    "UserId": "system",
+    "DataTypes": ["accounting", "habits", "todo"],
+    "Format": "pdf",
+    "StartDate": "2025-08-01T00:00:00",
+    "EndDate": "2025-08-31T23:59:59",
+    "FileName": "export_20250831_143022.pdf",
+    "FilePath": "wwwroot/exports/export_20250831_143022.pdf",
+    "FileSize": 2048576,
+    "Status": "Completed",
+    "CreatedDate": "2025-08-31T14:30:22",
+    "CompletedDate": "2025-08-31T14:30:45",
+    "Duration": "00:00:23"
+  }
+]
+```
+
+**匯出設定說明**：
+- **檔案清理週期**：預設7天自動清理過期匯出檔案
+- **單次匯出限制**：建議單次匯出資料不超過100MB
+- **支援格式**：PDF、Excel (.xlsx)、CSV、JSON
+- **並發限制**：同時只能進行一個匯出作業
+
 **⚠️ 重要備份提醒**：
 - 定期備份整個 `App_Data` 資料夾
-- 系統升級前務必完整備份
+- 系統升級前務必完整備份  
 - 建議使用版本控制系統追蹤資料變更
+- 匯出的檔案請自行保存，系統會定期清理
 
 ## 常見問題
 
