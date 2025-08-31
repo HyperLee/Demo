@@ -1,7 +1,7 @@
 # 語音記帳功能開發規格書
 
 ## 專案概述
-開發一個智能語音記帳功能，讓使用者可以透過語音輸入快速新增記帳記錄。此功能將大幅提升記帳的便利性，特別適合在移動中或無法使用鍵盤的情況下使用。
+將智能語音記帳功能整合到現有的記帳系統中，作為表單輸入的增強功能。讓使用者可以透過語音輸入快速填寫記帳表單，支援個人記帳和家庭共享記帳兩種模式。此功能將大幅提升記帳的便利性，特別適合在移動中或無法使用鍵盤的情況下使用。
 
 ## 技術規格
 - **開發框架**: ASP.NET Core 8.0 Razor Pages
@@ -15,16 +15,19 @@
 
 ## 核心功能模組
 
-### 1. 語音記帳主頁面
-- **前端**: `#file:voice-accounting.cshtml`
-- **後端**: `#file:voice-accounting.cshtml.cs`
-- **路由**: `/voice-accounting`
+### 1. 語音輸入組件整合
+- **整合位置**: 
+  - `index8.cshtml` - 個人記帳表單語音輸入
+  - `family-accounting.cshtml` - 家庭記帳語音輸入
+- **共用組件**: `wwwroot/js/voice-input.js`
+- **實作方式**: 模組化 JavaScript 組件
 
 ### 1.1 功能描述
 - **語音輸入**: 使用 Web Speech API 進行語音識別
 - **智能解析**: 自動解析語音內容中的金額、類別、描述
-- **即時回饋**: 顯示識別結果並允許用戶確認或修改
-- **快速儲存**: 確認後立即儲存到記帳記錄中
+- **表單整合**: 解析結果自動填入現有表單欄位
+- **即時預覽**: 顯示識別結果並允許用戶確認或修改
+- **無縫儲存**: 使用現有的表單提交和儲存機制
 
 ### 1.2 語音命令格式設計
 ```text
@@ -38,86 +41,70 @@
 
 ### 1.3 前端實作 (voice-accounting.cshtml)
 ```html
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h4><i class="fas fa-microphone me-2"></i>語音記帳</h4>
+### 1.3 個人記帳表單整合 (index8.cshtml)
+在現有的記帳表單中加入語音輸入功能：
+
+```html
+<!-- 在表單頂部加入語音輸入區塊 -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-microphone me-2"></i>語音快速輸入
+                </h5>
+            </div>
+            <div class="card-body text-center" id="voiceInputArea">
+                <div id="voiceStatus" class="voice-status-idle">
+                    <div class="voice-animation d-none" id="voiceAnimation">
+                        <div class="voice-wave"></div>
+                        <div class="voice-wave"></div>
+                        <div class="voice-wave"></div>
+                        <div class="voice-wave"></div>
+                        <div class="voice-wave"></div>
+                    </div>
+                    <div id="voiceIcon">
+                        <i class="fas fa-microphone fa-3x text-primary mb-3"></i>
+                    </div>
+                    <p id="statusText" class="mb-3">點擊開始語音輸入</p>
+                    <button type="button" id="startVoiceBtn" class="btn btn-primary btn-lg">
+                        <i class="fas fa-microphone"></i> 開始語音輸入
+                    </button>
+                    <button type="button" id="stopVoiceBtn" class="btn btn-danger btn-lg d-none">
+                        <i class="fas fa-stop"></i> 停止錄音
+                    </button>
                 </div>
-                <div class="card-body">
-                    <!-- 語音狀態顯示 -->
-                    <div class="text-center mb-4">
-                        <div id="voiceStatus" class="voice-status-idle">
-                            <div class="voice-animation">
-                                <div class="voice-wave"></div>
-                                <div class="voice-wave"></div>
-                                <div class="voice-wave"></div>
-                            </div>
-                            <p class="mt-3" id="statusText">點擊開始語音輸入</p>
+                
+                <!-- 語音識別結果顯示 -->
+                <div id="speechResult" class="alert alert-info mt-3 d-none">
+                    <h6>語音識別結果：</h6>
+                    <p id="speechText" class="mb-0"></p>
+                </div>
+                
+                <!-- 解析結果預覽 -->
+                <div id="parsedPreview" class="alert alert-success mt-3 d-none">
+                    <h6>解析結果預覽：</h6>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>類型:</strong> <span id="previewType"></span>
                         </div>
-                        <button id="startVoiceBtn" class="btn btn-primary btn-lg rounded-pill">
-                            <i class="fas fa-microphone"></i> 開始錄音
+                        <div class="col-md-3">
+                            <strong>金額:</strong> <span id="previewAmount"></span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>類別:</strong> <span id="previewCategory"></span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>描述:</strong> <span id="previewDescription"></span>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <button type="button" id="applyVoiceInput" class="btn btn-success btn-sm">
+                            <i class="fas fa-check"></i> 套用到表單
                         </button>
-                        <button id="stopVoiceBtn" class="btn btn-danger btn-lg rounded-pill d-none">
-                            <i class="fas fa-stop"></i> 停止錄音
+                        <button type="button" id="resetVoiceInput" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-redo"></i> 重新輸入
                         </button>
-                    </div>
-
-                    <!-- 識別結果顯示 -->
-                    <div id="speechResult" class="alert alert-info d-none">
-                        <h6>語音識別結果：</h6>
-                        <p id="speechText" class="mb-0"></p>
-                    </div>
-
-                    <!-- 解析結果確認 -->
-                    <div id="parsedResult" class="card mt-3 d-none">
-                        <div class="card-header">
-                            <h6 class="mb-0">請確認解析結果</h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <label class="form-label">類型</label>
-                                    <select id="recordType" class="form-select">
-                                        <option value="支出">支出</option>
-                                        <option value="收入">收入</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">金額</label>
-                                    <input type="number" id="amount" class="form-control" step="0.01">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">類別</label>
-                                    <select id="category" class="form-select">
-                                        <!-- 動態載入類別 -->
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="row mt-3">
-                                <div class="col-12">
-                                    <label class="form-label">描述</label>
-                                    <input type="text" id="description" class="form-control">
-                                </div>
-                            </div>
-                            <div class="mt-3">
-                                <button id="saveRecord" class="btn btn-success">
-                                    <i class="fas fa-save"></i> 儲存記錄
-                                </button>
-                                <button id="resetForm" class="btn btn-secondary">
-                                    <i class="fas fa-redo"></i> 重新開始
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 最近記錄 -->
-                    <div class="mt-4">
-                        <h6>最近新增的記錄</h6>
-                        <div id="recentRecords" class="list-group">
-                            <!-- 動態載入最近記錄 -->
-                        </div>
                     </div>
                 </div>
             </div>
@@ -125,61 +112,35 @@
     </div>
 </div>
 
-<!-- CSS 樣式 -->
-<style>
-.voice-status-idle, .voice-status-listening, .voice-status-processing {
-    padding: 2rem;
-    border-radius: 15px;
-    transition: all 0.3s ease;
-}
+<!-- 原有的記帳表單保持不變 -->
+```
 
-.voice-status-idle {
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-}
+### 1.4 家庭記帳表單整合 (family-accounting.cshtml)
+在快速記帳區域加入語音輸入功能：
 
-.voice-status-listening {
-    background: linear-gradient(135deg, #d4edda, #c3e6cb);
-    animation: pulse 1.5s infinite;
-}
-
-.voice-status-processing {
-    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
-}
-
-.voice-animation {
-    display: flex;
-    justify-content: center;
-    align-items: end;
-    height: 60px;
-    gap: 5px;
-}
-
-.voice-wave {
-    width: 8px;
-    background: var(--bs-primary);
-    border-radius: 4px;
-    animation: wave 1.2s ease-in-out infinite;
-}
-
-.voice-wave:nth-child(2) {
-    animation-delay: 0.1s;
-}
-
-.voice-wave:nth-child(3) {
-    animation-delay: 0.2s;
-}
-
-@keyframes wave {
-    0%, 100% { height: 20px; }
-    50% { height: 60px; }
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-</style>
+```html
+<!-- 在快速記帳表單中加入語音按鈕 -->
+<div class="card mb-4">
+    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>快速新增家庭支出</h5>
+        <button type="button" id="voiceInputToggle" class="btn btn-light btn-sm">
+            <i class="fas fa-microphone"></i> 語音輸入
+        </button>
+    </div>
+    
+    <!-- 語音輸入區塊（預設隱藏） -->
+    <div id="familyVoiceInputArea" class="card-body border-bottom bg-light d-none">
+        <!-- 語音輸入介面 - 類似個人記帳但適配家庭功能 -->
+    </div>
+    
+    <!-- 原有的快速記帳表單 -->
+    <div class="card-body">
+        <form method="post" asp-page-handler="QuickExpense">
+            <!-- 現有表單內容保持不變 -->
+        </form>
+    </div>
+</div>
+```
 ```
 
 ### 1.4 JavaScript 實作
@@ -444,7 +405,80 @@ $(document).ready(function() {
 });
 ```
 
-### 1.5 後端實作 (voice-accounting.cshtml.cs)
+### 1.5 後端 API 整合
+不需要建立新的後端頁面，而是在現有的頁面中加入語音相關的處理方法：
+
+#### A. 個人記帳後端整合 (index8.cshtml.cs)
+```csharp
+// 加入語音相關的 Handler 方法
+[HttpPost]
+public async Task<IActionResult> OnPostParseVoiceInput([FromBody] VoiceParseRequest request)
+{
+    try
+    {
+        var parseResult = await ParseVoiceTextAsync(request.VoiceText);
+        return new JsonResult(parseResult);
+    }
+    catch (Exception ex)
+    {
+        return BadRequest($"語音解析失敗: {ex.Message}");
+    }
+}
+
+[HttpGet] 
+public async Task<IActionResult> OnGetCategories()
+{
+    try
+    {
+        var categories = await LoadCategoriesAsync();
+        var categoryNames = categories.Select(c => c.Name).ToList();
+        return new JsonResult(categoryNames);
+    }
+    catch (Exception ex)
+    {
+        return BadRequest($"載入類別失敗: {ex.Message}");
+    }
+}
+
+private async Task<VoiceParseResult> ParseVoiceTextAsync(string voiceText)
+{
+    // 伺服器端語音解析邏輯（可選）
+    // 主要解析仍在前端進行，這裡可以做進階處理
+    return new VoiceParseResult
+    {
+        OriginalText = voiceText,
+        ParsedAt = DateTime.Now
+    };
+}
+```
+
+#### B. 家庭記帳後端整合 (family-accounting.cshtml.cs)
+```csharp
+// 在現有的 FamilyAccountingModel 中加入語音支援
+[HttpPost]
+public async Task<IActionResult> OnPostQuickExpenseVoice([FromBody] VoiceFamilyExpenseRequest request)
+{
+    try
+    {
+        // 使用現有的 QuickExpense 邏輯，但資料來源是語音解析結果
+        var expenseRequest = new QuickExpenseRequest
+        {
+            Type = request.Type,
+            Amount = request.Amount,
+            Category = request.Category,
+            Description = request.Description,
+            Date = request.Date ?? DateTime.Today.ToString("yyyy-MM-dd"),
+            SplitType = request.SplitType ?? "我支付"
+        };
+        
+        return await OnPostQuickExpense(expenseRequest);
+    }
+    catch (Exception ex)
+    {
+        return BadRequest($"語音記帳失敗: {ex.Message}");
+    }
+}
+```
 ```csharp
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -571,8 +605,20 @@ namespace Demo.Pages
 - **批量記帳**: "今天買菜花了 200 元，搭車花了 50 元"
 - **日期指定**: "昨天午餐花了 120 元"
 - **分類學習**: 系統學習用戶的語音習慣，提升識別準確度
+- **家庭分攤**: "大家一起吃飯花了 600 元平均分攤"
 
-### 3. 語音回饋系統
+### 3. 整合現有功能
+- **類別系統**: 使用現有的類別管理和智能分類功能
+- **資料同步**: 語音記帳與手動記帳共用相同資料結構
+- **統計分析**: 語音記帳資料自動納入現有的統計和分析功能
+- **匯出功能**: 支援匯出包含語音記帳的完整記錄
+
+### 4. 家庭記帳整合特色
+- **即時通知**: 透過 SignalR 即時通知家庭成員語音記帳結果
+- **語音分攤**: 支援語音指定分攤方式和金額
+- **成員識別**: 可擴展支援語音識別不同家庭成員（進階功能）
+
+### 5. 語音回饋系統
 ```javascript
 // 語音合成回饋
 function speakFeedback(text) {
@@ -583,35 +629,79 @@ function speakFeedback(text) {
         speechSynthesis.speak(utterance);
     }
 }
+
+// 在記帳完成後提供語音回饋
+function onVoiceRecordSaved(result) {
+    speakFeedback(`已記錄 ${result.type} ${result.amount} 元，類別：${result.category}`);
+}
 ```
 
-### 4. 離線語音處理
-- 實作本地語音模型（可選）
-- 網路斷線時的暫存機制
-- 自動同步功能
+## 實作計畫
 
-## 測試規範
+### Phase 1: 基礎整合 
+1. **建立共用語音組件** (`wwwroot/js/voice-input.js`)
+2. **個人記帳整合** - 在 `index8.cshtml` 加入語音輸入區塊
+3. **基礎語音解析** - 支援金額、類別、描述的基本識別
 
-### 4.1 功能測試
-- [ ] 語音識別準確度測試
-- [ ] 不同瀏覽器相容性測試
-- [ ] 語音命令格式測試
-- [ ] 資料儲存完整性測試
+### Phase 2: 家庭記帳整合
+1. **家庭記帳語音功能** - 在 `family-accounting.cshtml` 整合語音輸入
+2. **分攤模式支援** - 語音識別分攤方式
+3. **SignalR 整合** - 語音記帳的即時通知
 
-### 4.2 使用者體驗測試
-- [ ] 響應速度測試
-- [ ] 錯誤處理測試
-- [ ] 無障礙功能測試
-- [ ] 多語言支援測試（可選）
+### Phase 3: 進階功能
+1. **智能學習** - 個人化語音習慣學習
+2. **批量記帳** - 支援一次語音輸入多筆記錄
+3. **語音回饋** - 記帳完成的語音確認
 
-## 安全性考量
-- 語音數據不會上傳到伺服器
-- 所有處理都在用戶端進行
-- 敏感資訊的語音輸入警告機制
-- CSRF 保護機制
+### Phase 4: 優化與擴展
+1. **效能優化** - 語音識別準確度提升
+2. **多語言支援** - 支援英文等其他語言
+3. **離線功能** - 網路斷線時的暫存機制
 
-## 未來擴展計畫
-- AI 語音助手整合
-- 多語言語音識別支援
-- 語音指令自訂功能
-- 語音搜尋記帳記錄功能
+## 檔案結構調整
+
+```
+Demo/
+├── Pages/
+│   ├── index8.cshtml          # 個人記帳表單 (加入語音功能)
+│   ├── index8.cshtml.cs       # 後端邏輯 (加入語音 API)
+│   ├── family-accounting.cshtml     # 家庭記帳 (加入語音功能)
+│   └── family-accounting.cshtml.cs  # 後端邏輯 (加入語音 API)
+├── wwwroot/
+│   ├── js/
+│   │   ├── voice-input.js     # 語音輸入組件 (新增)
+│   │   └── voice-styles.css   # 語音介面樣式 (新增)
+│   └── ...
+├── Models/
+│   └── VoiceModels.cs         # 語音相關模型 (新增)
+└── ...
+```
+
+## 資料模型擴展
+
+```csharp
+// Models/VoiceModels.cs
+public class VoiceParseRequest
+{
+    public string VoiceText { get; set; }
+    public string Context { get; set; } // "personal" 或 "family"
+}
+
+public class VoiceParseResult
+{
+    public string OriginalText { get; set; }
+    public string Type { get; set; }
+    public decimal? Amount { get; set; }
+    public string Category { get; set; }
+    public string Description { get; set; }
+    public string SplitType { get; set; } // 家庭模式專用
+    public DateTime ParsedAt { get; set; }
+    public double Confidence { get; set; } // 識別信心度
+}
+
+public class VoiceFamilyExpenseRequest : QuickExpenseRequest
+{
+    public string VoiceText { get; set; }
+    public double ParseConfidence { get; set; }
+}
+```
