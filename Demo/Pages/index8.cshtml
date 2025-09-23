@@ -147,9 +147,153 @@
                     <p id="speechText" class="mb-0 speech-text"></p>
                 </div>
                 
-                <!-- 解析結果預覽 -->
+                <!-- 語音解析結果預覽 (Phase 1 增強版) -->
                 <div id="parsedPreview" class="mt-3 d-none">
-                    <!-- 動態填入解析結果 -->
+                    <div class="card border-primary">
+                        <div class="card-header bg-light">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0"><i class="fas fa-brain me-2"></i>語音解析結果</h6>
+                                <div class="d-flex align-items-center">
+                                    <span class="me-2">整體信心度:</span>
+                                    <div class="progress" style="width: 100px; height: 20px;">
+                                        <div id="overallConfidenceBar" class="progress-bar" role="progressbar" 
+                                             style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                            <span id="overallConfidenceText">0%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <!-- 日期 -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <strong>日期:</strong>
+                                        <div class="text-end">
+                                            <span id="previewDateValue" class="me-2">-</span>
+                                            <span id="previewDateConfidence" class="badge bg-secondary">-</span>
+                                            <span id="previewDateStatus" class="badge bg-secondary">未解析</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 收支類型 -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <strong>類型:</strong>
+                                        <div class="text-end">
+                                            <span id="previewTypeValue" class="me-2">-</span>
+                                            <span id="previewTypeConfidence" class="badge bg-secondary">-</span>
+                                            <span id="previewTypeStatus" class="badge bg-secondary">未解析</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 金額 -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <strong>金額:</strong>
+                                        <div class="text-end">
+                                            <span id="previewAmountValue" class="me-2">-</span>
+                                            <span id="previewAmountConfidence" class="badge bg-secondary">-</span>
+                                            <span id="previewAmountStatus" class="badge bg-secondary">未解析</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 付款方式 -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <strong>付款方式:</strong>
+                                        <div class="text-end">
+                                            <span id="previewPaymentMethodValue" class="me-2">-</span>
+                                            <span id="previewPaymentMethodConfidence" class="badge bg-secondary">-</span>
+                                            <span id="previewPaymentMethodStatus" class="badge bg-secondary">未解析</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 大分類 -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <strong>大分類:</strong>
+                                        <div class="text-end">
+                                            <span id="previewCategoryValue" class="me-2">-</span>
+                                            <span id="previewCategoryConfidence" class="badge bg-secondary">-</span>
+                                            <span id="previewCategoryStatus" class="badge bg-secondary">未解析</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 細分類 -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <strong>細分類:</strong>
+                                        <div class="text-end">
+                                            <span id="previewSubCategoryValue" class="me-2">-</span>
+                                            <span id="previewSubCategoryConfidence" class="badge bg-secondary">-</span>
+                                            <span id="previewSubCategoryStatus" class="badge bg-secondary">未解析</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 描述 -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <strong>描述:</strong>
+                                        <div class="text-end">
+                                            <span id="previewDescriptionValue" class="me-2">-</span>
+                                            <span id="previewDescriptionConfidence" class="badge bg-secondary">-</span>
+                                            <span id="previewDescriptionStatus" class="badge bg-secondary">未解析</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 商家 -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <strong>商家:</strong>
+                                        <div class="text-end">
+                                            <span id="previewMerchantValue" class="me-2">-</span>
+                                            <span id="previewMerchantConfidence" class="badge bg-secondary">-</span>
+                                            <span id="previewMerchantStatus" class="badge bg-secondary">未解析</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 備註 -->
+                                <div class="col-12 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <strong>備註:</strong>
+                                        <div class="text-end">
+                                            <span id="previewNoteValue" class="me-2">-</span>
+                                            <span id="previewNoteConfidence" class="badge bg-secondary">-</span>
+                                            <span id="previewNoteStatus" class="badge bg-secondary">未解析</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 未解析內容 -->
+                                <div id="unparsedContentSection" class="col-12 mb-3 d-none">
+                                    <div class="alert alert-warning mb-0">
+                                        <strong><i class="fas fa-exclamation-triangle me-2"></i>未解析內容:</strong>
+                                        <span id="unparsedContentText"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 操作按鈕 -->
+                            <div class="d-flex justify-content-end gap-2 mt-3">
+                                <button type="button" class="btn btn-outline-secondary" id="rejectParseResult">
+                                    <i class="fas fa-times me-1"></i>忽略結果
+                                </button>
+                                <button type="button" class="btn btn-primary" id="applyParseResult">
+                                    <i class="fas fa-check me-1"></i>套用到表單
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -575,6 +719,7 @@
                 targetForm: '#recordForm',
                 onResult: function(result) {
                     console.log('語音解析結果:', result);
+                    displayParseResult(result);
                 },
                 onError: function(error) {
                     console.error('語音輸入錯誤:', error);
@@ -1053,6 +1198,318 @@
             messageDiv.className = `alert alert-${type}`;
             messageDiv.textContent = message;
             messageDiv.classList.remove('d-none');
+        }
+
+        // === Phase 1 新增函式 ===
+
+        /**
+         * 顯示 Phase 1 增強版解析結果
+         */
+        function displayParseResult(parseResult) {
+            const previewDiv = document.getElementById('parsedPreview');
+            
+            if (!parseResult || !parseResult.IsSuccess) {
+                previewDiv.classList.add('d-none');
+                return;
+            }
+
+            // 更新整體信心度
+            updateOverallConfidence(parseResult.ParseConfidence);
+
+            // 更新各欄位解析結果
+            updateFieldResult('Date', parseResult.Date ? formatDate(parseResult.Date) : null, parseResult.FieldConfidence?.Date || 0);
+            updateFieldResult('Type', parseResult.Type === 'Income' ? '收入' : '支出', parseResult.FieldConfidence?.Type || 0);
+            updateFieldResult('Amount', parseResult.Amount ? `NT$ ${parseResult.Amount}` : null, parseResult.FieldConfidence?.Amount || 0);
+            updateFieldResult('PaymentMethod', parseResult.PaymentMethod, parseResult.FieldConfidence?.PaymentMethod || 0);
+            updateFieldResult('Category', parseResult.Category, parseResult.FieldConfidence?.Category || 0);
+            updateFieldResult('SubCategory', parseResult.SubCategory, parseResult.FieldConfidence?.SubCategory || 0);
+            updateFieldResult('Description', parseResult.Description, parseResult.FieldConfidence?.Description || 0);
+            updateFieldResult('Merchant', parseResult.MerchantName, parseResult.FieldConfidence?.MerchantName || 0);
+            updateFieldResult('Note', parseResult.Note, parseResult.FieldConfidence?.Note || 0);
+
+            // 處理未解析內容
+            showUnparsedContent(parseResult.UnparsedContent);
+
+            // 顯示預覽區域
+            previewDiv.classList.remove('d-none');
+
+            // 綁定按鈕事件
+            bindPreviewButtons(parseResult);
+        }
+
+        /**
+         * 更新整體信心度顯示
+         */
+        function updateOverallConfidence(confidence) {
+            const percentage = Math.round(confidence * 100);
+            const progressBar = document.getElementById('overallConfidenceBar');
+            const progressText = document.getElementById('overallConfidenceText');
+            
+            progressBar.style.width = `${percentage}%`;
+            progressBar.setAttribute('aria-valuenow', percentage);
+            progressText.textContent = `${percentage}%`;
+            
+            // 根據信心度設定顏色
+            progressBar.className = 'progress-bar';
+            if (percentage >= 80) {
+                progressBar.classList.add('bg-success');
+            } else if (percentage >= 60) {
+                progressBar.classList.add('bg-warning');
+            } else {
+                progressBar.classList.add('bg-danger');
+            }
+        }
+
+        /**
+         * 更新單一欄位結果顯示
+         */
+        function updateFieldResult(fieldName, value, confidence) {
+            const valueElement = document.getElementById(`preview${fieldName}Value`);
+            const confidenceElement = document.getElementById(`preview${fieldName}Confidence`);
+            const statusElement = document.getElementById(`preview${fieldName}Status`);
+            
+            if (value) {
+                valueElement.textContent = value;
+                
+                const percentage = Math.round(confidence * 100);
+                confidenceElement.textContent = `${percentage}%`;
+                confidenceElement.className = 'badge';
+                
+                if (percentage >= 70) {
+                    confidenceElement.classList.add('bg-success');
+                    statusElement.textContent = '已解析';
+                    statusElement.className = 'badge bg-success';
+                } else if (percentage >= 40) {
+                    confidenceElement.classList.add('bg-warning');
+                    statusElement.textContent = '低信心度';
+                    statusElement.className = 'badge bg-warning';
+                } else {
+                    confidenceElement.classList.add('bg-danger');
+                    statusElement.textContent = '不確定';
+                    statusElement.className = 'badge bg-danger';
+                }
+            } else {
+                valueElement.textContent = '-';
+                confidenceElement.textContent = '-';
+                confidenceElement.className = 'badge bg-secondary';
+                statusElement.textContent = '未解析';
+                statusElement.className = 'badge bg-secondary';
+            }
+        }
+
+        /**
+         * 顯示未解析內容
+         */
+        function showUnparsedContent(unparsedContent) {
+            const section = document.getElementById('unparsedContentSection');
+            const textElement = document.getElementById('unparsedContentText');
+            
+            if (unparsedContent && unparsedContent.trim()) {
+                textElement.textContent = unparsedContent;
+                section.classList.remove('d-none');
+            } else {
+                section.classList.add('d-none');
+            }
+        }
+
+        /**
+         * 綁定預覽按鈕事件
+         */
+        function bindPreviewButtons(parseResult) {
+            // 套用按鈕
+            const applyBtn = document.getElementById('applyParseResult');
+            applyBtn.onclick = function() {
+                applyParseResultToForm(parseResult);
+            };
+
+            // 忽略按鈕
+            const rejectBtn = document.getElementById('rejectParseResult');
+            rejectBtn.onclick = function() {
+                document.getElementById('parsedPreview').classList.add('d-none');
+            };
+        }
+
+        /**
+         * 套用解析結果到表單
+         */
+        function applyParseResultToForm(parseResult) {
+            try {
+                // 日期
+                if (parseResult.Date) {
+                    const dateInput = document.querySelector('input[name="Record.Date"]');
+                    if (dateInput) {
+                        dateInput.value = formatDateForInput(parseResult.Date);
+                    }
+                }
+
+                // 收支類型
+                if (parseResult.Type) {
+                    const typeRadio = document.querySelector(`input[name="Record.Type"][value="${parseResult.Type}"]`);
+                    if (typeRadio) {
+                        typeRadio.checked = true;
+                        // 觸發事件以更新分類選項
+                        typeRadio.dispatchEvent(new Event('change'));
+                    }
+                }
+
+                // 金額
+                if (parseResult.Amount) {
+                    const amountInput = document.querySelector('input[asp-for="Record.Amount"]') || 
+                                       document.querySelector('.money-input') ||
+                                       document.querySelector('input[type="number"]');
+                    if (amountInput) {
+                        amountInput.value = parseResult.Amount;
+                        updateAmountDisplay();
+                    }
+                }
+
+                // 付款方式
+                if (parseResult.PaymentMethod) {
+                    const paymentSelect = document.querySelector('select[name="Record.PaymentMethod"]');
+                    if (paymentSelect) {
+                        // 嘗試找到匹配的選項
+                        for (let option of paymentSelect.options) {
+                            if (option.text.includes(parseResult.PaymentMethod) || option.value === parseResult.PaymentMethod) {
+                                paymentSelect.value = option.value;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // 大分類
+                if (parseResult.Category) {
+                    setTimeout(() => {
+                        const categorySelect = document.getElementById('categorySelect');
+                        if (categorySelect) {
+                            categorySelect.value = parseResult.Category;
+                            categorySelect.dispatchEvent(new Event('change'));
+                            
+                            // 細分類 (需要等大分類載入完成)
+                            if (parseResult.SubCategory) {
+                                setTimeout(() => {
+                                    const subCategorySelect = document.getElementById('subCategorySelect');
+                                    if (subCategorySelect) {
+                                        subCategorySelect.value = parseResult.SubCategory;
+                                    }
+                                }, 500);
+                            }
+                        }
+                    }, 200);
+                }
+
+                // 交易描述
+                if (parseResult.Description) {
+                    const descInput = document.querySelector('input[name="description"]');
+                    if (descInput) {
+                        descInput.value = parseResult.Description;
+                    }
+                }
+
+                // 商家名稱
+                if (parseResult.MerchantName) {
+                    const merchantInput = document.querySelector('input[name="merchant"]');
+                    if (merchantInput) {
+                        merchantInput.value = parseResult.MerchantName;
+                    }
+                }
+
+                // 備註
+                if (parseResult.Note) {
+                    const noteTextarea = document.querySelector('textarea[name="Record.Note"]');
+                    if (noteTextarea) {
+                        const existingNote = noteTextarea.value.trim();
+                        noteTextarea.value = existingNote ? `${existingNote}\n${parseResult.Note}` : parseResult.Note;
+                        updateNoteCount();
+                    }
+                }
+
+                // 隱藏預覽區域
+                document.getElementById('parsedPreview').classList.add('d-none');
+                
+                // 顯示成功訊息
+                showSuccessMessage('語音解析結果已套用到表單！請檢查並確認資訊是否正確。');
+
+            } catch (error) {
+                console.error('套用解析結果時發生錯誤:', error);
+                showErrorMessage('套用解析結果時發生錯誤，請手動填入資訊');
+            }
+        }
+
+        /**
+         * 格式化日期顯示
+         */
+        function formatDate(dateString) {
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('zh-TW', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                });
+            } catch (error) {
+                return dateString;
+            }
+        }
+
+        /**
+         * 格式化日期為輸入欄位格式 (YYYY-MM-DD)
+         */
+        function formatDateForInput(dateString) {
+            try {
+                const date = new Date(dateString);
+                return date.toISOString().split('T')[0];
+            } catch (error) {
+                return dateString;
+            }
+        }
+
+        /**
+         * 顯示成功訊息
+         */
+        function showSuccessMessage(message) {
+            // 創建臨時通知
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-success alert-dismissible fade show position-fixed';
+            alert.style.top = '20px';
+            alert.style.right = '20px';
+            alert.style.zIndex = '9999';
+            alert.innerHTML = `
+                <i class="fas fa-check-circle me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alert);
+            
+            // 3秒後自動移除
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.parentNode.removeChild(alert);
+                }
+            }, 3000);
+        }
+
+        /**
+         * 顯示錯誤訊息
+         */
+        function showErrorMessage(message) {
+            // 創建臨時通知
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-danger alert-dismissible fade show position-fixed';
+            alert.style.top = '20px';
+            alert.style.right = '20px';
+            alert.style.zIndex = '9999';
+            alert.innerHTML = `
+                <i class="fas fa-exclamation-circle me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alert);
+            
+            // 5秒後自動移除
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.parentNode.removeChild(alert);
+                }
+            }, 5000);
         }
     </script>
     

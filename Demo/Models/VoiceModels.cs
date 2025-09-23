@@ -25,10 +25,11 @@ namespace Demo.Models
     }
 
     /// <summary>
-    /// 語音解析結果模型
+    /// 語音解析結果模型 (Phase 1 增強版)
     /// </summary>
     public class VoiceParseResult
     {
+        // === 現有欄位 (保持不變) ===
         /// <summary>
         /// 原始語音文字
         /// </summary>
@@ -78,6 +79,47 @@ namespace Demo.Models
         /// 錯誤訊息
         /// </summary>
         public string? ErrorMessage { get; set; }
+        
+        // === Phase 1 新增欄位 ===
+        /// <summary>
+        /// 解析的日期
+        /// </summary>
+        public DateTime? Date { get; set; }
+        
+        /// <summary>
+        /// 付款方式
+        /// </summary>
+        public string? PaymentMethod { get; set; }
+        
+        /// <summary>
+        /// 細分類
+        /// </summary>
+        public string? SubCategory { get; set; }
+        
+        /// <summary>
+        /// 商家名稱
+        /// </summary>
+        public string? MerchantName { get; set; }
+        
+        /// <summary>
+        /// 備註資訊 (從描述中分離出來的額外資訊)
+        /// </summary>
+        public string? Note { get; set; }
+        
+        /// <summary>
+        /// 各欄位解析信心度 (0-1)
+        /// </summary>
+        public Dictionary<string, double> FieldConfidence { get; set; } = new();
+        
+        /// <summary>
+        /// 無法解析的剩餘內容
+        /// </summary>
+        public string? UnparsedContent { get; set; }
+        
+        /// <summary>
+        /// 解析過程中的中間結果 (供除錯使用)
+        /// </summary>
+        public Dictionary<string, object> ParsedSteps { get; set; } = new();
     }
 
     /// <summary>
@@ -191,5 +233,47 @@ namespace Demo.Models
         /// 錯誤
         /// </summary>
         Error
+    }
+
+    /// <summary>
+    /// 解析配置模型
+    /// </summary>
+    public class VoiceParseConfig
+    {
+        /// <summary>
+        /// 最低信心度閾值
+        /// </summary>
+        public double MinConfidenceThreshold { get; set; } = 0.3;
+        
+        /// <summary>
+        /// 是否啟用模糊匹配
+        /// </summary>
+        public bool EnableFuzzyMatching { get; set; } = true;
+        
+        /// <summary>
+        /// 日期解析模式
+        /// </summary>
+        public DateParseMode DateParseMode { get; set; } = DateParseMode.Flexible;
+    }
+
+    /// <summary>
+    /// 日期解析模式
+    /// </summary>
+    public enum DateParseMode
+    {
+        /// <summary>
+        /// 嚴格模式：只解析明確的日期格式
+        /// </summary>
+        Strict,
+        
+        /// <summary>
+        /// 彈性模式：支援相對日期 (今天、昨天等)
+        /// </summary>
+        Flexible,
+        
+        /// <summary>
+        /// 智能模式：根據上下文推測日期
+        /// </summary>
+        Smart
     }
 }

@@ -214,5 +214,17 @@
     "Note": "傢俱購買",
     "CreatedDate": "2025-08-31T22:06:41.587139+08:00",
     "ModifiedDate": "2025-08-31T22:06:41.587144+08:00"
+  },
+  {
+    "Id": 19,
+    "Date": "2025-09-23T00:00:00",
+    "Type": "Expense",
+    "Amount": 66,
+    "Category": "餐飲食品",
+    "SubCategory": "早餐",
+    "PaymentMethod": "現金",
+    "Note": "soso",
+    "CreatedDate": "2025-09-23T11:59:12.2344064+08:00",
+    "ModifiedDate": "2025-09-23T11:59:12.2344093+08:00"
   }
 ]
