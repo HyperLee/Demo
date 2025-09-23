@@ -1,0 +1,106 @@
+{
+  "1": {
+    "userId": 1,
+    "createdAt": "2025-01-23T00:00:00Z",
+    "updatedAt": "2025-01-23T00:00:00Z",
+    "personalKeywords": {
+      "Amount_元": {
+        "keyword": "元",
+        "mappedValue": "元",
+        "category": "Amount",
+        "confidence": 0.8,
+        "usageCount": 0,
+        "lastUsed": "2025-01-23T00:00:00Z",
+        "synonyms": ["塊", "塊錢", "块"]
+      },
+      "PaymentMethod_刷卡": {
+        "keyword": "刷卡",
+        "mappedValue": "信用卡",
+        "category": "PaymentMethod",
+        "confidence": 0.9,
+        "usageCount": 0,
+        "lastUsed": "2025-01-23T00:00:00Z",
+        "synonyms": ["信用卡", "卡片"]
+      },
+      "PaymentMethod_現金": {
+        "keyword": "現金",
+        "mappedValue": "現金",
+        "category": "PaymentMethod",
+        "confidence": 0.9,
+        "usageCount": 0,
+        "lastUsed": "2025-01-23T00:00:00Z",
+        "synonyms": ["cash", "錢"]
+      }
+    },
+    "frequentCategories": {
+      "飲食": {
+        "categoryName": "飲食",
+        "triggerWords": ["餐廳", "吃", "喝", "食物", "飲料", "咖啡", "早餐", "午餐", "晚餐"],
+        "confidence": 0.5,
+        "usageCount": 0,
+        "lastUsed": "2025-01-23T00:00:00Z",
+        "preferredSubCategory": null
+      },
+      "交通": {
+        "categoryName": "交通",
+        "triggerWords": ["捷運", "公車", "計程車", "uber", "油錢", "停車", "高鐵", "火車"],
+        "confidence": 0.5,
+        "usageCount": 0,
+        "lastUsed": "2025-01-23T00:00:00Z",
+        "preferredSubCategory": null
+      },
+      "購物": {
+        "categoryName": "購物",
+        "triggerWords": ["買", "購買", "商店", "超市", "百貨", "網購", "服飾", "用品"],
+        "confidence": 0.5,
+        "usageCount": 0,
+        "lastUsed": "2025-01-23T00:00:00Z",
+        "preferredSubCategory": null
+      }
+    },
+    "frequentMerchants": {
+      "星巴克": {
+        "merchantName": "星巴克",
+        "aliases": ["starbucks", "星巴客", "星巴"],
+        "preferredCategory": "飲食",
+        "preferredPaymentMethod": "信用卡",
+        "averageAmount": 150.0,
+        "visitCount": 0,
+        "lastVisit": "2025-01-23T00:00:00Z"
+      },
+      "7-11": {
+        "merchantName": "7-11",
+        "aliases": ["711", "seven", "統一超商", "便利商店"],
+        "preferredCategory": "購物",
+        "preferredPaymentMethod": "悠遊卡",
+        "averageAmount": 80.0,
+        "visitCount": 0,
+        "lastVisit": "2025-01-23T00:00:00Z"
+      }
+    },
+    "voiceBehaviorPattern": {
+      "commonPhrases": [],
+      "preferredOrder": "Amount-First",
+      "timeExpressions": {
+        "今天": "today",
+        "昨天": "yesterday",
+        "明天": "tomorrow"
+      },
+      "inputStats": {
+        "totalInputs": 0,
+        "successfulParses": 0,
+        "averageConfidence": 0.0,
+        "averageInputLength": "00:00:00",
+        "hourlyUsage": {},
+        "categoryUsage": {}
+      }
+    },
+    "statistics": {
+      "totalLearningEvents": 0,
+      "lastLearningEvent": "2025-01-23T00:00:00Z",
+      "accuracyImprovement": 0.0,
+      "fieldImprovements": {},
+      "recentLearningEvents": []
+    }
+  }
+}

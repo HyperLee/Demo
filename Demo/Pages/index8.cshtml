@@ -791,11 +791,13 @@
         let voiceInput = null;
 
         document.addEventListener('DOMContentLoaded', function() {
-            // 初始化語音輸入
-            voiceInput = new VoiceInput({
+            // 初始化 Phase 3 智能語音輸入
+            voiceInput = new ConversationalVoiceInput({
                 context: 'personal',
                 container: '#voiceInputArea',
                 targetForm: '#recordForm',
+                userId: 1, // 實際應用中應該從用戶登錄狀態獲取
+                learningEnabled: true,
                 onResult: function(result) {
                     console.log('語音解析結果:', result);
                     displayParseResult(result);

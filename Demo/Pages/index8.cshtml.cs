@@ -19,17 +19,23 @@ public class index8 : PageModel
     private readonly VoiceParseConfig _parseConfig;
     private readonly FieldConfidenceCalculator _confidenceCalculator;
     private readonly ProgressiveParseManager _progressiveParseManager;
+    private readonly UserPreferenceLearningEngine _learningEngine;
+    private readonly VoiceContextAnalyzer _contextAnalyzer;
 
     public index8(ILogger<index8> logger, 
                   IAccountingService accountingService,
                   FieldConfidenceCalculator confidenceCalculator,
-                  ProgressiveParseManager progressiveParseManager)
+                  ProgressiveParseManager progressiveParseManager,
+                  UserPreferenceLearningEngine learningEngine,
+                  VoiceContextAnalyzer contextAnalyzer)
     {
         _logger = logger;
         _accountingService = accountingService;
         _parseConfig = new VoiceParseConfig(); // 使用預設配置
         _confidenceCalculator = confidenceCalculator;
         _progressiveParseManager = progressiveParseManager;
+        _learningEngine = learningEngine;
+        _contextAnalyzer = contextAnalyzer;
     }
 
     #region 屬性
@@ -291,7 +297,7 @@ public class index8 : PageModel
     #region 語音記帳處理方法
 
     /// <summary>
-    /// 解析語音輸入 (Phase 2 增強版)
+    /// 解析語音輸入 (Phase 3 智能增強版)
     /// </summary>
     public async Task<IActionResult> OnPostParseVoiceInputAsync([FromBody] VoiceParseRequest request)
     {
@@ -307,13 +313,43 @@ public class index8 : PageModel
                 });
             }
 
-            // Phase 1 的基本解析
+            // Phase 3: 上下文分析和個人化處理
+            var contextResult = await _contextAnalyzer.AnalyzeContextAsync(
+                request.VoiceText, 
+                request.VoiceContext, 
+                request.UserId);
+            
+            // Phase 1 的基本解析（保持不變）
             var parseResult = await ParseVoiceTextAsync(request.VoiceText);
             
-            // Phase 2 的狀態評估和提示生成
+            // Phase 3: 個人化建議增強
+            if (request.UserId.HasValue)
+            {
+                var personalizedSuggestions = await _learningEngine.GetPersonalizedSuggestionsAsync(
+                    request.UserId.Value, request.VoiceText);
+                parseResult.Suggestions.AddRange(personalizedSuggestions);
+                
+                // 學習語音模式
+                await _learningEngine.LearnVoicePatternAsync(request.UserId.Value, request.VoiceText, parseResult);
+            }
+            
+            // Phase 2 的狀態評估和提示生成（保持不變）
             var parseState = _progressiveParseManager.EvaluateParseState(parseResult);
             var missingFieldHints = _progressiveParseManager.GenerateMissingFieldHints(parseResult);
             var nextStepSuggestion = _progressiveParseManager.GenerateNextStepSuggestion(parseState, missingFieldHints);
+
+            // Phase 3: 對話式回應
+            ConversationalResponse? conversationalResponse = null;
+            if (contextResult.ConversationalSuggestions.Any())
+            {
+                conversationalResponse = new ConversationalResponse
+                {
+                    Question = contextResult.ConversationalSuggestions.First().Message,
+                    SuggestedAnswers = contextResult.ConversationalSuggestions.First().SuggestedActions,
+                    ResponseType = contextResult.ConversationalSuggestions.First().Type,
+                    SessionId = request.VoiceContext?.SessionId ?? Guid.NewGuid().ToString()
+                };
+            }
 
             // 根據解析狀態決定回應
             var response = new VoiceParseResponse
@@ -322,7 +358,8 @@ public class index8 : PageModel
                 ParseResult = parseResult,
                 ParseState = parseState,
                 MissingFieldHints = missingFieldHints,
-                NextStepSuggestion = nextStepSuggestion
+                NextStepSuggestion = nextStepSuggestion,
+                ConversationalResponse = conversationalResponse
             };
 
             return new JsonResult(response);
@@ -378,6 +415,50 @@ public class index8 : PageModel
         {
             _logger.LogError(ex, "語音記帳時發生錯誤");
             return new JsonResult(new { success = false, message = "語音記帳失敗，請重試" });
+        }
+    }
+
+    /// <summary>
+    /// 語音解析修正學習 (Phase 3 新增)
+    /// </summary>
+    public async Task<IActionResult> OnPostLearnFromCorrectionAsync([FromBody] VoiceCorrectionRequest request)
+    {
+        try
+        {
+            if (request.UserId.HasValue && !string.IsNullOrEmpty(request.FieldName))
+            {
+                await _learningEngine.LearnFromUserCorrectionAsync(
+                    request.UserId.Value,
+                    request.OriginalValue ?? "",
+                    request.CorrectedValue ?? "",
+                    request.FieldName);
+                
+                return new JsonResult(new { success = true, message = "學習修正已記錄" });
+            }
+            
+            return new JsonResult(new { success = false, message = "修正資料不完整" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "記錄語音修正學習失敗");
+            return new JsonResult(new { success = false, message = "學習記錄失敗" });
+        }
+    }
+
+    /// <summary>
+    /// 獲取個人化語音建議 (Phase 3 新增)
+    /// </summary>
+    public async Task<IActionResult> OnGetPersonalizedSuggestionsAsync(int userId, string voiceText)
+    {
+        try
+        {
+            var suggestions = await _learningEngine.GetPersonalizedSuggestionsAsync(userId, voiceText);
+            return new JsonResult(new { success = true, suggestions = suggestions });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "獲取個人化建議失敗：UserId={UserId}", userId);
+            return new JsonResult(new { success = false, message = "獲取建議失敗" });
         }
     }
 
@@ -1663,6 +1744,18 @@ public class CreateSubCategoryRequest
     public string CategoryName { get; set; } = string.Empty;
     public string SubCategoryName { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// 語音修正請求模型 (Phase 3 新增)
+/// </summary>
+public class VoiceCorrectionRequest
+{
+    public int? UserId { get; set; }
+    public string FieldName { get; set; } = string.Empty;
+    public string? OriginalValue { get; set; }
+    public string? CorrectedValue { get; set; }
+    public string? Context { get; set; }
 }
 
 #endregion

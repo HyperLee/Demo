@@ -226,5 +226,17 @@
     "Note": "soso",
     "CreatedDate": "2025-09-23T11:59:12.2344064+08:00",
     "ModifiedDate": "2025-09-23T11:59:12.2344093+08:00"
+  },
+  {
+    "Id": 20,
+    "Date": "2025-09-23T00:00:00",
+    "Type": "Expense",
+    "Amount": 150,
+    "Category": "餐飲食品",
+    "SubCategory": "午餐",
+    "PaymentMethod": "信用卡",
+    "Note": "韭菜鍋貼 酸辣湯",
+    "CreatedDate": "2025-09-23T13:43:43.1587302+08:00",
+    "ModifiedDate": "2025-09-23T13:43:43.1587455+08:00"
   }
 ]
