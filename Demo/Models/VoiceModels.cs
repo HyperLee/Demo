@@ -276,4 +276,54 @@ namespace Demo.Models
         /// </summary>
         Smart
     }
+
+    // === Phase 2 新增模型 ===
+
+    /// <summary>
+    /// 解析狀態枚舉
+    /// </summary>
+    public enum ParseState
+    {
+        NotStarted,     // 尚未開始
+        Parsing,        // 解析中
+        Completed,      // 完全解析完成
+        PartialSuccess, // 部分成功
+        Failed,         // 解析失敗
+        RequiresInput   // 需要用戶輸入
+    }
+
+    /// <summary>
+    /// 提示優先級
+    /// </summary>
+    public enum HintPriority
+    {
+        Low = 1,
+        Medium = 2,
+        High = 3
+    }
+
+    /// <summary>
+    /// 缺失欄位提示模型
+    /// </summary>
+    public class MissingFieldHint
+    {
+        public string FieldName { get; set; } = string.Empty;
+        public string DisplayName { get; set; } = string.Empty;
+        public string Suggestion { get; set; } = string.Empty;
+        public HintPriority Priority { get; set; }
+        public string Icon { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// 語音解析回應模型 (Phase 2)
+    /// </summary>
+    public class VoiceParseResponse
+    {
+        public bool IsSuccess { get; set; }
+        public string? ErrorMessage { get; set; }
+        public VoiceParseResult? ParseResult { get; set; }
+        public ParseState ParseState { get; set; }
+        public List<MissingFieldHint> MissingFieldHints { get; set; } = new();
+        public string? NextStepSuggestion { get; set; }
+    }
 }

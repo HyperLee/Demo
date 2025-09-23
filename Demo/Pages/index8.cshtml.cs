@@ -17,12 +17,19 @@ public class index8 : PageModel
     private readonly ILogger<index8> _logger;
     private readonly IAccountingService _accountingService;
     private readonly VoiceParseConfig _parseConfig;
+    private readonly FieldConfidenceCalculator _confidenceCalculator;
+    private readonly ProgressiveParseManager _progressiveParseManager;
 
-    public index8(ILogger<index8> logger, IAccountingService accountingService)
+    public index8(ILogger<index8> logger, 
+                  IAccountingService accountingService,
+                  FieldConfidenceCalculator confidenceCalculator,
+                  ProgressiveParseManager progressiveParseManager)
     {
         _logger = logger;
         _accountingService = accountingService;
         _parseConfig = new VoiceParseConfig(); // 使用預設配置
+        _confidenceCalculator = confidenceCalculator;
+        _progressiveParseManager = progressiveParseManager;
     }
 
     #region 屬性
@@ -284,7 +291,7 @@ public class index8 : PageModel
     #region 語音記帳處理方法
 
     /// <summary>
-    /// 解析語音輸入
+    /// 解析語音輸入 (Phase 2 增強版)
     /// </summary>
     public async Task<IActionResult> OnPostParseVoiceInputAsync([FromBody] VoiceParseRequest request)
     {
@@ -292,23 +299,42 @@ public class index8 : PageModel
         {
             if (string.IsNullOrWhiteSpace(request.VoiceText))
             {
-                return new JsonResult(new VoiceParseResult
+                return new JsonResult(new VoiceParseResponse
                 {
                     IsSuccess = false,
-                    ErrorMessage = "語音文字不可為空"
+                    ErrorMessage = "語音文字不可為空",
+                    ParseState = ParseState.Failed
                 });
             }
 
+            // Phase 1 的基本解析
             var parseResult = await ParseVoiceTextAsync(request.VoiceText);
-            return new JsonResult(parseResult);
+            
+            // Phase 2 的狀態評估和提示生成
+            var parseState = _progressiveParseManager.EvaluateParseState(parseResult);
+            var missingFieldHints = _progressiveParseManager.GenerateMissingFieldHints(parseResult);
+            var nextStepSuggestion = _progressiveParseManager.GenerateNextStepSuggestion(parseState, missingFieldHints);
+
+            // 根據解析狀態決定回應
+            var response = new VoiceParseResponse
+            {
+                IsSuccess = parseState != ParseState.Failed,
+                ParseResult = parseResult,
+                ParseState = parseState,
+                MissingFieldHints = missingFieldHints,
+                NextStepSuggestion = nextStepSuggestion
+            };
+
+            return new JsonResult(response);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "解析語音輸入時發生錯誤");
-            return new JsonResult(new VoiceParseResult
+            return new JsonResult(new VoiceParseResponse
             {
                 IsSuccess = false,
-                ErrorMessage = "語音解析失敗，請重試"
+                ErrorMessage = "語音解析失敗，請重試",
+                ParseState = ParseState.Failed
             });
         }
     }
@@ -1130,22 +1156,55 @@ public class index8 : PageModel
     }
 
     /// <summary>
-    /// 計算整體信心度
+    /// 計算整體信心度和更新各欄位信心度 (Phase 2 增強版)
     /// </summary>
     private double CalculateOverallConfidence(VoiceParseResult result)
     {
         try
         {
-            var confidenceValues = result.FieldConfidence.Values.ToList();
-            
-            // 如果沒有任何欄位解析成功，返回低信心度
-            if (!confidenceValues.Any())
-                return 0.2;
+            // Phase 2: 使用增強的信心度計算器
+            // 重新計算各欄位信心度
+            result.FieldConfidence["Date"] = _confidenceCalculator.CalculateDateConfidence(
+                result.OriginalText, 
+                result.Date, 
+                GetDateMatchPattern(result.OriginalText, result.Date));
 
-            // 加權平均：重要欄位權重較高
-            var weightedSum = 0.0;
-            var totalWeight = 0.0;
+            result.FieldConfidence["Amount"] = _confidenceCalculator.CalculateAmountConfidence(
+                result.OriginalText, 
+                result.Amount);
 
+            result.FieldConfidence["Type"] = _confidenceCalculator.CalculateTypeConfidence(
+                result.OriginalText, 
+                result.Type);
+
+            if (!string.IsNullOrEmpty(result.Category))
+            {
+                result.FieldConfidence["Category"] = _confidenceCalculator.CalculateCategoryConfidence(
+                    result.OriginalText, 
+                    result.Category, 
+                    result.MerchantName, 
+                    result.Description);
+            }
+
+            if (!string.IsNullOrEmpty(result.PaymentMethod))
+            {
+                result.FieldConfidence["PaymentMethod"] = _confidenceCalculator.CalculatePaymentMethodConfidence(
+                    result.OriginalText, 
+                    result.PaymentMethod);
+            }
+
+            // 其他欄位使用簡化計算
+            if (!string.IsNullOrEmpty(result.MerchantName))
+            {
+                result.FieldConfidence["MerchantName"] = CalculateMerchantNameConfidence(result.OriginalText, result.MerchantName);
+            }
+
+            if (!string.IsNullOrEmpty(result.Description))
+            {
+                result.FieldConfidence["Description"] = CalculateDescriptionConfidence(result.Description);
+            }
+
+            // 計算整體加權信心度
             var fieldWeights = new Dictionary<string, double>
             {
                 {"Amount", 0.3},      // 金額最重要
@@ -1158,23 +1217,134 @@ public class index8 : PageModel
                 {"SubCategory", 0.02}   // 細分類
             };
 
-            foreach (var fieldConf in result.FieldConfidence)
+            double weightedSum = 0.0;
+            double totalWeight = 0.0;
+
+            // 計算加權平均信心度
+            foreach (var field in result.FieldConfidence)
             {
-                if (fieldWeights.ContainsKey(fieldConf.Key))
+                if (fieldWeights.ContainsKey(field.Key))
                 {
-                    var weight = fieldWeights[fieldConf.Key];
-                    weightedSum += fieldConf.Value * weight;
+                    var weight = fieldWeights[field.Key];
+                    weightedSum += field.Value * weight;
                     totalWeight += weight;
                 }
             }
 
-            return totalWeight > 0 ? Math.Min(weightedSum / totalWeight, 1.0) : 0.2;
+            if (totalWeight == 0) return 0.0;
+
+            var baseConfidence = weightedSum / totalWeight;
+
+            // 完整性加成：解析出的欄位越多，整體信心度越高
+            var completenessBonus = CalculateCompletenessBonus(result);
+            
+            // 一致性加成：各欄位間的一致性
+            var consistencyBonus = CalculateConsistencyBonus(result);
+
+            var finalConfidence = baseConfidence * (1 + completenessBonus + consistencyBonus);
+            
+            return Math.Min(Math.Max(finalConfidence, 0.0), 1.0);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "計算整體信心度時發生錯誤");
-            return 0.2;
+            return 0.0;
         }
+    }
+
+    /// <summary>
+    /// 獲取日期匹配模式
+    /// </summary>
+    private string GetDateMatchPattern(string text, DateTime? date)
+    {
+        if (!date.HasValue) return "";
+        
+        // 相對日期檢查
+        if (text.Contains("今天") || text.Contains("昨天") || text.Contains("前天") || text.Contains("明天") || text.Contains("後天"))
+            return "relative";
+            
+        // 完整日期格式檢查
+        if (Regex.IsMatch(text, @"\d{4}\s*年\s*\d{1,2}\s*月\s*\d{1,2}\s*[日號]"))
+            return "full";
+            
+        // 月日格式檢查
+        if (Regex.IsMatch(text, @"\d{1,2}\s*月\s*\d{1,2}\s*[日號]"))
+            return "monthDay";
+            
+        // 中文數字格式檢查
+        if (Regex.IsMatch(text, @"[一二三四五六七八九十]+\s*月\s*[一二三四五六七八九十]+\s*[日號]"))
+            return "chinese";
+            
+        return "";
+    }
+
+    /// <summary>
+    /// 計算商家名稱信心度
+    /// </summary>
+    private double CalculateMerchantNameConfidence(string text, string merchantName)
+    {
+        if (string.IsNullOrEmpty(merchantName)) return 0.0;
+        
+        // 直接匹配
+        if (text.Contains(merchantName, StringComparison.OrdinalIgnoreCase))
+            return 0.9;
+            
+        // 部分匹配
+        if (merchantName.Length > 2 && text.Contains(merchantName.Substring(0, merchantName.Length / 2)))
+            return 0.6;
+            
+        return 0.3;
+    }
+
+    /// <summary>
+    /// 計算描述信心度
+    /// </summary>
+    private double CalculateDescriptionConfidence(string description)
+    {
+        if (string.IsNullOrEmpty(description)) return 0.0;
+        if (description == "語音記帳") return 0.3;
+        if (description.Length < 2) return 0.4;
+        if (description.Length < 5) return 0.6;
+        return 0.8;
+    }
+
+    /// <summary>
+    /// 計算完整性加成
+    /// </summary>
+    private double CalculateCompletenessBonus(VoiceParseResult result)
+    {
+        var coreFields = new[] { "Amount", "Type", "Category", "Description" };
+        var parsedCoreFields = coreFields.Count(field => 
+            result.FieldConfidence.ContainsKey(field) && result.FieldConfidence[field] > 0.3);
+        
+        // 核心欄位解析比例
+        var coreCompleteness = (double)parsedCoreFields / coreFields.Length;
+        
+        return coreCompleteness * 0.1; // 最多10%加成
+    }
+
+    /// <summary>
+    /// 計算一致性加成
+    /// </summary>
+    private double CalculateConsistencyBonus(VoiceParseResult result)
+    {
+        double consistencyScore = 0.0;
+        
+        // 檢查商家與分類的一致性
+        if (!string.IsNullOrEmpty(result.MerchantName) && !string.IsNullOrEmpty(result.Category))
+        {
+            // 這裡可以實作商家與分類的一致性檢查邏輯
+            consistencyScore += 0.05;
+        }
+        
+        // 檢查描述與分類的一致性
+        if (!string.IsNullOrEmpty(result.Description) && !string.IsNullOrEmpty(result.Category))
+        {
+            // 這裡可以實作描述與分類的一致性檢查邏輯
+            consistencyScore += 0.05;
+        }
+        
+        return Math.Min(consistencyScore, 0.1); // 最多10%加成
     }
 
     /// <summary>
