@@ -1,4 +1,10 @@
-# 世界時鐘功能規格書
+# 世### 專案資訊
+### 檔案位置
+- 前端頁面: `D:\Demo\Demo\Demo\Pages\index10.cshtml`
+- 後端邏輯: `D:\Demo\Demo\Demo\Pages\index10.cshtml.cs`
+- 樣式檔案: `D:\Demo\Demo\Demo\wwwroot\css\index10.css`（新建）
+- JavaScript: `D:\Demo\Demo\Demo\wwwroot\js\index10.js`（新建）
+- 音效檔案: `D:\Demo\Demo\Demo\wwwroot\audio\city-effects\`（新建）格書
 - 顯示各種時區的當前時間，提供全球化時間管理體驗
 
 ## 專案資訊
@@ -142,7 +148,8 @@
   - 櫻花飄落效果（粉色花瓣從上方飄落）
   - 101大樓剪影從底部升起
   - 背景漸變為台北夜景色調
-- **音效**: 台灣傳統鐘聲（可選）
+- **音效**: 台灣傳統鐘聲 + 夜市環境音
+- **音檔**: `taipei-bell-chime.mp3` (1.5秒)
 - **持續時間**: 2.5 秒
 
 ##### 4.4.2 東京 (Asia/Tokyo)
@@ -152,7 +159,8 @@
   - 富士山剪影配合旭日東升
   - 櫻花瓣旋轉飛舞（粉白色）
   - 傳統和紙質感背景過渡
-- **音效**: 日式風鈴聲
+- **音效**: 日式風鈴聲 + 竹筒敲擊
+- **音檔**: `tokyo-wind-chime.mp3` (2秒)
 - **持續時間**: 3 秒
 
 ##### 4.4.3 紐約 (America/New_York)
@@ -162,7 +170,8 @@
   - 黃色計程車橫向移動
   - 霓虹燈閃爍效果
   - 都市網格線條掃描
-- **音效**: 都市交通聲響
+- **音效**: 都市交通聲響 + 爵士樂片段
+- **音檔**: `newyork-city-buzz.mp3` (1.8秒)
 - **持續時間**: 2 秒
 
 ##### 4.4.4 倫敦 (Europe/London)
@@ -172,7 +181,8 @@
   - 英式雨滴從天而降
   - 紅色雙層巴士穿越畫面
   - 霧氣瀰漫效果
-- **音效**: 大笨鐘鐘聲
+- **音效**: 大笨鐘鐘聲 + 雨滴聲
+- **音檔**: `london-big-ben.mp3` (3秒)
 - **持續時間**: 3.5 秒
 
 ##### 4.4.5 巴黎 (Europe/Paris)
@@ -182,7 +192,8 @@
   - 香檳泡泡上升效果
   - 浪漫玫瓣花瓣飄散
   - 金色光芒放射
-- **音效**: 法式手風琴旋律
+- **音效**: 法式手風琴旋律 + 香檳開瓶聲
+- **音檔**: `paris-accordion.mp3` (2.5秒)
 - **持續時間**: 3 秒
 
 ##### 4.4.6 柏林 (Europe/Berlin)
@@ -192,7 +203,8 @@
   - 德國國旗色彩條紋掃過
   - 工業齒輪旋轉效果
   - 幾何線條精密組合
-- **音效**: 古典音樂片段
+- **音效**: 古典音樂片段 + 機械齒輪聲
+- **音檔**: `berlin-classical.mp3` (2.2秒)
 - **持續時間**: 2.5 秒
 
 ##### 4.4.7 莫斯科 (Europe/Moscow)
@@ -202,7 +214,8 @@
   - 雪花紛飛效果
   - 紅場磚牆紋理展開
   - 金色星星閃爍
-- **音效**: 俄羅斯鐘聲
+- **音效**: 俄羅斯鐘聲 + 巴拉萊卡琴聲
+- **音檔**: `moscow-bells.mp3` (2.8秒)
 - **持續時間**: 3 秒
 
 ##### 4.4.8 雪梨 (Australia/Sydney)
@@ -212,7 +225,8 @@
   - 海浪起伏效果
   - 袋鼠剪影跳躍
   - 陽光從海平面升起
-- **音效**: 海浪聲配合海鷗叫聲
+- **音效**: 海浪聲 + 海鷗叫聲 + 迪吉里杜管
+- **音檔**: `sydney-ocean-waves.mp3` (3秒)
 - **持續時間**: 3.5 秒
 
 ##### 4.4.9 特效技術規格
@@ -225,6 +239,120 @@
 - **取消機制**: 使用者在特效播放期間點擊其他城市可立即切換
 - **響應式適配**: 手機版簡化特效以維持效能
 - **無障礙支援**: 提供關閉動畫選項（遵循 prefers-reduced-motion）
+
+### 4.5 音效系統規格
+
+#### 4.5.1 音檔技術規格
+- **檔案格式**: MP3 (主要) / WebM (備用)
+- **音質**: 44.1kHz, 16-bit, 單聲道
+- **檔案大小**: 每個音檔 < 50KB
+- **音量**: 標準化至 -12dB
+- **總大小**: 所有音檔總計 < 400KB
+
+#### 4.5.2 音檔來源與製作
+##### 免費音效資源庫
+| 來源 | 網址 | 授權 | 建議用途 |
+|------|------|------|----------|
+| Freesound.org | https://freesound.org | CC授權 | 自然音效、環境音 |
+| Zapsplat | https://zapsplat.com | 免費註冊 | 城市音效、機械音 |
+| BBC Sound Effects | https://sound-effects.bbcrewind.co.uk | 免費個人使用 | 專業音效 |
+| Adobe Audition內建 | - | 商業授權 | 基礎音效 |
+| YouTube Audio Library | https://studio.youtube.com | 免費 | 背景音樂片段 |
+
+##### 音效製作建議
+**台北音效**:
+- 搜尋關鍵字: "temple bell", "night market ambience", "taiwanese traditional"
+- 建議來源: Freesound.org 的寺廟鐘聲 + 自錄夜市環境音
+
+**東京音效**:
+- 搜尋關鍵字: "wind chime", "bamboo", "japanese traditional"
+- 建議來源: Zapsplat 的風鈴音效
+
+**紐約音效**:
+- 搜尋關鍵字: "city traffic", "jazz music", "urban ambience"
+- 建議來源: BBC Sound Effects 的都市音效
+
+**倫敦音效**:
+- 搜尋關鍵字: "big ben", "rain drops", "london ambience"
+- 建議來源: BBC Sound Effects 的大笨鐘錄音
+
+**巴黎音效**:
+- 搜尋關鍵字: "accordion", "champagne cork", "french cafe"
+- 建議來源: YouTube Audio Library 的手風琴音樂
+
+**柏林音效**:
+- 搜尋關鍵字: "classical music", "gear mechanism", "german traditional"
+- 建議來源: 古典音樂片段 + Freesound.org 機械音
+
+**莫斯科音效**:
+- 搜尋關鍵字: "church bells", "balalaika", "russian traditional"
+- 建議來源: Freesound.org 的教堂鐘聲
+
+**雪梨音效**:
+- 搜尋關鍵字: "ocean waves", "seagulls", "didgeridoo"
+- 建議來源: 自然音效 + 澳洲傳統樂器
+
+#### 4.5.3 音效控制功能
+- **音效開關**: 使用者可全域開啟/關閉音效
+- **音量控制**: 0-100% 可調節音量
+- **靜音模式**: 自動偵測系統靜音狀態
+- **音效預載**: 頁面載入時預載所有音檔
+- **設定儲存**: 使用者音效偏好儲存在 localStorage
+
+#### 4.5.4 音效實作細節
+```javascript
+// 音效管理類別
+class WorldClockAudioManager {
+    constructor() {
+        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        this.sounds = new Map();
+        this.volume = 0.7; // 預設音量 70%
+        this.enabled = true; // 預設開啟音效
+    }
+    
+    async preloadSounds() {
+        const soundFiles = [
+            'taipei-bell-chime.mp3',
+            'tokyo-wind-chime.mp3',
+            'newyork-city-buzz.mp3',
+            'london-big-ben.mp3',
+            'paris-accordion.mp3',
+            'berlin-classical.mp3',
+            'moscow-bells.mp3',
+            'sydney-ocean-waves.mp3'
+        ];
+        // 預載入邏輯...
+    }
+    
+    playSound(cityId) {
+        if (!this.enabled) return;
+        // 播放對應城市音效...
+    }
+}
+```
+
+#### 4.5.5 音檔目錄結構
+```
+wwwroot/
+├── audio/
+│   ├── city-effects/
+│   │   ├── taipei-bell-chime.mp3
+│   │   ├── tokyo-wind-chime.mp3
+│   │   ├── newyork-city-buzz.mp3
+│   │   ├── london-big-ben.mp3
+│   │   ├── paris-accordion.mp3
+│   │   ├── berlin-classical.mp3
+│   │   ├── moscow-bells.mp3
+│   │   └── sydney-ocean-waves.mp3
+│   └── fallback/
+│       └── default-chime.mp3
+```
+
+#### 4.5.6 音效備用方案
+- **載入失敗**: 使用預設鐘聲音效
+- **瀏覽器不支援**: 自動停用音效功能
+- **網路緩慢**: 延遲載入音效，優先顯示視覺特效
+- **行動裝置**: 考慮資料用量，提供選擇性載入
 
 ### 5. UI/UX 設計規範
 #### 5.1 視覺風格
@@ -280,6 +408,8 @@
 - **樣式**: CSS3 + CSS Grid/Flexbox
 - **腳本**: Vanilla JavaScript (ES6+)
 - **時間處理**: Intl.DateTimeFormat API
+- **音效處理**: Web Audio API / HTML5 Audio
+- **動畫引擎**: CSS3 Animations + requestAnimationFrame
 
 #### 7.2 後端技術
 - **語言**: C# (.NET Core)
@@ -317,20 +447,33 @@ public class CityEffectConfig
     public int DurationMs { get; set; }
     public List<string> AnimationElements { get; set; }
     public string SoundEffect { get; set; }
+    public string SoundFile { get; set; }
+    public decimal SoundDuration { get; set; }
     public bool HasParticleSystem { get; set; }
+    public bool SoundEnabled { get; set; }
+}
+
+public class AudioSettings
+{
+    public bool Enabled { get; set; } = true;
+    public decimal Volume { get; set; } = 0.7m;
+    public bool PreloadSounds { get; set; } = true;
+    public string FallbackSound { get; set; } = "default-chime.mp3";
 }
 ```
 
 ### 8. 效能要求
 #### 8.1 載入效能
 - **首次載入時間**: < 2 秒
-- **資源大小**: 總計 < 500KB
+- **資源大小**: 總計 < 900KB (包含音效檔案)
 - **圖片優化**: 使用 WebP 格式
+- **音效預載**: 背景非同步載入，不阻塞頁面顯示
 
 #### 8.2 運行效能
 - **時間更新頻率**: 每秒一次
-- **記憶體使用**: < 50MB
-- **CPU使用率**: < 5%
+- **記憶體使用**: < 80MB (包含音效緩存)
+- **CPU使用率**: < 8%
+- **音效延遲**: < 100ms 觸發延遲
 
 ### 9. 測試需求
 #### 9.1 功能測試
@@ -360,3 +503,35 @@ public class CityEffectConfig
   - 音效檔案壓縮優化（建議使用 WebM 或 MP3 格式）
   - 特效動畫的 GPU 加速測試
 - **效能監控**: 特別關注特效播放時的 FPS 和記憶體使用情況
+- **音效部署**:
+  - 確保所有音檔都已正確上傳到 `/wwwroot/audio/city-effects/` 目錄
+  - 設定音效檔案的適當 MIME 類型
+  - 考慮音效檔案的 CDN 分發
+  - 監控音效載入失敗率和播放成功率
+
+### 11. 音效資源清單
+#### 11.1 需要準備的音檔
+```
+taipei-bell-chime.mp3      (1.5秒, ~45KB)
+tokyo-wind-chime.mp3       (2.0秒, ~48KB)
+newyork-city-buzz.mp3      (1.8秒, ~44KB)
+london-big-ben.mp3         (3.0秒, ~50KB)
+paris-accordion.mp3        (2.5秒, ~49KB)
+berlin-classical.mp3       (2.2秒, ~46KB)
+moscow-bells.mp3           (2.8秒, ~47KB)
+sydney-ocean-waves.mp3     (3.0秒, ~50KB)
+default-chime.mp3          (1.0秒, ~25KB) [備用]
+```
+
+#### 11.2 音檔授權注意事項
+- 確認所有音效檔案都有適當的使用授權
+- 建議使用 Creative Commons 或公共領域音效
+- 保留音效來源的歸屬資訊
+- 考慮購買商業授權以避免版權問題
+
+#### 11.3 音效品質檢查清單
+- [ ] 所有音檔音量已標準化
+- [ ] 沒有明顯的噪音或雜音
+- [ ] 音效長度符合特效動畫時間
+- [ ] 檔案大小在限制範圍內
+- [ ] 在不同裝置上測試播放效果

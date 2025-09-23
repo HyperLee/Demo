@@ -1,0 +1,628 @@
+/* ========================================
+   城市特效動畫擴展
+   ======================================== */
+
+/* 台北特效 - 櫻花飄落和台北 101 */
+.taipei-effect .sakura-petal {
+    width: 8px;
+    height: 8px;
+    background: radial-gradient(circle, #ffb3d9 30%, #ff69b4 70%);
+    border-radius: 50% 0 50% 0;
+    animation: sakura-fall 3s linear infinite;
+}
+
+@keyframes sakura-fall {
+    0% {
+        transform: translateY(-100px) rotateZ(0deg) translateX(0px);
+        opacity: 1;
+    }
+    25% {
+        transform: translateY(-25px) rotateZ(90deg) translateX(10px);
+    }
+    50% {
+        transform: translateY(50px) rotateZ(180deg) translateX(-5px);
+    }
+    75% {
+        transform: translateY(125px) rotateZ(270deg) translateX(15px);
+    }
+    100% {
+        transform: translateY(200px) rotateZ(360deg) translateX(-10px);
+        opacity: 0;
+    }
+}
+
+.taipei-effect .taipei-101-rise {
+    position: absolute;
+    bottom: 0;
+    right: 20%;
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 100px solid #003d79;
+    animation: taipei-101-grow 2.5s ease-out;
+}
+
+@keyframes taipei-101-grow {
+    0% {
+        transform: scaleY(0);
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        transform: scaleY(1);
+        opacity: 0.7;
+    }
+}
+
+/* 東京特效 - 日式風格 */
+.japanese-effect .paper-fan-unfold {
+    position: absolute;
+    bottom: 30%;
+    left: 20%;
+    width: 60px;
+    height: 30px;
+    background: conic-gradient(from 0deg, #dc143c, #f8f8ff, #dc143c);
+    border-radius: 0 0 60px 60px;
+    animation: fan-unfold 3s ease;
+}
+
+@keyframes fan-unfold {
+    0% {
+        transform: scaleX(0) rotate(-45deg);
+        opacity: 0;
+    }
+    50% {
+        transform: scaleX(0.5) rotate(0deg);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scaleX(1) rotate(15deg);
+        opacity: 0.6;
+    }
+}
+
+.japanese-effect .fuji-mountain-rise {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 40px solid transparent;
+    border-right: 40px solid transparent;
+    border-bottom: 60px solid #f8f8ff;
+    animation: mountain-rise 2.8s ease-out;
+}
+
+@keyframes mountain-rise {
+    0% {
+        transform: translateX(-50%) scaleY(0);
+        opacity: 0;
+    }
+    100% {
+        transform: translateX(-50%) scaleY(1);
+        opacity: 0.8;
+    }
+}
+
+/* 紐約特效 - 都市風格 */
+.urban-effect .skyscraper-build {
+    position: absolute;
+    bottom: 0;
+    left: 10%;
+    width: 8px;
+    height: 80px;
+    background: linear-gradient(to top, #478778, #ffffff);
+    animation: building-rise 1.5s ease-out;
+}
+
+.urban-effect .skyscraper-build:nth-child(2) {
+    left: 20%;
+    height: 100px;
+    animation-delay: 0.3s;
+}
+
+.urban-effect .skyscraper-build:nth-child(3) {
+    left: 30%;
+    height: 70px;
+    animation-delay: 0.6s;
+}
+
+@keyframes building-rise {
+    0% {
+        transform: scaleY(0);
+        transform-origin: bottom;
+    }
+    100% {
+        transform: scaleY(1);
+    }
+}
+
+.urban-effect .yellow-taxi {
+    position: absolute;
+    bottom: 10%;
+    left: -50px;
+    width: 30px;
+    height: 15px;
+    background: #ffff00;
+    border-radius: 3px;
+    animation: taxi-drive 2s linear;
+}
+
+@keyframes taxi-drive {
+    0% {
+        left: -50px;
+    }
+    100% {
+        left: calc(100% + 50px);
+    }
+}
+
+.urban-effect .neon-flash {
+    position: absolute;
+    top: 20%;
+    right: 15%;
+    width: 20px;
+    height: 20px;
+    background: #00ffff;
+    border-radius: 50%;
+    animation: neon-blink 1s ease-in-out infinite;
+}
+
+@keyframes neon-blink {
+    0%, 100% {
+        opacity: 0.3;
+        box-shadow: 0 0 5px #00ffff;
+    }
+    50% {
+        opacity: 1;
+        box-shadow: 0 0 20px #00ffff, 0 0 30px #00ffff;
+    }
+}
+
+/* 倫敦特效 - 英式風格 */
+.british-effect .big-ben-pendulum {
+    position: absolute;
+    bottom: 40%;
+    left: 60%;
+    width: 2px;
+    height: 40px;
+    background: #c8102e;
+    transform-origin: top center;
+    animation: pendulum-swing 3.5s ease-in-out;
+}
+
+@keyframes pendulum-swing {
+    0%, 100% {
+        transform: rotate(0deg);
+    }
+    25% {
+        transform: rotate(15deg);
+    }
+    75% {
+        transform: rotate(-15deg);
+    }
+}
+
+.british-effect .rain-drop {
+    width: 2px;
+    height: 8px;
+    background: linear-gradient(to bottom, transparent, #87ceeb);
+    border-radius: 0 0 2px 2px;
+    animation: rain-fall 1.5s linear infinite;
+}
+
+@keyframes rain-fall {
+    0% {
+        transform: translateY(-100px);
+        opacity: 0.8;
+    }
+    100% {
+        transform: translateY(200px);
+        opacity: 0;
+    }
+}
+
+.british-effect .double-decker-bus {
+    position: absolute;
+    bottom: 15%;
+    left: -60px;
+    width: 40px;
+    height: 25px;
+    background: #c8102e;
+    border-radius: 5px;
+    animation: bus-drive 3s linear;
+}
+
+.british-effect .double-decker-bus::before {
+    content: '';
+    position: absolute;
+    top: -12px;
+    left: 0;
+    width: 100%;
+    height: 12px;
+    background: #c8102e;
+    border-radius: 5px 5px 0 0;
+}
+
+@keyframes bus-drive {
+    0% {
+        left: -60px;
+    }
+    100% {
+        left: calc(100% + 60px);
+    }
+}
+
+/* 巴黎特效 - 法式風格 */
+.french-effect .eiffel-tower-draw {
+    position: absolute;
+    bottom: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 80px;
+    border-left: 3px solid #ef4135;
+    animation: tower-draw 2.5s ease;
+}
+
+.french-effect .eiffel-tower-draw::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: -10px;
+    width: 20px;
+    height: 2px;
+    background: #ef4135;
+    animation: crossbeam-appear 2.5s ease 1s;
+    opacity: 0;
+}
+
+.french-effect .eiffel-tower-draw::after {
+    content: '';
+    position: absolute;
+    top: 50px;
+    left: -15px;
+    width: 30px;
+    height: 2px;
+    background: #ef4135;
+    animation: crossbeam-appear 2.5s ease 1.5s;
+    opacity: 0;
+}
+
+@keyframes tower-draw {
+    0% {
+        height: 0;
+    }
+    100% {
+        height: 80px;
+    }
+}
+
+@keyframes crossbeam-appear {
+    0% {
+        opacity: 0;
+        transform: scaleX(0);
+    }
+    100% {
+        opacity: 1;
+        transform: scaleX(1);
+    }
+}
+
+.french-effect .champagne-bubble {
+    width: 6px;
+    height: 6px;
+    background: radial-gradient(circle, #ffffff, rgba(255, 255, 255, 0.3));
+    border-radius: 50%;
+    animation: champagne-rise 3s ease-in infinite;
+}
+
+@keyframes champagne-rise {
+    0% {
+        transform: translateY(100px) scale(0.5);
+        opacity: 0;
+    }
+    50% {
+        opacity: 0.8;
+    }
+    100% {
+        transform: translateY(-100px) scale(1.2);
+        opacity: 0;
+    }
+}
+
+/* 柏林特效 - 德式風格 */
+.german-effect .brandenburg-appear {
+    position: absolute;
+    bottom: 25%;
+    left: 30%;
+    width: 40px;
+    height: 30px;
+    background: linear-gradient(to bottom, #dd0000, #000000);
+    animation: gate-appear 2.5s ease;
+}
+
+.german-effect .brandenburg-appear::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 8px;
+    background: #ffce00;
+    border-radius: 4px;
+}
+
+@keyframes gate-appear {
+    0% {
+        opacity: 0;
+        transform: scaleY(0);
+        transform-origin: bottom;
+    }
+    100% {
+        opacity: 0.8;
+        transform: scaleY(1);
+    }
+}
+
+.german-effect .flag-stripe {
+    position: absolute;
+    top: 20%;
+    left: 0;
+    width: 100%;
+    height: 8px;
+    animation: flag-wave 2.5s ease;
+}
+
+.german-effect .flag-stripe:nth-child(1) {
+    background: #000000;
+    top: 20%;
+}
+
+.german-effect .flag-stripe:nth-child(2) {
+    background: #dd0000;
+    top: 30%;
+    animation-delay: 0.3s;
+}
+
+.german-effect .flag-stripe:nth-child(3) {
+    background: #ffce00;
+    top: 40%;
+    animation-delay: 0.6s;
+}
+
+@keyframes flag-wave {
+    0% {
+        transform: scaleX(0);
+        transform-origin: left;
+    }
+    100% {
+        transform: scaleX(1);
+    }
+}
+
+/* 莫斯科特效 - 俄式風格 */
+.russian-effect .onion-dome {
+    position: absolute;
+    bottom: 40%;
+    left: 45%;
+    width: 20px;
+    height: 20px;
+    background: #ffd700;
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    animation: dome-spin 3s ease;
+}
+
+.russian-effect .onion-dome::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 8px;
+    background: #d52b1e;
+}
+
+@keyframes dome-spin {
+    0% {
+        transform: scale(0) rotate(0deg);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1) rotate(180deg);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1) rotate(360deg);
+        opacity: 0.7;
+    }
+}
+
+.russian-effect .snowflake {
+    width: 6px;
+    height: 6px;
+    background: #ffffff;
+    border-radius: 50%;
+    animation: snow-spiral 4s linear infinite;
+}
+
+@keyframes snow-spiral {
+    0% {
+        transform: translateY(-100px) translateX(0px) rotate(0deg);
+        opacity: 1;
+    }
+    25% {
+        transform: translateY(-25px) translateX(20px) rotate(90deg);
+    }
+    50% {
+        transform: translateY(50px) translateX(0px) rotate(180deg);
+    }
+    75% {
+        transform: translateY(125px) translateX(-20px) rotate(270deg);
+    }
+    100% {
+        transform: translateY(200px) translateX(0px) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+/* 雪梨特效 - 澳洲風格 */
+.australian-effect .opera-house-shell {
+    position: absolute;
+    bottom: 20%;
+    left: 30%;
+    width: 40px;
+    height: 30px;
+    background: #0057b8;
+    border-radius: 50% 50% 0 0;
+    animation: shell-unfold 3.5s ease;
+}
+
+.australian-effect .opera-house-shell:nth-child(2) {
+    left: 50%;
+    animation-delay: 0.5s;
+}
+
+.australian-effect .opera-house-shell:nth-child(3) {
+    left: 45%;
+    width: 35px;
+    height: 35px;
+    animation-delay: 1s;
+}
+
+@keyframes shell-unfold {
+    0% {
+        transform: scaleX(0) scaleY(0);
+        opacity: 0;
+    }
+    50% {
+        transform: scaleX(1) scaleY(0.5);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scaleX(1) scaleY(1);
+        opacity: 0.9;
+    }
+}
+
+.australian-effect .ocean-wave {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 20px;
+    background: linear-gradient(to right, #0057b8, #87ceeb, #0057b8);
+    animation: wave-motion 3s ease-in-out infinite;
+}
+
+@keyframes wave-motion {
+    0%, 100% {
+        transform: scaleY(1) translateY(0);
+    }
+    50% {
+        transform: scaleY(1.5) translateY(-5px);
+    }
+}
+
+/* 通用粒子效果增強 */
+.particle {
+    position: absolute;
+    pointer-events: none;
+    z-index: 10;
+}
+
+/* 通用動畫效果 */
+@keyframes fadeInScale {
+    0% {
+        opacity: 0;
+        transform: scale(0);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes slideInFromLeft {
+    0% {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInFromRight {
+    0% {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes rotateGlow {
+    0% {
+        transform: rotate(0deg);
+        filter: brightness(1);
+    }
+    50% {
+        transform: rotate(180deg);
+        filter: brightness(1.5);
+    }
+    100% {
+        transform: rotate(360deg);
+        filter: brightness(1);
+    }
+}
+
+/* 背景色彩過渡效果 */
+.color-transition {
+    transition: background 2s ease-in-out;
+}
+
+/* 響應式動畫調整 */
+@media (max-width: 768px) {
+    /* 簡化手機版動畫以提升效能 */
+    .city-effect-active {
+        animation-duration: 2s !important;
+    }
+    
+    .particle {
+        display: none; /* 在手機版隱藏粒子效果 */
+    }
+    
+    @keyframes simpleFade {
+        0% { opacity: 0; }
+        50% { opacity: 0.8; }
+        100% { opacity: 0; }
+    }
+    
+    .animation-element {
+        animation: simpleFade 2s ease !important;
+    }
+}
+
+/* 無障礙支援 - 減少動畫 */
+@media (prefers-reduced-motion: reduce) {
+    .city-effect-active,
+    .animation-element,
+    .particle {
+        animation: none !important;
+    }
+    
+    .city-effect-active {
+        opacity: 0.5;
+        transition: opacity 0.3s ease;
+    }
+}

@@ -1,11 +1,109 @@
 @page
 @model Demo.Pages.index10
 @{
-    ViewData["Title"] = "index10";
+    ViewData["Title"] = Model.WorldClock.Localizations["pageTitle"];
+    Layout = "_Layout";
 }
 
-<h1>@ViewData["Title"]</h1>
+<!-- 世界時鐘主要容器 -->
+<div class="world-clock-container" id="worldClockContainer">
+    <!-- 頁面標題和控制區域 -->
+    <div class="header-section">
+        <!-- 當前位置指示器 -->
+        <div class="current-location">
+            <span class="location-label">@Model.WorldClock.Localizations["currentLocation"]:</span>
+            <span class="location-name" id="currentLocationName">@Model.WorldClock.SupportedTimeZones.FirstOrDefault(tz => tz.Id == Model.WorldClock.CurrentTimeZone)?.LocalizedName</span>
+        </div>
 
-<div>
-    
+        <!-- 語言切換和音效控制 -->
+        <div class="controls-section">
+            <!-- 語言切換 -->
+            <div class="language-selector">
+                <select id="languageSelect" onchange="changeLanguage(this.value)">
+                    <option value="zh-tw" selected="@(Model.WorldClock.SelectedLanguage == "zh-tw")">繁體中文</option>
+                    <option value="en-us" selected="@(Model.WorldClock.SelectedLanguage == "en-us")">English</option>
+                </select>
+            </div>
+            
+            <!-- 音效控制 -->
+            <div class="audio-controls">
+                <button id="audioToggle" class="audio-toggle-btn" onclick="toggleAudio()">
+                    <i id="audioIcon" class="@(Model.WorldClock.AudioSettings.Enabled ? "icon-volume-on" : "icon-volume-off")"></i>
+                </button>
+                <div class="volume-slider-container">
+                    <input type="range" id="volumeSlider" class="volume-slider" 
+                           min="0" max="100" value="@((int)(Model.WorldClock.AudioSettings.Volume * 100))" 
+                           onchange="adjustVolume(this.value)">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主要時間顯示區域 -->
+    <div class="main-time-section">
+        <div class="main-time-display">
+            <div class="main-time" id="mainTime">--:--:--</div>
+            <div class="main-date" id="mainDate">----年--月--日 (星期-)</div>
+        </div>
+    </div>
+
+    <!-- 世界時鐘網格區域 -->
+    <div class="world-clocks-grid" id="worldClocksGrid">
+        @foreach (var timeZone in Model.WorldClock.SupportedTimeZones)
+        {
+            var effectConfig = Model.WorldClock.CityEffects.FirstOrDefault(e => e.CityId == timeZone.Id);
+            <div class="city-clock-card @(timeZone.Id == Model.WorldClock.CurrentTimeZone ? "selected" : "")" 
+                 data-timezone="@timeZone.Id" 
+                 data-city-name="@timeZone.LocalizedName"
+                 data-effect-type="@effectConfig?.EffectType"
+                 data-primary-color="@effectConfig?.PrimaryColor"
+                 data-secondary-color="@effectConfig?.SecondaryColor"
+                 onclick="selectTimeZone('@timeZone.Id', '@timeZone.LocalizedName')">
+                
+                <!-- 城市名稱 -->
+                <div class="city-name">@timeZone.LocalizedName</div>
+                
+                <!-- 時間顯示 -->
+                <div class="city-time" id="time-@timeZone.Id.Replace("/", "-")">--:--:--</div>
+                
+                <!-- 時區資訊和日期 -->
+                <div class="city-info">
+                    <span class="timezone-offset">(GMT@(timeZone.Offset.TotalHours >= 0 ? "+" : "")@timeZone.Offset.TotalHours:+0;-0)</span>
+                    <span class="city-date" id="date-@timeZone.Id.Replace("/", "-")">--/--</span>
+                </div>
+                
+                <!-- 特效容器 -->
+                <div class="city-effect-container" id="effect-@timeZone.Id.Replace("/", "-")"></div>
+            </div>
+        }
+    </div>
+
+    <!-- 校時按鈕 -->
+    <div class="sync-section">
+        <button class="sync-time-btn" id="syncTimeBtn" onclick="syncTime()">
+            <i class="icon-sync"></i>
+            <span>@Model.WorldClock.Localizations["syncTime"]</span>
+        </button>
+    </div>
+
+    <!-- 特效層容器 -->
+    <div class="global-effects-overlay" id="globalEffectsOverlay"></div>
 </div>
+
+<!-- 隱藏的資料傳遞 -->
+<script type="application/json" id="worldClockData">
+    @Html.Raw(System.Text.Json.JsonSerializer.Serialize(new 
+    {
+        currentTimeZone = Model.WorldClock.CurrentTimeZone,
+        selectedLanguage = Model.WorldClock.SelectedLanguage,
+        timeZones = Model.WorldClock.SupportedTimeZones,
+        localizations = Model.WorldClock.Localizations,
+        cityEffects = Model.WorldClock.CityEffects,
+        audioSettings = Model.WorldClock.AudioSettings
+    }))
+</script>
+
+<!-- 載入相關的樣式和腳本 -->
+<link rel="stylesheet" href="~/css/index10.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/city-effects.css" asp-append-version="true" />
+<script src="~/js/index10.js" asp-append-version="true" defer></script>

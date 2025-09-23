@@ -1,0 +1,12 @@
+# 預設音效檔案
+
+這是一個預設的音效檔案說明。實際的音檔需要用戶自行準備或下載。
+
+為了測試目的，可以使用以下命令在 PowerShell 中建立一個簡短的無聲 MP3 檔案：
+
+```powershell
+# 注意：需要安裝 FFmpeg 才能使用此命令
+# ffmpeg -f lavfi -i anullsrc=channel_layout=mono:sample_rate=48000 -t 1 default-chime.mp3
+```
+
+或者，可以從免費音效資源下載適當的音檔。
