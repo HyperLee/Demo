@@ -42,8 +42,8 @@
     <!-- 主要時間顯示區域 -->
     <div class="main-time-section">
         <div class="main-time-display">
-            <div class="main-time" id="mainTime">--:--:--</div>
-            <div class="main-date" id="mainDate">----年--月--日 (星期-)</div>
+            <div class="main-time" id="mainTime">@Model.WorldClock.CurrentTime.ToString("HH:mm:ss")</div>
+            <div class="main-date" id="mainDate">@(Model.WorldClock.SelectedLanguage == "zh-tw" ? Model.WorldClock.CurrentTime.ToString("yyyy年MM月dd日 (dddd)", new System.Globalization.CultureInfo("zh-TW")) : Model.WorldClock.CurrentTime.ToString("MMMM dd, yyyy (dddd)", new System.Globalization.CultureInfo("en-US")))</div>
         </div>
     </div>
 
@@ -64,12 +64,12 @@
                 <div class="city-name">@timeZone.LocalizedName</div>
                 
                 <!-- 時間顯示 -->
-                <div class="city-time" id="time-@timeZone.Id.Replace("/", "-")">--:--:--</div>
+                <div class="city-time" id="time-@timeZone.Id.Replace("/", "-")">@timeZone.FormattedTime</div>
                 
                 <!-- 時區資訊和日期 -->
                 <div class="city-info">
                     <span class="timezone-offset">(GMT@(timeZone.Offset.TotalHours >= 0 ? "+" : "")@timeZone.Offset.TotalHours:+0;-0)</span>
-                    <span class="city-date" id="date-@timeZone.Id.Replace("/", "-")">--/--</span>
+                    <span class="city-date" id="date-@timeZone.Id.Replace("/", "-")">@timeZone.FormattedDate</span>
                 </div>
                 
                 <!-- 特效容器 -->

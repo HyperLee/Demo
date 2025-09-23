@@ -88,18 +88,24 @@ namespace Demo.Pages
                 ("Australia/Sydney", "雪梨", "雪梨", "Sydney")
             };
 
+            var utcNow = DateTime.UtcNow;
+            
             return supportedZones.Select(zone =>
             {
                 var systemId = ConvertToSystemTimeZoneId(zone.Id);
                 var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(systemId);
+                var localTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, timeZoneInfo);
                 
                 return new TimeZoneData
                 {
                     Id = zone.Id,
                     DisplayName = zone.DisplayName,
                     LocalizedName = SelectedLanguage == "zh-tw" ? zone.LocalizedNameCn : zone.LocalizedNameEn,
-                    Offset = timeZoneInfo.GetUtcOffset(DateTime.UtcNow),
-                    SupportsDaylightSavingTime = timeZoneInfo.SupportsDaylightSavingTime
+                    Offset = timeZoneInfo.GetUtcOffset(utcNow),
+                    SupportsDaylightSavingTime = timeZoneInfo.SupportsDaylightSavingTime,
+                    CurrentTime = localTime,
+                    FormattedTime = localTime.ToString("HH:mm:ss"),
+                    FormattedDate = localTime.ToString("MM/dd")
                 };
             }).ToList();
         }
@@ -327,6 +333,9 @@ namespace Demo.Pages
         public string LocalizedName { get; set; } = string.Empty;
         public TimeSpan Offset { get; set; }
         public bool SupportsDaylightSavingTime { get; set; }
+        public DateTime CurrentTime { get; set; }
+        public string FormattedTime { get; set; } = string.Empty;
+        public string FormattedDate { get; set; } = string.Empty;
     }
 
     /// <summary>
