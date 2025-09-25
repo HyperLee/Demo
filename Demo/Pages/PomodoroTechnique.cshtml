@@ -1,11 +1,947 @@
 @page
-@model Demo.Pages.PomodoroTechnique
+@model Demo.Pages.PomodoroTechniqueModel
+@using System.Text.Json
 @{
-    ViewData["Title"] = "PomodoroTechnique";
+    ViewData["Title"] = "番茄鐘";
+    var defaultsJson = JsonSerializer.Serialize(Model.DefaultSettings, new JsonSerializerOptions(JsonSerializerDefaults.Web));
 }
 
-<h1>@ViewData["Title"]</h1>
+<section class="pomodoro-page" data-onboarding-version="@Model.OnboardingVersion">
+    <header class="pomodoro-header">
+        <div>
+            <h1 class="pomodoro-title" id="pomodoro-title">番茄鐘 (Pomodoro Technique)</h1>
+            <p class="pomodoro-subtitle">專注與休息的節奏，幫助你保持高效率。</p>
+        </div>
+        <button id="open-tutorial" class="link-button" type="button" aria-describedby="pomodoro-title">重新查看指南</button>
+    </header>
 
-<div>
-    
-</div>
+    <div class="pomodoro-layout" aria-labelledby="pomodoro-title">
+        <article class="pomodoro-main" aria-label="番茄鐘計時器">
+            <label class="task-label" for="task-input">任務名稱</label>
+            <div class="task-input-wrapper">
+                <input id="task-input" name="task-input" aria-describedby="task-helper" maxlength="120" placeholder="請輸入最多 120 字元的任務" autocomplete="off" />
+                <span id="task-helper" class="helper-text">空白時將顯示「未命名任務」。</span>
+            </div>
+
+            <div class="timer-card">
+                <div class="timer-visual" role="img" aria-label="倒數計時" aria-live="polite">
+                    <svg viewBox="0 0 220 220" class="timer-svg" role="presentation">
+                        <circle class="timer-track" cx="110" cy="110" r="102" />
+                        <circle class="timer-progress" cx="110" cy="110" r="102" stroke-dasharray="640" stroke-dashoffset="0" />
+                    </svg>
+                    <div class="timer-display" aria-live="assertive" aria-atomic="true">
+                        <span id="timer-status" class="status-label" data-status="idle">準備開始</span>
+                        <span id="timer-value" class="timer-value">25:00</span>
+                    </div>
+                </div>
+
+                <div class="timer-controls" role="group" aria-label="計時器控制">
+                    <button id="primary-action" class="primary" type="button">開始</button>
+                    <button id="pause-action" class="secondary" type="button" hidden>暫停</button>
+                    <button id="resume-action" class="secondary" type="button" hidden>繼續</button>
+                    <button id="reset-action" class="ghost" type="button">重置</button>
+                    <button id="skip-break-action" class="ghost" type="button" hidden>跳過休息</button>
+                </div>
+
+                <div class="preferences">
+                    <button id="toggle-audio" class="icon-button" type="button" aria-pressed="true">🔔 關閉提示音</button>
+                    <span id="audio-warning" class="warning" role="status" aria-live="polite" hidden>瀏覽器阻擋自動播放，請點擊頁面以啟用提示音。</span>
+                </div>
+            </div>
+
+            <div class="events-log" aria-live="polite" aria-atomic="true"></div>
+        </article>
+
+        <aside class="pomodoro-summary" aria-label="今日統計">
+            <h2 id="summary-title">今日統計</h2>
+            <div class="summary-card">
+                <dl class="summary-grid">
+                    <div>
+                        <dt id="completed-label">已完成番茄鐘</dt>
+                        <dd id="completed-value">0</dd>
+                    </div>
+                    <div>
+                        <dt id="minutes-label">累積專注分鐘</dt>
+                        <dd id="minutes-value">0</dd>
+                    </div>
+                    <div>
+                        <dt id="loop-label">迴圈進度</dt>
+                        <dd id="loop-value">0 / 4</dd>
+                    </div>
+                </dl>
+
+                <section aria-labelledby="timeline-title" class="timeline">
+                    <h3 id="timeline-title">今日紀錄</h3>
+                    <ol id="timeline-list" class="timeline-list" aria-live="polite"></ol>
+                </section>
+            </div>
+        </aside>
+    </div>
+
+    <div class="toast" id="pomodoro-toast" role="alert" aria-live="assertive" hidden></div>
+
+    <dialog id="tutorial-dialog" class="tutorial-dialog" aria-labelledby="tutorial-title" aria-modal="true">
+        <form method="dialog">
+            <header>
+                <h2 id="tutorial-title">快速導覽</h2>
+            </header>
+            <ol id="tutorial-steps" class="tutorial-steps"></ol>
+            <footer>
+                <button value="close" class="primary">我知道了</button>
+            </footer>
+        </form>
+    </dialog>
+
+    <audio id="pomodoro-chime" src="~/pomodoro/notify.wav" preload="auto" aria-hidden="true"></audio>
+
+    <script id="pomodoro-defaults" type="application/json">@Html.Raw(defaultsJson)</script>
+    <script id="pomodoro-localization" type="application/json">@Html.Raw(Model.LocalizationJson)</script>
+    <script id="pomodoro-onboarding" type="application/json">@Html.Raw(Model.OnboardingJson)</script>
+</section>
+
+@section Styles {
+    <style>
+        :root {
+            color-scheme: light;
+        }
+
+        .pomodoro-page {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            padding: 2rem 0;
+        }
+
+        .pomodoro-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .pomodoro-title {
+            margin: 0;
+            font-size: 2.25rem;
+            color: #d94b3d;
+        }
+
+        .pomodoro-subtitle {
+            margin: 0.25rem 0 0;
+            color: #525252;
+        }
+
+        .link-button {
+            border: none;
+            background: none;
+            color: #d94b3d;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .pomodoro-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+            gap: 2rem;
+        }
+
+        .pomodoro-main,
+        .pomodoro-summary {
+            background: #fff8f4;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 18px 45px rgba(217, 75, 61, 0.15);
+        }
+
+        .pomodoro-summary {
+            background: #fffdf9;
+        }
+
+        .task-label {
+            font-weight: 700;
+            color: #444;
+        }
+
+        .task-input-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        #task-input {
+            border-radius: 0.75rem;
+            border: 2px solid #ffd0c2;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            transition: border-color 0.2s ease;
+        }
+
+        #task-input:focus {
+            border-color: #ff6347;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 99, 71, 0.25);
+        }
+
+        .helper-text {
+            font-size: 0.85rem;
+            color: #777;
+        }
+
+        .timer-card {
+            margin-top: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .timer-visual {
+            position: relative;
+            width: min(420px, 100%);
+            aspect-ratio: 1 / 1;
+        }
+
+        .timer-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .timer-track {
+            fill: none;
+            stroke: #ffe2d5;
+            stroke-width: 12px;
+        }
+
+        .timer-progress {
+            fill: none;
+            stroke: #ff7a5e;
+            stroke-linecap: round;
+            stroke-width: 12px;
+            transform-origin: 50% 50%;
+            transform: rotate(-90deg);
+            transition: stroke-dashoffset 0.5s ease;
+        }
+
+        .timer-display {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            font-size: clamp(2.5rem, 5vw, 3.75rem);
+            color: #c63b2f;
+        }
+
+        .status-label {
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: #ffa167;
+        }
+
+        .timer-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: center;
+        }
+
+        .primary,
+        .secondary,
+        .ghost {
+            border: none;
+            border-radius: 999px;
+            font-size: 1rem;
+            padding: 0.75rem 1.75rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .primary {
+            background: linear-gradient(135deg, #ff6347, #ffa500);
+            color: #fff;
+            box-shadow: 0 12px 20px rgba(255, 99, 71, 0.3);
+        }
+
+        .secondary {
+            background: #fff;
+            border: 2px solid #ffa167;
+            color: #ff6347;
+        }
+
+        .ghost {
+            background: transparent;
+            border: 2px dashed #ffc9a1;
+            color: #ff7a5e;
+        }
+
+        .primary:hover,
+        .secondary:hover,
+        .ghost:hover {
+            transform: translateY(-1px);
+        }
+
+        .preferences {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .icon-button {
+            background: none;
+            border: none;
+            font-size: 0.95rem;
+            cursor: pointer;
+            color: #ff6347;
+            font-weight: 600;
+        }
+
+        .warning {
+            color: #b54730;
+            font-size: 0.9rem;
+        }
+
+        .summary-card {
+            display: flex;
+            flex-direction: column;
+            gap: 1.75rem;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .summary-grid dt {
+            font-size: 0.9rem;
+            color: #977a62;
+            margin-bottom: 0.35rem;
+        }
+
+        .summary-grid dd {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #c63b2f;
+            margin: 0;
+        }
+
+        .timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .timeline-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .timeline-list li {
+            background: #fff5ec;
+            border-radius: 1rem;
+            padding: 1rem;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 0.75rem;
+            border-left: 6px solid #ffb27f;
+        }
+
+        .timeline-task {
+            font-weight: 600;
+            color: #9e481f;
+        }
+
+        .timeline-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            color: #8a6f5a;
+            font-size: 0.9rem;
+            text-align: right;
+        }
+
+        .toast {
+            position: fixed;
+            inset-inline: 50%;
+            bottom: 2rem;
+            transform: translateX(-50%) translateY(30px);
+            background: #ffecda;
+            color: #903d28;
+            padding: 1rem 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 20px 30px rgba(0, 0, 0, 0.15);
+            opacity: 0;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            z-index: 30;
+        }
+
+        .toast[data-visible="true"] {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .tutorial-dialog::backdrop {
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(3px);
+        }
+
+        .tutorial-dialog {
+            border: none;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.2);
+        }
+
+        .tutorial-steps {
+            list-style: none;
+            padding: 0;
+            margin: 1.5rem 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .tutorial-steps li {
+            background: #fff6ee;
+            border-radius: 1rem;
+            padding: 1rem;
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .tutorial-icon {
+            font-size: 1.5rem;
+        }
+
+        .events-log {
+            position: absolute;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+        }
+
+    @@media (max-width: 1023px) {
+            .pomodoro-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .pomodoro-main,
+            .pomodoro-summary {
+                padding: 1.75rem;
+            }
+
+            .timer-controls {
+                gap: 0.5rem;
+            }
+        }
+
+    @@media (max-width: 767px) {
+            .pomodoro-page {
+                padding: 1.5rem 0;
+            }
+
+            .pomodoro-main,
+            .pomodoro-summary {
+                padding: 1.5rem;
+            }
+
+            .primary,
+            .secondary,
+            .ghost {
+                width: 100%;
+            }
+
+            .timeline-list li {
+                grid-template-columns: 1fr;
+                text-align: left;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        (() => {
+            const storageKeys = {
+                stats: 'pomodoro.technique.stats',
+                preferences: 'pomodoro.technique.preferences',
+                onboarding: 'pomodoro.technique.onboarding',
+                localization: 'pomodoro.technique.localization'
+            };
+
+            const defaults = JSON.parse(document.getElementById('pomodoro-defaults').textContent || '{}');
+            const localizationManifest = JSON.parse(document.getElementById('pomodoro-localization').textContent || '{}');
+            const onboardingSteps = JSON.parse(document.getElementById('pomodoro-onboarding').textContent || '[]');
+
+            const getCulture = () => {
+                const stored = JSON.parse(localStorage.getItem(storageKeys.localization) || '{}');
+                return stored.culture || localizationManifest.defaultCulture || 'zh-TW';
+            };
+
+            const setCulture = (culture) => {
+                localStorage.setItem(storageKeys.localization, JSON.stringify({ culture }));
+            };
+
+            const culture = getCulture();
+            const strings = localizationManifest.cultures?.[culture] || localizationManifest.cultures?.[localizationManifest.defaultCulture] || {};
+
+            const refs = {
+                taskInput: document.getElementById('task-input'),
+                statusLabel: document.getElementById('timer-status'),
+                timerValue: document.getElementById('timer-value'),
+                primaryAction: document.getElementById('primary-action'),
+                pauseAction: document.getElementById('pause-action'),
+                resumeAction: document.getElementById('resume-action'),
+                resetAction: document.getElementById('reset-action'),
+                skipBreakAction: document.getElementById('skip-break-action'),
+                toggleAudio: document.getElementById('toggle-audio'),
+                audioWarning: document.getElementById('audio-warning'),
+                toast: document.getElementById('pomodoro-toast'),
+                progress: document.querySelector('.timer-progress'),
+                completedValue: document.getElementById('completed-value'),
+                minutesValue: document.getElementById('minutes-value'),
+                loopValue: document.getElementById('loop-value'),
+                timelineList: document.getElementById('timeline-list'),
+                tutorialDialog: document.getElementById('tutorial-dialog'),
+                tutorialSteps: document.getElementById('tutorial-steps'),
+                openTutorial: document.getElementById('open-tutorial'),
+                page: document.querySelector('.pomodoro-page'),
+                eventsLog: document.querySelector('.events-log'),
+                audioElement: document.getElementById('pomodoro-chime')
+            };
+
+            const statusMap = {
+                idle: strings.idle || '準備開始',
+                focus: strings.focus || '專注中',
+                paused: strings.paused || '已暫停',
+                shortBreak: strings.shortBreak || '短休息',
+                longBreak: strings.longBreak || '長休息'
+            };
+
+            const applyStaticLabels = () => {
+                const staticLabels = [
+                    { element: document.getElementById('summary-title'), key: 'dailySummary', fallback: '今日統計' },
+                    { element: document.getElementById('completed-label'), key: 'completedSessions', fallback: '已完成番茄鐘' },
+                    { element: document.getElementById('minutes-label'), key: 'totalFocusMinutes', fallback: '累積專注分鐘' },
+                    { element: document.getElementById('loop-label'), key: 'currentLoop', fallback: '迴圈進度' }
+                ];
+
+                staticLabels.forEach(({ element, key, fallback }) => {
+                    if (element) {
+                        element.textContent = strings[key] || fallback;
+                    }
+                });
+
+                refs.primaryAction.textContent = strings.start || '開始';
+                refs.pauseAction.textContent = strings.pause || '暫停';
+                refs.resumeAction.textContent = strings.resume || '繼續';
+                refs.resetAction.textContent = strings.reset || '重置';
+                refs.skipBreakAction.textContent = strings.skip || '跳過休息';
+                if (refs.tutorialDialog) {
+                    const title = refs.tutorialDialog.querySelector('#tutorial-title');
+                    if (title) {
+                        title.textContent = strings.tutorialTitle || '快速導覽';
+                    }
+                    const dismiss = refs.tutorialDialog.querySelector('footer button');
+                    if (dismiss) {
+                        dismiss.textContent = strings.tutorialDismiss || '我知道了';
+                    }
+                }
+                if (refs.openTutorial) {
+                    refs.openTutorial.textContent = strings.tutorialTitle ? `${strings.tutorialTitle} ↺` : '重新查看指南';
+                }
+            };
+
+            const formatTime = (seconds) => {
+                const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+                const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+                return `${m}:${s}`;
+            };
+
+            const todayKey = new Date().toISOString().slice(0, 10);
+
+            const readStats = () => {
+                try {
+                    const stats = JSON.parse(localStorage.getItem(storageKeys.stats) || 'null');
+                    if (!stats || stats.date !== todayKey) {
+                        return { date: todayKey, focusSessions: 0, totalFocusMinutes: 0, loopProgress: 0, sessions: [] };
+                    }
+                    return stats;
+                } catch (error) {
+                    console.warn('Unable to parse stats, resetting.', error);
+                    return { date: todayKey, focusSessions: 0, totalFocusMinutes: 0, loopProgress: 0, sessions: [] };
+                }
+            };
+
+            const restorePreferences = () => {
+                try {
+                    const prefs = JSON.parse(localStorage.getItem(storageKeys.preferences) || 'null');
+                    if (!prefs) {
+                        return { audioEnabled: defaults.audioEnabledByDefault ?? true };
+                    }
+                    return {
+                        audioEnabled: prefs.audioEnabled ?? (defaults.audioEnabledByDefault ?? true)
+                    };
+                } catch (error) {
+                    console.warn('Unable to parse preferences, resetting.', error);
+                    return { audioEnabled: defaults.audioEnabledByDefault ?? true };
+                }
+            };
+
+            const state = {
+                phase: 'idle',
+                remainingSeconds: (defaults.focusMinutes ?? 25) * 60,
+                totalSeconds: (defaults.focusMinutes ?? 25) * 60,
+                intervalId: null,
+                loopProgress: 0,
+                stats: readStats(),
+                preferences: restorePreferences(),
+                culture
+            };
+
+            const baseDurations = {
+                focus: (defaults.focusMinutes ?? 25) * 60,
+                shortBreak: (defaults.shortBreakMinutes ?? 5) * 60,
+                longBreak: (defaults.longBreakMinutes ?? 15) * 60
+            };
+
+            const longBreakInterval = defaults.longBreakInterval ?? 4;
+
+            const saveStats = () => {
+                localStorage.setItem(storageKeys.stats, JSON.stringify(state.stats));
+            };
+
+            const savePreferences = () => {
+                localStorage.setItem(storageKeys.preferences, JSON.stringify(state.preferences));
+            };
+
+            const announce = (message) => {
+                const el = document.createElement('p');
+                el.textContent = message;
+                refs.eventsLog.append(el);
+                setTimeout(() => refs.eventsLog.removeChild(el), 4000);
+            };
+
+            const showToast = (message) => {
+                refs.toast.textContent = message;
+                refs.toast.hidden = false;
+                refs.toast.dataset.visible = 'true';
+                setTimeout(() => {
+                    refs.toast.dataset.visible = 'false';
+                    setTimeout(() => {
+                        refs.toast.hidden = true;
+                        refs.toast.textContent = '';
+                    }, 250);
+                }, 4500);
+            };
+
+            const updateTimeline = () => {
+                refs.timelineList.innerHTML = '';
+                if (!state.stats.sessions.length) {
+                    const fallback = document.createElement('li');
+                    fallback.className = 'timeline-empty';
+                    fallback.textContent = strings.noSessionsMessage || '尚未有完成的番茄鐘，現在就開始你的第一輪吧！';
+                    refs.timelineList.appendChild(fallback);
+                    return;
+                }
+
+                state.stats.sessions.slice(-8).reverse().forEach((session) => {
+                    const item = document.createElement('li');
+                    const task = document.createElement('span');
+                    task.className = 'timeline-task';
+                    task.textContent = session.task;
+
+                    const meta = document.createElement('div');
+                    meta.className = 'timeline-meta';
+                    const duration = document.createElement('span');
+                    duration.textContent = `${session.duration} 分鐘`;
+                    const timestamp = document.createElement('time');
+                    timestamp.dateTime = session.completedAt;
+                    timestamp.textContent = new Intl.DateTimeFormat(culture, {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }).format(new Date(session.completedAt));
+
+                    meta.append(duration, timestamp);
+                    item.append(task, meta);
+                    refs.timelineList.append(item);
+                });
+            };
+
+            const updateStatsUi = () => {
+                refs.completedValue.textContent = state.stats.focusSessions.toString();
+                refs.minutesValue.textContent = state.stats.totalFocusMinutes.toString();
+                refs.loopValue.textContent = `${state.stats.loopProgress} / ${longBreakInterval}`;
+                updateTimeline();
+            };
+
+            const updateProgressArc = () => {
+                const dashArray = parseFloat(refs.progress.getAttribute('stroke-dasharray')) || 640;
+                const ratio = state.remainingSeconds / state.totalSeconds;
+                refs.progress.setAttribute('stroke-dashoffset', (dashArray * (1 - ratio)).toString());
+            };
+
+            const playChime = () => {
+                if (!state.preferences.audioEnabled) {
+                    return;
+                }
+
+                const playPromise = refs.audioElement.play();
+                if (playPromise) {
+                    playPromise.catch(() => {
+                        refs.audioWarning.hidden = false;
+                    });
+                }
+            };
+
+            const updateAudioToggleLabel = () => {
+                const label = state.preferences.audioEnabled ? (strings.toggleAudioOff || '關閉提示音') : (strings.toggleAudioOn || '開啟提示音');
+                const icon = state.preferences.audioEnabled ? '🔔' : '🔕';
+                refs.toggleAudio.textContent = `${icon} ${label}`;
+                refs.toggleAudio.setAttribute('aria-pressed', String(state.preferences.audioEnabled));
+            };
+
+            const setPhase = (phase, duration) => {
+                state.phase = phase;
+                state.remainingSeconds = duration;
+                state.totalSeconds = duration;
+                refs.statusLabel.dataset.status = phase;
+                refs.statusLabel.textContent = statusMap[phase] || statusMap.idle;
+                refs.timerValue.textContent = formatTime(duration);
+                updateProgressArc();
+                announce(`${refs.statusLabel.textContent} ${formatTime(duration)}`);
+                refs.skipBreakAction.hidden = !['shortBreak', 'longBreak'].includes(phase);
+                refs.primaryAction.hidden = phase !== 'idle';
+                refs.pauseAction.hidden = phase !== 'focus';
+                refs.resumeAction.hidden = phase !== 'paused';
+            };
+
+            const applyPauseState = () => {
+                refs.statusLabel.dataset.status = 'paused';
+                refs.statusLabel.textContent = statusMap.paused;
+                refs.pauseAction.hidden = true;
+                refs.resumeAction.hidden = false;
+                refs.primaryAction.hidden = true;
+            };
+
+            const startInterval = () => {
+                clearInterval(state.intervalId);
+                state.intervalId = setInterval(() => {
+                    state.remainingSeconds -= 1;
+                    if (state.remainingSeconds <= 0) {
+                        clearInterval(state.intervalId);
+                        state.remainingSeconds = 0;
+                        refs.timerValue.textContent = formatTime(0);
+                        updateProgressArc();
+                        handlePhaseCompletion();
+                        return;
+                    }
+                    refs.timerValue.textContent = formatTime(state.remainingSeconds);
+                    updateProgressArc();
+                }, 1000);
+            };
+
+            const handleFocusCompletion = () => {
+                state.stats.focusSessions += 1;
+                state.stats.totalFocusMinutes += Math.round(baseDurations.focus / 60);
+                state.stats.loopProgress = (state.stats.loopProgress % longBreakInterval) + 1;
+                const completedAt = new Date().toISOString();
+                const taskName = (refs.taskInput.value?.trim() || strings.statsPlaceholderTask || '未命名任務');
+                state.stats.sessions.push({
+                    task: taskName,
+                    duration: Math.round(baseDurations.focus / 60),
+                    completedAt
+                });
+                if (state.stats.sessions.length > 50) {
+                    state.stats.sessions.splice(0, state.stats.sessions.length - 50);
+                }
+                saveStats();
+                updateStatsUi();
+                playChime();
+
+                if (state.stats.loopProgress >= longBreakInterval) {
+                    showToast(strings.longBreakToast || '四個番茄鐘完成，建議長休息 15–30 分鐘。');
+                    setPhase('longBreak', baseDurations.longBreak);
+                } else {
+                    showToast(strings.shortBreakToast || '工作完成，休息 5 分鐘。');
+                    setPhase('shortBreak', baseDurations.shortBreak);
+                }
+                startInterval();
+            };
+
+            const handleBreakCompletion = () => {
+                playChime();
+                if (state.phase === 'longBreak') {
+                    state.stats.loopProgress = 0;
+                    saveStats();
+                    updateStatsUi();
+                }
+                showToast(strings.restCompleteToast || '休息結束，準備下一輪專注。');
+                setPhase('focus', baseDurations.focus);
+                startInterval();
+            };
+
+            const handlePhaseCompletion = () => {
+                if (state.phase === 'focus') {
+                    handleFocusCompletion();
+                } else if (state.phase === 'shortBreak' || state.phase === 'longBreak') {
+                    handleBreakCompletion();
+                }
+            };
+
+            const startFocus = () => {
+                setPhase('focus', baseDurations.focus);
+                startInterval();
+            };
+
+            const resumeTimer = () => {
+                refs.pauseAction.hidden = false;
+                refs.resumeAction.hidden = true;
+                startInterval();
+            };
+
+            const resetTimer = () => {
+                clearInterval(state.intervalId);
+                state.intervalId = null;
+                state.remainingSeconds = baseDurations.focus;
+                state.totalSeconds = baseDurations.focus;
+                state.phase = 'idle';
+                refs.timerValue.textContent = formatTime(baseDurations.focus);
+                refs.statusLabel.dataset.status = 'idle';
+                refs.statusLabel.textContent = statusMap.idle;
+                refs.primaryAction.hidden = false;
+                refs.pauseAction.hidden = true;
+                refs.resumeAction.hidden = true;
+                refs.skipBreakAction.hidden = true;
+                updateProgressArc();
+                announce(strings.resetAnnouncement || '已回到初始狀態。');
+            };
+
+            const skipBreak = () => {
+                clearInterval(state.intervalId);
+                state.intervalId = null;
+                showToast(strings.skipBreakToast || '已跳過休息，進入下一個番茄鐘。');
+                setPhase('focus', baseDurations.focus);
+                startInterval();
+            };
+
+            const handlePrimaryClick = () => {
+                if (state.phase === 'idle') {
+                    startFocus();
+                    refs.primaryAction.hidden = true;
+                    refs.pauseAction.hidden = false;
+                }
+            };
+
+            const handlePause = () => {
+                if (state.phase === 'focus') {
+                    clearInterval(state.intervalId);
+                    state.intervalId = null;
+                    state.phase = 'paused';
+                    applyPauseState();
+                }
+            };
+
+            const handleResume = () => {
+                if (state.phase === 'paused') {
+                    state.phase = 'focus';
+                    resumeTimer();
+                    refs.statusLabel.dataset.status = 'focus';
+                    refs.statusLabel.textContent = statusMap.focus;
+                }
+            };
+
+            const handleAudioToggle = () => {
+                state.preferences.audioEnabled = !state.preferences.audioEnabled;
+                updateAudioToggleLabel();
+                savePreferences();
+            };
+
+            const renderTutorial = () => {
+                refs.tutorialSteps.innerHTML = '';
+                onboardingSteps.forEach((step, index) => {
+                    const item = document.createElement('li');
+                    const icon = document.createElement('span');
+                    icon.className = 'tutorial-icon';
+                    icon.textContent = '🍅';
+                    const content = document.createElement('div');
+                    const title = document.createElement('h3');
+                    title.textContent = step.title || `${strings.tutorialTitle || '快速導覽'} ${index + 1}`;
+                    const desc = document.createElement('p');
+                    const localizedBody = strings[`tutorialStep${index + 1}`];
+                    desc.textContent = localizedBody || step.description;
+                    content.append(title, desc);
+                    item.append(icon, content);
+                    refs.tutorialSteps.append(item);
+                });
+            };
+
+            const showTutorialIfNeeded = () => {
+                const version = refs.page.dataset.onboardingVersion;
+                const stored = localStorage.getItem(storageKeys.onboarding);
+                if (stored === version) {
+                    return;
+                }
+                if (typeof refs.tutorialDialog.showModal === 'function') {
+                    renderTutorial();
+                    refs.tutorialDialog.showModal();
+                }
+            };
+
+            refs.tutorialDialog?.addEventListener('close', () => {
+                const version = refs.page.dataset.onboardingVersion;
+                localStorage.setItem(storageKeys.onboarding, version);
+            });
+
+            refs.openTutorial?.addEventListener('click', () => {
+                renderTutorial();
+                refs.tutorialDialog.showModal();
+            });
+
+            refs.primaryAction.addEventListener('click', handlePrimaryClick);
+            refs.pauseAction.addEventListener('click', handlePause);
+            refs.resumeAction.addEventListener('click', handleResume);
+            refs.resetAction.addEventListener('click', resetTimer);
+            refs.skipBreakAction.addEventListener('click', skipBreak);
+            refs.toggleAudio.addEventListener('click', handleAudioToggle);
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden && state.phase === 'focus') {
+                    announce(strings.pageHiddenAnnouncement || '頁面已隱藏，請記得返回掌握狀態。');
+                }
+            });
+
+            window.addEventListener('beforeunload', () => {
+                if (state.phase === 'focus' && state.intervalId) {
+                    const elapsed = state.totalSeconds - state.remainingSeconds;
+                    if (elapsed > 60) {
+                        state.stats.totalFocusMinutes += Math.floor(elapsed / 60);
+                        saveStats();
+                    }
+                }
+            });
+
+            applyStaticLabels();
+            updateAudioToggleLabel();
+            refs.timerValue.textContent = formatTime(baseDurations.focus);
+            updateStatsUi();
+            showTutorialIfNeeded();
+        })();
+    </script>
+}
