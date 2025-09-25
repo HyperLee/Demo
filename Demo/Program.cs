@@ -28,6 +28,14 @@ public class Program
         // 註冊會計服務
         builder.Services.AddScoped<IAccountingService, AccountingService>();
         
+        // 註冊語音解析 Phase 2 服務
+        builder.Services.AddScoped<FieldConfidenceCalculator>();
+        builder.Services.AddScoped<ProgressiveParseManager>();
+        
+        // 註冊語音解析 Phase 3 服務
+        builder.Services.AddScoped<UserPreferenceLearningEngine>();
+        builder.Services.AddScoped<VoiceContextAnalyzer>();
+        
         // 註冊家庭共享服務
         builder.Services.AddScoped<IFamilyService, FamilyService>();
         builder.Services.AddScoped<ISharedAccountingService, SharedAccountingService>();

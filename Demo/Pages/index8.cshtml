@@ -147,9 +147,232 @@
                     <p id="speechText" class="mb-0 speech-text"></p>
                 </div>
                 
-                <!-- 解析結果預覽 -->
+                <!-- 語音解析結果預覽 (Phase 1 增強版) -->
                 <div id="parsedPreview" class="mt-3 d-none">
-                    <!-- 動態填入解析結果 -->
+                    <div class="card border-primary">
+                        <div class="card-header bg-light">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0"><i class="fas fa-brain me-2"></i>語音解析結果</h6>
+                                <div class="d-flex align-items-center">
+                                    <span class="me-2">整體信心度:</span>
+                                    <div class="progress" style="width: 100px; height: 20px;">
+                                        <div id="overallConfidenceBar" class="progress-bar" role="progressbar" 
+                                             style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                            <span id="overallConfidenceText">0%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <!-- 日期 -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <strong>日期:</strong>
+                                        <div class="text-end">
+                                            <span id="previewDateValue" class="me-2">-</span>
+                                            <span id="previewDateConfidence" class="badge bg-secondary">-</span>
+                                            <span id="previewDateStatus" class="badge bg-secondary">未解析</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 收支類型 -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <strong>類型:</strong>
+                                        <div class="text-end">
+                                            <span id="previewTypeValue" class="me-2">-</span>
+                                            <span id="previewTypeConfidence" class="badge bg-secondary">-</span>
+                                            <span id="previewTypeStatus" class="badge bg-secondary">未解析</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 金額 -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <strong>金額:</strong>
+                                        <div class="text-end">
+                                            <span id="previewAmountValue" class="me-2">-</span>
+                                            <span id="previewAmountConfidence" class="badge bg-secondary">-</span>
+                                            <span id="previewAmountStatus" class="badge bg-secondary">未解析</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 付款方式 -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <strong>付款方式:</strong>
+                                        <div class="text-end">
+                                            <span id="previewPaymentMethodValue" class="me-2">-</span>
+                                            <span id="previewPaymentMethodConfidence" class="badge bg-secondary">-</span>
+                                            <span id="previewPaymentMethodStatus" class="badge bg-secondary">未解析</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 大分類 -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <strong>大分類:</strong>
+                                        <div class="text-end">
+                                            <span id="previewCategoryValue" class="me-2">-</span>
+                                            <span id="previewCategoryConfidence" class="badge bg-secondary">-</span>
+                                            <span id="previewCategoryStatus" class="badge bg-secondary">未解析</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 細分類 -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <strong>細分類:</strong>
+                                        <div class="text-end">
+                                            <span id="previewSubCategoryValue" class="me-2">-</span>
+                                            <span id="previewSubCategoryConfidence" class="badge bg-secondary">-</span>
+                                            <span id="previewSubCategoryStatus" class="badge bg-secondary">未解析</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 描述 -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <strong>描述:</strong>
+                                        <div class="text-end">
+                                            <span id="previewDescriptionValue" class="me-2">-</span>
+                                            <span id="previewDescriptionConfidence" class="badge bg-secondary">-</span>
+                                            <span id="previewDescriptionStatus" class="badge bg-secondary">未解析</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 商家 -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <strong>商家:</strong>
+                                        <div class="text-end">
+                                            <span id="previewMerchantValue" class="me-2">-</span>
+                                            <span id="previewMerchantConfidence" class="badge bg-secondary">-</span>
+                                            <span id="previewMerchantStatus" class="badge bg-secondary">未解析</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 備註 -->
+                                <div class="col-12 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <strong>備註:</strong>
+                                        <div class="text-end">
+                                            <span id="previewNoteValue" class="me-2">-</span>
+                                            <span id="previewNoteConfidence" class="badge bg-secondary">-</span>
+                                            <span id="previewNoteStatus" class="badge bg-secondary">未解析</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 未解析內容 -->
+                                <div id="unparsedContentSection" class="col-12 mb-3 d-none">
+                                    <div class="alert alert-warning mb-0">
+                                        <strong><i class="fas fa-exclamation-triangle me-2"></i>未解析內容:</strong>
+                                        <span id="unparsedContentText"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 操作按鈕 -->
+                            <div class="d-flex justify-content-end gap-2 mt-3">
+                                <button type="button" class="btn btn-outline-secondary" id="rejectParseResult">
+                                    <i class="fas fa-times me-1"></i>忽略結果
+                                </button>
+                                <button type="button" class="btn btn-primary" id="applyParseResult">
+                                    <i class="fas fa-check me-1"></i>套用到表單
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 2: 語音解析狀態指示器 -->
+                <div id="voiceParseProgress" class="mt-3 d-none">
+                    <div class="card border-info">
+                        <div class="card-header bg-info text-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-cog fa-spin me-2"></i>語音解析進度
+                                </h6>
+                                <span class="badge bg-light text-dark" id="parseStateText">解析中</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <!-- 整體進度 -->
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <small class="text-muted">整體信心度</small>
+                                    <small class="text-muted" id="overallProgressText">0%</small>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" 
+                                         id="overallProgressBar" style="width: 0%" 
+                                         aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 欄位解析狀態 -->
+                            <div id="fieldParseStatus" class="row g-2">
+                                <!-- 動態生成的欄位狀態 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 2: 缺失欄位提示區域 -->
+                <div id="missingFieldsAlert" class="mt-3 d-none">
+                    <div class="alert alert-warning">
+                        <div class="d-flex align-items-start">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-exclamation-triangle fa-lg text-warning"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="alert-heading mb-2">需要補充資訊</h6>
+                                <p class="mb-3" id="nextStepSuggestion">請補充以下缺失的欄位：</p>
+                                <div id="missingFieldsList" class="mb-3">
+                                    <!-- 動態生成的缺失欄位列表 -->
+                                </div>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <button type="button" class="btn btn-sm btn-outline-warning" id="quickFillBtn">
+                                        <i class="fas fa-magic me-1"></i>智能填補
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-success" id="continueWithPartialBtn">
+                                        <i class="fas fa-arrow-right me-1"></i>繼續使用部分結果
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 2: 信心度詳細檢視 -->
+                <div id="confidenceDetails" class="mt-3 d-none">
+                    <div class="card border-secondary">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-chart-line me-2"></i>信心度詳細分析
+                                <button type="button" class="btn btn-sm btn-outline-secondary float-end" onclick="toggleConfidenceDetails()">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="confidenceDetailsList" class="row g-3">
+                                <!-- 動態生成的詳細信心度分析 -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -568,13 +791,16 @@
         let voiceInput = null;
 
         document.addEventListener('DOMContentLoaded', function() {
-            // 初始化語音輸入
-            voiceInput = new VoiceInput({
+            // 初始化 Phase 3 智能語音輸入
+            voiceInput = new ConversationalVoiceInput({
                 context: 'personal',
                 container: '#voiceInputArea',
                 targetForm: '#recordForm',
+                userId: 1, // 實際應用中應該從用戶登錄狀態獲取
+                learningEnabled: true,
                 onResult: function(result) {
                     console.log('語音解析結果:', result);
+                    displayParseResult(result);
                 },
                 onError: function(error) {
                     console.error('語音輸入錯誤:', error);
@@ -1053,6 +1279,785 @@
             messageDiv.className = `alert alert-${type}`;
             messageDiv.textContent = message;
             messageDiv.classList.remove('d-none');
+        }
+
+        // === Phase 2 UX 增強功能 ===
+
+        /**
+         * Phase 2 使用者體驗增強類
+         */
+        class VoiceInputUXEnhancer {
+            constructor(voiceInputInstance) {
+                this.voiceInput = voiceInputInstance;
+                this.parseState = 'NotStarted';
+                this.currentParseResult = null;
+                this.progressAnimation = null;
+            }
+
+            /**
+             * 處理解析結果並更新UI (Phase 2)
+             */
+            handleParseResult(response) {
+                try {
+                    this.currentParseResult = response.ParseResult;
+                    this.parseState = response.ParseState;
+
+                    // 顯示解析進度
+                    this.showParseProgress(response);
+
+                    // 根據解析狀態處理
+                    switch (response.ParseState) {
+                        case 'Completed':
+                            this.handleCompleteSuccess(response);
+                            break;
+                        case 'PartialSuccess':
+                            this.handlePartialSuccess(response);
+                            break;
+                        case 'RequiresInput':
+                            this.handleRequiresInput(response);
+                            break;
+                        case 'Failed':
+                            this.handleParseFailed(response);
+                            break;
+                        default:
+                            this.showInfo('解析狀態未知，請檢查結果。');
+                    }
+
+                    // 顯示原有的解析結果預覽
+                    if (response.ParseResult) {
+                        displayParseResultLegacy(response.ParseResult);
+                    }
+                } catch (error) {
+                    console.error('處理解析結果時發生錯誤:', error);
+                    this.showError('處理解析結果時發生錯誤。');
+                }
+            }
+
+            /**
+             * 顯示解析進度
+             */
+            showParseProgress(response) {
+                const progressDiv = document.getElementById('voiceParseProgress');
+                const stateText = document.getElementById('parseStateText');
+                
+                // 顯示進度區域
+                progressDiv.classList.remove('d-none');
+                
+                // 更新狀態文字
+                const stateDisplayMap = {
+                    'Completed': '完全解析完成',
+                    'PartialSuccess': '部分解析成功',
+                    'RequiresInput': '需要用戶輸入',
+                    'Failed': '解析失敗',
+                    'Parsing': '解析中'
+                };
+                
+                stateText.textContent = stateDisplayMap[response.ParseState] || '未知狀態';
+                stateText.className = `badge ${this.getStateColorClass(response.ParseState)}`;
+
+                // 更新整體進度
+                this.updateOverallProgress(response.ParseResult);
+                
+                // 更新欄位狀態
+                this.updateFieldStatus(response.ParseResult);
+            }
+
+            /**
+             * 更新整體進度
+             */
+            updateOverallProgress(parseResult) {
+                const progressBar = document.getElementById('overallProgressBar');
+                const progressText = document.getElementById('overallProgressText');
+                
+                const progress = Math.round(parseResult.ParseConfidence * 100);
+                
+                // 動畫效果
+                if (this.progressAnimation) {
+                    this.progressAnimation.cancel();
+                }
+                
+                this.progressAnimation = progressBar.animate([
+                    { width: '0%' },
+                    { width: `${progress}%` }
+                ], {
+                    duration: 1000,
+                    easing: 'ease-out',
+                    fill: 'forwards'
+                });
+                
+                progressBar.style.width = `${progress}%`;
+                progressBar.setAttribute('aria-valuenow', progress);
+                progressText.textContent = `${progress}%`;
+                
+                // 根據進度設定顏色
+                progressBar.className = 'progress-bar progress-bar-striped';
+                if (progress >= 80) {
+                    progressBar.classList.add('bg-success');
+                } else if (progress >= 60) {
+                    progressBar.classList.add('bg-warning');
+                } else {
+                    progressBar.classList.add('bg-danger');
+                }
+            }
+
+            /**
+             * 更新欄位解析狀態
+             */
+            updateFieldStatus(parseResult) {
+                const statusContainer = document.getElementById('fieldParseStatus');
+                statusContainer.innerHTML = '';
+
+                const fields = [
+                    { key: 'Date', name: '日期', icon: 'fas fa-calendar' },
+                    { key: 'Amount', name: '金額', icon: 'fas fa-dollar-sign' },
+                    { key: 'Type', name: '類型', icon: 'fas fa-exchange-alt' },
+                    { key: 'Category', name: '分類', icon: 'fas fa-tags' },
+                    { key: 'PaymentMethod', name: '付款方式', icon: 'fas fa-credit-card' },
+                    { key: 'Description', name: '描述', icon: 'fas fa-comment' }
+                ];
+
+                fields.forEach(field => {
+                    const confidence = parseResult.FieldConfidence?.[field.key] || 0;
+                    const status = this.getFieldStatus(confidence);
+                    
+                    const fieldElement = document.createElement('div');
+                    fieldElement.className = 'col-6 col-sm-4 col-md-2';
+                    fieldElement.innerHTML = `
+                        <div class="text-center p-2 border rounded">
+                            <i class="${field.icon} ${status.colorClass} mb-1"></i>
+                            <div class="small fw-bold">${field.name}</div>
+                            <div class="badge ${status.badgeClass}">${Math.round(confidence * 100)}%</div>
+                        </div>
+                    `;
+                    
+                    statusContainer.appendChild(fieldElement);
+                });
+            }
+
+            /**
+             * 處理完全成功的情況
+             */
+            handleCompleteSuccess(response) {
+                // 隱藏缺失欄位提示
+                document.getElementById('missingFieldsAlert').classList.add('d-none');
+                
+                // 顯示成功訊息
+                this.showSuccess('語音解析完成！所有主要資訊都已成功識別。');
+                
+                // 自動套用到表單（延遲2秒）
+                setTimeout(() => {
+                    if (this.voiceInput && this.voiceInput.applyParseResultToForm) {
+                        this.voiceInput.applyParseResultToForm(response.ParseResult);
+                    }
+                }, 2000);
+            }
+
+            /**
+             * 處理部分成功的情況
+             */
+            handlePartialSuccess(response) {
+                // 顯示缺失欄位提示
+                this.showMissingFieldsAlert(response.MissingFieldHints, response.NextStepSuggestion);
+                
+                // 顯示部分成功訊息
+                this.showWarning(`部分解析成功。${response.NextStepSuggestion}`);
+            }
+
+            /**
+             * 處理需要輸入的情況
+             */
+            handleRequiresInput(response) {
+                // 顯示缺失欄位提示
+                this.showMissingFieldsAlert(response.MissingFieldHints, response.NextStepSuggestion);
+                
+                // 顯示需要輸入訊息
+                this.showInfo(`需要更多資訊。${response.NextStepSuggestion}`);
+            }
+
+            /**
+             * 處理解析失敗的情況
+             */
+            handleParseFailed(response) {
+                // 隱藏進度區域
+                document.getElementById('voiceParseProgress').classList.add('d-none');
+                
+                // 顯示失敗訊息
+                this.showError(response.ErrorMessage || '語音解析失敗，請重新嘗試或手動填入。');
+                
+                // 提供重新錄音選項
+                this.showRetryOptions();
+            }
+
+            /**
+             * 顯示缺失欄位提示
+             */
+            showMissingFieldsAlert(hints, suggestion) {
+                const alertDiv = document.getElementById('missingFieldsAlert');
+                const hintsList = document.getElementById('missingFieldsList');
+                const suggestionText = document.getElementById('nextStepSuggestion');
+                
+                suggestionText.textContent = suggestion || '請補充以下缺失的欄位：';
+                hintsList.innerHTML = '';
+                
+                hints.forEach(hint => {
+                    const hintElement = document.createElement('div');
+                    hintElement.className = 'mb-2 p-2 border rounded';
+                    hintElement.innerHTML = `
+                        <div class="d-flex align-items-center">
+                            <i class="${hint.Icon} ${this.getPriorityColor(hint.Priority)} me-2"></i>
+                            <div class="flex-grow-1">
+                                <strong>${hint.DisplayName}</strong>
+                                <small class="text-muted d-block">${hint.Suggestion}</small>
+                            </div>
+                            <span class="badge ${this.getPriorityColor(hint.Priority)}">${hint.Priority === 3 ? '高' : hint.Priority === 2 ? '中' : '低'}</span>
+                        </div>
+                    `;
+                    hintsList.appendChild(hintElement);
+                });
+                
+                alertDiv.classList.remove('d-none');
+                
+                // 綁定按鈕事件
+                this.bindMissingFieldButtons();
+            }
+
+            /**
+             * 綁定缺失欄位按鈕事件
+             */
+            bindMissingFieldButtons() {
+                // 智能填補按鈕
+                const quickFillBtn = document.getElementById('quickFillBtn');
+                if (quickFillBtn) {
+                    quickFillBtn.onclick = () => this.performQuickFill();
+                }
+                
+                // 繼續使用部分結果按鈕
+                const continueBtn = document.getElementById('continueWithPartialBtn');
+                if (continueBtn) {
+                    continueBtn.onclick = () => this.continueWithPartialResult();
+                }
+            }
+
+            /**
+             * 執行智能填補
+             */
+            performQuickFill() {
+                try {
+                    // 實作智能填補邏輯
+                    // 根據已解析的資訊智能推測缺失的欄位
+                    
+                    // 如果有商家但沒有分類，根據商家推測分類
+                    if (this.currentParseResult.MerchantName && !this.currentParseResult.Category) {
+                        // 商家分類對應邏輯
+                        const merchantCategoryMap = {
+                            '星巴克': '餐飲美食',
+                            '麥當勞': '餐飲美食',
+                            '7-Eleven': '餐飲美食',
+                            '全家': '餐飲美食',
+                            '全聯': '日用品'
+                        };
+                        
+                        const suggestedCategory = merchantCategoryMap[this.currentParseResult.MerchantName];
+                        if (suggestedCategory) {
+                            this.currentParseResult.Category = suggestedCategory;
+                        }
+                    }
+                    
+                    // 如果沒有日期，預設為今天
+                    if (!this.currentParseResult.Date) {
+                        this.currentParseResult.Date = new Date().toISOString().split('T')[0];
+                    }
+                    
+                    // 如果沒有付款方式，預設為現金
+                    if (!this.currentParseResult.PaymentMethod) {
+                        this.currentParseResult.PaymentMethod = '現金';
+                    }
+                    
+                    this.showSuccess('已智能填補部分欄位！');
+                    
+                    // 重新顯示結果
+                    displayParseResultLegacy(this.currentParseResult);
+                } catch (error) {
+                    console.error('智能填補時發生錯誤:', error);
+                    this.showError('智能填補失敗。');
+                }
+            }
+
+            /**
+             * 繼續使用部分結果
+             */
+            continueWithPartialResult() {
+                try {
+                    if (this.voiceInput && this.voiceInput.applyParseResultToForm) {
+                        this.voiceInput.applyParseResultToForm(this.currentParseResult);
+                        this.showInfo('已套用部分解析結果，請手動補充剩餘欄位。');
+                    }
+                } catch (error) {
+                    console.error('套用部分結果時發生錯誤:', error);
+                    this.showError('套用部分結果失敗。');
+                }
+            }
+
+            // === 輔助方法 ===
+
+            getStateColorClass(state) {
+                switch (state) {
+                    case 'Completed': return 'bg-success text-white';
+                    case 'PartialSuccess': return 'bg-warning text-dark';
+                    case 'RequiresInput': return 'bg-info text-white';
+                    case 'Failed': return 'bg-danger text-white';
+                    default: return 'bg-secondary text-white';
+                }
+            }
+
+            getFieldStatus(confidence) {
+                if (confidence >= 0.8) {
+                    return { colorClass: 'text-success', badgeClass: 'bg-success' };
+                } else if (confidence >= 0.6) {
+                    return { colorClass: 'text-warning', badgeClass: 'bg-warning' };
+                } else if (confidence > 0) {
+                    return { colorClass: 'text-danger', badgeClass: 'bg-danger' };
+                } else {
+                    return { colorClass: 'text-muted', badgeClass: 'bg-secondary' };
+                }
+            }
+
+            getPriorityColor(priority) {
+                switch (priority) {
+                    case 3: return 'text-danger';
+                    case 2: return 'text-warning';
+                    case 1: return 'text-info';
+                    default: return 'text-muted';
+                }
+            }
+
+            showSuccess(message) {
+                this.showToast(message, 'success');
+            }
+
+            showWarning(message) {
+                this.showToast(message, 'warning');
+            }
+
+            showInfo(message) {
+                this.showToast(message, 'info');
+            }
+
+            showError(message) {
+                this.showToast(message, 'error');
+            }
+
+            showToast(message, type) {
+                // 創建臨時通知
+                const toast = document.createElement('div');
+                toast.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
+                toast.style.cssText = 'top: 20px; right: 20px; z-index: 1060; max-width: 400px;';
+                toast.innerHTML = `
+                    ${message}
+                    <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+                `;
+                
+                document.body.appendChild(toast);
+                
+                // 自動移除
+                setTimeout(() => {
+                    if (toast.parentElement) {
+                        toast.remove();
+                    }
+                }, 5000);
+            }
+
+            showRetryOptions() {
+                // 顯示重新錄音按鈕或其他恢復選項
+                this.showInfo('您可以重新錄音或手動填入資訊。');
+            }
+        }
+
+        // 全域變數：UX 增強器實例
+        let voiceUXEnhancer = null;
+
+        /**
+         * 顯示 Phase 1 增強版解析結果 (重新命名以避免衝突)
+         */
+        function displayParseResultLegacy(parseResult) {
+            const previewDiv = document.getElementById('parsedPreview');
+            
+            if (!parseResult || !parseResult.IsSuccess) {
+                previewDiv.classList.add('d-none');
+                return;
+            }
+
+            // 更新整體信心度
+            updateOverallConfidence(parseResult.ParseConfidence);
+
+            // 更新各欄位解析結果
+            updateFieldResult('Date', parseResult.Date ? formatDate(parseResult.Date) : null, parseResult.FieldConfidence?.Date || 0);
+            updateFieldResult('Type', parseResult.Type === 'Income' ? '收入' : '支出', parseResult.FieldConfidence?.Type || 0);
+            updateFieldResult('Amount', parseResult.Amount ? `NT$ ${parseResult.Amount}` : null, parseResult.FieldConfidence?.Amount || 0);
+            updateFieldResult('PaymentMethod', parseResult.PaymentMethod, parseResult.FieldConfidence?.PaymentMethod || 0);
+            updateFieldResult('Category', parseResult.Category, parseResult.FieldConfidence?.Category || 0);
+            updateFieldResult('SubCategory', parseResult.SubCategory, parseResult.FieldConfidence?.SubCategory || 0);
+            updateFieldResult('Description', parseResult.Description, parseResult.FieldConfidence?.Description || 0);
+            updateFieldResult('Merchant', parseResult.MerchantName, parseResult.FieldConfidence?.MerchantName || 0);
+            updateFieldResult('Note', parseResult.Note, parseResult.FieldConfidence?.Note || 0);
+
+            // 處理未解析內容
+            showUnparsedContent(parseResult.UnparsedContent);
+
+            // 顯示預覽區域
+            previewDiv.classList.remove('d-none');
+
+            // 綁定按鈕事件
+            bindPreviewButtons(parseResult);
+        }
+
+        /**
+         * Phase 2 版本的解析結果顯示函式
+         */
+        function displayParseResult(response) {
+            // 如果回應是 Phase 2 格式（有 ParseState），使用新的 UX 增強器
+            if (response && response.ParseState !== undefined) {
+                if (!voiceUXEnhancer) {
+                    voiceUXEnhancer = new VoiceInputUXEnhancer(voiceInput);
+                }
+                voiceUXEnhancer.handleParseResult(response);
+            } else {
+                // 如果是舊格式，使用原有的顯示方式
+                displayParseResultLegacy(response);
+            }
+        }
+
+        /**
+         * 切換信心度詳細檢視
+         */
+        function toggleConfidenceDetails() {
+            const detailsDiv = document.getElementById('confidenceDetails');
+            const isVisible = !detailsDiv.classList.contains('d-none');
+            
+            if (isVisible) {
+                detailsDiv.classList.add('d-none');
+            } else {
+                detailsDiv.classList.remove('d-none');
+                
+                // 如果有當前解析結果，顯示詳細信心度分析
+                if (voiceUXEnhancer && voiceUXEnhancer.currentParseResult) {
+                    showDetailedConfidenceAnalysis(voiceUXEnhancer.currentParseResult);
+                }
+            }
+        }
+
+        /**
+         * 顯示詳細信心度分析
+         */
+        function showDetailedConfidenceAnalysis(parseResult) {
+            const listContainer = document.getElementById('confidenceDetailsList');
+            listContainer.innerHTML = '';
+
+            const fields = [
+                { key: 'Date', name: '日期解析', description: '基於時間關鍵字和格式匹配' },
+                { key: 'Amount', name: '金額解析', description: '基於數字識別和金額關鍵字' },
+                { key: 'Type', name: '收支類型', description: '基於動詞和意圖分析' },
+                { key: 'Category', name: '分類匹配', description: '基於關鍵字和商家對應' },
+                { key: 'PaymentMethod', name: '付款方式', description: '基於支付相關關鍵字' },
+                { key: 'Description', name: '描述提取', description: '基於語意分析和內容過濾' }
+            ];
+
+            fields.forEach(field => {
+                const confidence = parseResult.FieldConfidence?.[field.key] || 0;
+                const percentage = Math.round(confidence * 100);
+                
+                const fieldElement = document.createElement('div');
+                fieldElement.className = 'col-md-6 mb-3';
+                fieldElement.innerHTML = `
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6 class="card-title">${field.name}</h6>
+                            <div class="progress mb-2">
+                                <div class="progress-bar ${confidence >= 0.8 ? 'bg-success' : confidence >= 0.6 ? 'bg-warning' : 'bg-danger'}" 
+                                     style="width: ${percentage}%" 
+                                     aria-valuenow="${percentage}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                    ${percentage}%
+                                </div>
+                            </div>
+                            <small class="text-muted">${field.description}</small>
+                        </div>
+                    </div>
+                `;
+                listContainer.appendChild(fieldElement);
+            });
+        }
+        function updateOverallConfidence(confidence) {
+            const percentage = Math.round(confidence * 100);
+            const progressBar = document.getElementById('overallConfidenceBar');
+            const progressText = document.getElementById('overallConfidenceText');
+            
+            progressBar.style.width = `${percentage}%`;
+            progressBar.setAttribute('aria-valuenow', percentage);
+            progressText.textContent = `${percentage}%`;
+            
+            // 根據信心度設定顏色
+            progressBar.className = 'progress-bar';
+            if (percentage >= 80) {
+                progressBar.classList.add('bg-success');
+            } else if (percentage >= 60) {
+                progressBar.classList.add('bg-warning');
+            } else {
+                progressBar.classList.add('bg-danger');
+            }
+        }
+
+        /**
+         * 更新單一欄位結果顯示
+         */
+        function updateFieldResult(fieldName, value, confidence) {
+            const valueElement = document.getElementById(`preview${fieldName}Value`);
+            const confidenceElement = document.getElementById(`preview${fieldName}Confidence`);
+            const statusElement = document.getElementById(`preview${fieldName}Status`);
+            
+            if (value) {
+                valueElement.textContent = value;
+                
+                const percentage = Math.round(confidence * 100);
+                confidenceElement.textContent = `${percentage}%`;
+                confidenceElement.className = 'badge';
+                
+                if (percentage >= 70) {
+                    confidenceElement.classList.add('bg-success');
+                    statusElement.textContent = '已解析';
+                    statusElement.className = 'badge bg-success';
+                } else if (percentage >= 40) {
+                    confidenceElement.classList.add('bg-warning');
+                    statusElement.textContent = '低信心度';
+                    statusElement.className = 'badge bg-warning';
+                } else {
+                    confidenceElement.classList.add('bg-danger');
+                    statusElement.textContent = '不確定';
+                    statusElement.className = 'badge bg-danger';
+                }
+            } else {
+                valueElement.textContent = '-';
+                confidenceElement.textContent = '-';
+                confidenceElement.className = 'badge bg-secondary';
+                statusElement.textContent = '未解析';
+                statusElement.className = 'badge bg-secondary';
+            }
+        }
+
+        /**
+         * 顯示未解析內容
+         */
+        function showUnparsedContent(unparsedContent) {
+            const section = document.getElementById('unparsedContentSection');
+            const textElement = document.getElementById('unparsedContentText');
+            
+            if (unparsedContent && unparsedContent.trim()) {
+                textElement.textContent = unparsedContent;
+                section.classList.remove('d-none');
+            } else {
+                section.classList.add('d-none');
+            }
+        }
+
+        /**
+         * 綁定預覽按鈕事件
+         */
+        function bindPreviewButtons(parseResult) {
+            // 套用按鈕
+            const applyBtn = document.getElementById('applyParseResult');
+            applyBtn.onclick = function() {
+                applyParseResultToForm(parseResult);
+            };
+
+            // 忽略按鈕
+            const rejectBtn = document.getElementById('rejectParseResult');
+            rejectBtn.onclick = function() {
+                document.getElementById('parsedPreview').classList.add('d-none');
+            };
+        }
+
+        /**
+         * 套用解析結果到表單
+         */
+        function applyParseResultToForm(parseResult) {
+            try {
+                // 日期
+                if (parseResult.Date) {
+                    const dateInput = document.querySelector('input[name="Record.Date"]');
+                    if (dateInput) {
+                        dateInput.value = formatDateForInput(parseResult.Date);
+                    }
+                }
+
+                // 收支類型
+                if (parseResult.Type) {
+                    const typeRadio = document.querySelector(`input[name="Record.Type"][value="${parseResult.Type}"]`);
+                    if (typeRadio) {
+                        typeRadio.checked = true;
+                        // 觸發事件以更新分類選項
+                        typeRadio.dispatchEvent(new Event('change'));
+                    }
+                }
+
+                // 金額
+                if (parseResult.Amount) {
+                    const amountInput = document.querySelector('input[asp-for="Record.Amount"]') || 
+                                       document.querySelector('.money-input') ||
+                                       document.querySelector('input[type="number"]');
+                    if (amountInput) {
+                        amountInput.value = parseResult.Amount;
+                        updateAmountDisplay();
+                    }
+                }
+
+                // 付款方式
+                if (parseResult.PaymentMethod) {
+                    const paymentSelect = document.querySelector('select[name="Record.PaymentMethod"]');
+                    if (paymentSelect) {
+                        // 嘗試找到匹配的選項
+                        for (let option of paymentSelect.options) {
+                            if (option.text.includes(parseResult.PaymentMethod) || option.value === parseResult.PaymentMethod) {
+                                paymentSelect.value = option.value;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // 大分類
+                if (parseResult.Category) {
+                    setTimeout(() => {
+                        const categorySelect = document.getElementById('categorySelect');
+                        if (categorySelect) {
+                            categorySelect.value = parseResult.Category;
+                            categorySelect.dispatchEvent(new Event('change'));
+                            
+                            // 細分類 (需要等大分類載入完成)
+                            if (parseResult.SubCategory) {
+                                setTimeout(() => {
+                                    const subCategorySelect = document.getElementById('subCategorySelect');
+                                    if (subCategorySelect) {
+                                        subCategorySelect.value = parseResult.SubCategory;
+                                    }
+                                }, 500);
+                            }
+                        }
+                    }, 200);
+                }
+
+                // 交易描述
+                if (parseResult.Description) {
+                    const descInput = document.querySelector('input[name="description"]');
+                    if (descInput) {
+                        descInput.value = parseResult.Description;
+                    }
+                }
+
+                // 商家名稱
+                if (parseResult.MerchantName) {
+                    const merchantInput = document.querySelector('input[name="merchant"]');
+                    if (merchantInput) {
+                        merchantInput.value = parseResult.MerchantName;
+                    }
+                }
+
+                // 備註
+                if (parseResult.Note) {
+                    const noteTextarea = document.querySelector('textarea[name="Record.Note"]');
+                    if (noteTextarea) {
+                        const existingNote = noteTextarea.value.trim();
+                        noteTextarea.value = existingNote ? `${existingNote}\n${parseResult.Note}` : parseResult.Note;
+                        updateNoteCount();
+                    }
+                }
+
+                // 隱藏預覽區域
+                document.getElementById('parsedPreview').classList.add('d-none');
+                
+                // 顯示成功訊息
+                showSuccessMessage('語音解析結果已套用到表單！請檢查並確認資訊是否正確。');
+
+            } catch (error) {
+                console.error('套用解析結果時發生錯誤:', error);
+                showErrorMessage('套用解析結果時發生錯誤，請手動填入資訊');
+            }
+        }
+
+        /**
+         * 格式化日期顯示
+         */
+        function formatDate(dateString) {
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('zh-TW', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                });
+            } catch (error) {
+                return dateString;
+            }
+        }
+
+        /**
+         * 格式化日期為輸入欄位格式 (YYYY-MM-DD)
+         */
+        function formatDateForInput(dateString) {
+            try {
+                const date = new Date(dateString);
+                return date.toISOString().split('T')[0];
+            } catch (error) {
+                return dateString;
+            }
+        }
+
+        /**
+         * 顯示成功訊息
+         */
+        function showSuccessMessage(message) {
+            // 創建臨時通知
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-success alert-dismissible fade show position-fixed';
+            alert.style.top = '20px';
+            alert.style.right = '20px';
+            alert.style.zIndex = '9999';
+            alert.innerHTML = `
+                <i class="fas fa-check-circle me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alert);
+            
+            // 3秒後自動移除
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.parentNode.removeChild(alert);
+                }
+            }, 3000);
+        }
+
+        /**
+         * 顯示錯誤訊息
+         */
+        function showErrorMessage(message) {
+            // 創建臨時通知
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-danger alert-dismissible fade show position-fixed';
+            alert.style.top = '20px';
+            alert.style.right = '20px';
+            alert.style.zIndex = '9999';
+            alert.innerHTML = `
+                <i class="fas fa-exclamation-circle me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alert);
+            
+            // 5秒後自動移除
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.parentNode.removeChild(alert);
+                }
+            }, 5000);
         }
     </script>
     

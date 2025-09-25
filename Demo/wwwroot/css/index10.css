@@ -1,0 +1,707 @@
+/* ========================================
+   世界時鐘 - 科幻未來風格樣式
+   ======================================== */
+
+/* CSS 自定義屬性 - 支援暗黑模式 */
+:root {
+    /* 主色調 */
+    --primary-blue: #0066CC;
+    --primary-dark-blue: #003D7A;
+    --accent-cyan: #00FFFF;
+    --accent-cyan-glow: rgba(0, 255, 255, 0.5);
+    
+    /* 背景色彩 */
+    --bg-primary: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+    --bg-card: rgba(255, 255, 255, 0.05);
+    --bg-card-hover: rgba(255, 255, 255, 0.1);
+    --bg-card-selected: rgba(0, 255, 255, 0.1);
+    
+    /* 文字色彩 */
+    --text-primary: #ffffff;
+    --text-secondary: #cccccc;
+    --text-muted: #999999;
+    
+    /* 邊框和陰影 */
+    --border-primary: rgba(0, 255, 255, 0.3);
+    --border-secondary: rgba(255, 255, 255, 0.1);
+    --shadow-glow: 0 0 20px rgba(0, 255, 255, 0.3);
+    --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.3);
+    
+    /* 尺寸 */
+    --card-width: 150px;
+    --card-height: 120px;
+    --main-time-size: 72px;
+    --border-radius: 12px;
+    
+    /* 動畫參數 */
+    --transition-fast: 0.2s ease;
+    --transition-medium: 0.3s ease;
+    --transition-slow: 0.5s ease;
+}
+
+/* 暗黑模式支援 */
+[data-bs-theme="dark"] {
+    --bg-primary: linear-gradient(135deg, #000000 0%, #1a1a2e 50%, #16213e 100%);
+    --bg-card: rgba(255, 255, 255, 0.03);
+    --text-primary: #ffffff;
+    --text-secondary: #e0e0e0;
+}
+
+[data-bs-theme="light"] {
+    --bg-primary: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 50%, #d1e9ff 100%);
+    --bg-card: rgba(0, 0, 0, 0.05);
+    --bg-card-hover: rgba(0, 0, 0, 0.1);
+    --bg-card-selected: rgba(0, 102, 204, 0.1);
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --text-muted: #999999;
+    --border-primary: rgba(0, 102, 204, 0.3);
+    --border-secondary: rgba(0, 0, 0, 0.1);
+    --shadow-glow: 0 0 20px rgba(0, 102, 204, 0.2);
+}
+
+/* 基礎容器 */
+.world-clock-container {
+    min-height: 100vh;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    padding: 20px;
+    position: relative;
+    overflow-x: hidden;
+    font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+}
+
+/* ========================================
+   頁面標題和控制區域
+   ======================================== */
+.header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding: 0 20px;
+}
+
+.current-location {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+}
+
+.location-label {
+    color: var(--text-secondary);
+}
+
+.location-name {
+    color: var(--accent-cyan);
+    font-weight: 600;
+    text-shadow: 0 0 10px var(--accent-cyan-glow);
+}
+
+.controls-section {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+/* 語言選擇器 */
+.language-selector select {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border: 1px solid var(--border-primary);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 14px;
+    transition: var(--transition-fast);
+}
+
+.language-selector select:hover,
+.language-selector select:focus {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 10px var(--accent-cyan-glow);
+    outline: none;
+}
+
+/* 音效控制 */
+.audio-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.audio-toggle-btn {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border: 1px solid var(--border-primary);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.audio-toggle-btn:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--accent-cyan);
+    box-shadow: var(--shadow-glow);
+}
+
+.volume-slider-container {
+    width: 80px;
+}
+
+.volume-slider {
+    width: 100%;
+    height: 4px;
+    background: var(--border-secondary);
+    border-radius: 2px;
+    outline: none;
+    appearance: none;
+}
+
+.volume-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: var(--accent-cyan);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 10px var(--accent-cyan-glow);
+}
+
+.volume-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: var(--accent-cyan);
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 10px var(--accent-cyan-glow);
+}
+
+/* ========================================
+   主要時間顯示區域
+   ======================================== */
+.main-time-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 40px 0;
+}
+
+.main-time-display {
+    text-align: center;
+    position: relative;
+}
+
+.main-time {
+    font-size: var(--main-time-size);
+    font-weight: 300;
+    color: var(--accent-cyan);
+    text-shadow: 0 0 30px var(--accent-cyan-glow);
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+    font-family: 'Courier New', monospace;
+    position: relative;
+}
+
+.main-time::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120%;
+    height: 120%;
+    background: radial-gradient(circle, transparent 30%, var(--accent-cyan-glow) 70%);
+    z-index: -1;
+    opacity: 0.1;
+    border-radius: 50%;
+}
+
+.main-date {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-top: 10px;
+}
+
+/* ========================================
+   世界時鐘網格
+   ======================================== */
+.world-clocks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(var(--card-width), 1fr));
+    gap: 20px;
+    max-width: 800px;
+    margin: 0 auto 40px;
+    padding: 0 20px;
+}
+
+.city-clock-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-secondary);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition-medium);
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+    min-height: var(--card-height);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.city-clock-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(0, 255, 255, 0.03) 50%, transparent 70%);
+    opacity: 0;
+    transition: var(--transition-medium);
+    z-index: 1;
+}
+
+.city-clock-card:hover {
+    transform: scale(1.05);
+    background: var(--bg-card-hover);
+    border-color: var(--border-primary);
+    box-shadow: var(--shadow-card), var(--shadow-glow);
+}
+
+.city-clock-card:hover::before {
+    opacity: 1;
+}
+
+.city-clock-card.selected {
+    border-color: var(--accent-cyan);
+    background: var(--bg-card-selected);
+    box-shadow: var(--shadow-card), 0 0 25px var(--accent-cyan-glow);
+}
+
+.city-clock-card.selected::before {
+    opacity: 1;
+    background: linear-gradient(45deg, transparent 20%, rgba(0, 255, 255, 0.1) 50%, transparent 80%);
+}
+
+.city-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 2;
+}
+
+.city-time {
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--accent-cyan);
+    font-family: 'Courier New', monospace;
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 2;
+}
+
+.city-info {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    z-index: 2;
+}
+
+.timezone-offset {
+    font-weight: 500;
+}
+
+.city-date {
+    opacity: 0.8;
+}
+
+/* 城市特效容器 */
+.city-effect-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    overflow: hidden;
+    border-radius: var(--border-radius);
+    z-index: 0;
+}
+
+/* ========================================
+   校時按鈕
+   ======================================== */
+.sync-section {
+    display: flex;
+    justify-content: center;
+    margin: 30px 0;
+}
+
+.sync-time-btn {
+    background: linear-gradient(135deg, var(--primary-blue), var(--primary-dark-blue));
+    color: var(--text-primary);
+    border: 1px solid var(--border-primary);
+    border-radius: 25px;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition-medium);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+}
+
+.sync-time-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: var(--transition-slow);
+}
+
+.sync-time-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 102, 204, 0.3), var(--shadow-glow);
+    border-color: var(--accent-cyan);
+}
+
+.sync-time-btn:hover::before {
+    left: 100%;
+}
+
+.sync-time-btn:active {
+    transform: translateY(0);
+}
+
+.sync-time-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ========================================
+   全域特效層
+   ======================================== */
+.global-effects-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 1000;
+    overflow: hidden;
+}
+
+/* ========================================
+   圖示字型
+   ======================================== */
+.icon-volume-on::before {
+    content: '🔊';
+}
+
+.icon-volume-off::before {
+    content: '🔇';
+}
+
+.icon-sync::before {
+    content: '🔄';
+}
+
+/* ========================================
+   數字翻轉動畫
+   ======================================== */
+@keyframes flipIn {
+    0% {
+        transform: perspective(400px) rotateX(90deg);
+        opacity: 0;
+    }
+    40% {
+        transform: perspective(400px) rotateX(-15deg);
+    }
+    70% {
+        transform: perspective(400px) rotateX(15deg);
+    }
+    100% {
+        transform: perspective(400px) rotateX(0deg);
+        opacity: 1;
+    }
+}
+
+.time-digit-flip {
+    animation: flipIn 0.6s ease;
+}
+
+/* ========================================
+   載入動畫
+   ======================================== */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.world-clock-container {
+    animation: fadeInUp 0.8s ease;
+}
+
+.city-clock-card {
+    animation: fadeInUp 0.6s ease;
+    animation-fill-mode: both;
+}
+
+.city-clock-card:nth-child(1) { animation-delay: 0.1s; }
+.city-clock-card:nth-child(2) { animation-delay: 0.2s; }
+.city-clock-card:nth-child(3) { animation-delay: 0.3s; }
+.city-clock-card:nth-child(4) { animation-delay: 0.4s; }
+.city-clock-card:nth-child(5) { animation-delay: 0.5s; }
+.city-clock-card:nth-child(6) { animation-delay: 0.6s; }
+.city-clock-card:nth-child(7) { animation-delay: 0.7s; }
+.city-clock-card:nth-child(8) { animation-delay: 0.8s; }
+
+/* ========================================
+   響應式設計
+   ======================================== */
+
+/* 平板版 */
+@media (max-width: 1024px) {
+    :root {
+        --main-time-size: 60px;
+        --card-width: 140px;
+    }
+    
+    .world-clocks-grid {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 15px;
+    }
+    
+    .header-section {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+}
+
+/* 手機版 */
+@media (max-width: 768px) {
+    :root {
+        --main-time-size: 48px;
+        --card-width: 130px;
+    }
+    
+    .world-clock-container {
+        padding: 15px;
+    }
+    
+    .world-clocks-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        max-width: none;
+    }
+    
+    .city-clock-card {
+        min-height: 100px;
+        padding: 12px;
+    }
+    
+    .city-name {
+        font-size: 14px;
+    }
+    
+    .city-time {
+        font-size: 18px;
+    }
+    
+    .city-info {
+        font-size: 11px;
+    }
+    
+    .controls-section {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .audio-controls {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .volume-slider-container {
+        width: 120px;
+    }
+}
+
+@media (max-width: 480px) {
+    :root {
+        --main-time-size: 36px;
+    }
+    
+    .world-clocks-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .city-clock-card {
+        min-height: 80px;
+        padding: 10px;
+    }
+    
+    .main-time-section {
+        margin: 20px 0;
+    }
+}
+
+/* ========================================
+   無障礙支援
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    .city-clock-card:hover {
+        transform: none;
+    }
+}
+
+/* 高對比模式 */
+@media (prefers-contrast: high) {
+    :root {
+        --border-primary: #ffffff;
+        --border-secondary: #cccccc;
+        --text-primary: #ffffff;
+        --text-secondary: #ffffff;
+        --accent-cyan: #ffffff;
+    }
+}
+
+/* ========================================
+   城市特效基礎樣式
+   ======================================== */
+
+/* 粒子系統基礎 */
+.particle {
+    position: absolute;
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+/* 櫻花花瓣 */
+.sakura-petal {
+    width: 8px;
+    height: 8px;
+    background: #ffb3d9;
+    border-radius: 50% 0 50% 0;
+    animation: fall 3s linear infinite;
+}
+
+@keyframes fall {
+    0% {
+        transform: translateY(-100px) rotateZ(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(200px) rotateZ(360deg);
+        opacity: 0;
+    }
+}
+
+/* 雪花 */
+.snowflake {
+    width: 6px;
+    height: 6px;
+    background: #ffffff;
+    border-radius: 50%;
+    animation: snow-fall 4s linear infinite;
+}
+
+@keyframes snow-fall {
+    0% {
+        transform: translateY(-100px) translateX(0px);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(200px) translateX(50px);
+        opacity: 0;
+    }
+}
+
+/* 泡泡效果 */
+.bubble {
+    width: 10px;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    animation: bubble-rise 3s ease-in infinite;
+}
+
+@keyframes bubble-rise {
+    0% {
+        transform: translateY(100px) scale(0);
+        opacity: 0;
+    }
+    50% {
+        opacity: 0.8;
+    }
+    100% {
+        transform: translateY(-100px) scale(1);
+        opacity: 0;
+    }
+}
+
+/* 脈衝發光效果 */
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 0 5px var(--accent-cyan-glow);
+    }
+    50% {
+        box-shadow: 0 0 20px var(--accent-cyan-glow), 0 0 35px var(--accent-cyan-glow);
+    }
+}
+
+.pulse-effect {
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* 打字機效果 */
+@keyframes typewriter {
+    from {
+        width: 0;
+    }
+    to {
+        width: 100%;
+    }
+}
+
+.typewriter-effect {
+    overflow: hidden;
+    white-space: nowrap;
+    animation: typewriter 2s steps(40, end);
+}

@@ -636,3 +636,420 @@ if (typeof jQuery !== 'undefined') {
         });
     };
 }
+
+/**
+ * Phase 3: 對話式語音輸入增強類
+ * 提供智能學習、上下文理解和多輪對話功能
+ */
+class ConversationalVoiceInput extends VoiceInput {
+    constructor(options = {}) {
+        super(options);
+        
+        // Phase 3 新增屬性
+        this.userId = options.userId || 1; // 預設用戶ID
+        this.sessionId = null;
+        this.conversationHistory = [];
+        this.currentContext = null;
+        this.personalizedSuggestions = [];
+        this.learningEnabled = options.learningEnabled !== false;
+        
+        this.initPhase3Features();
+    }
+
+    /**
+     * 初始化 Phase 3 特殊功能
+     */
+    initPhase3Features() {
+        this.setupConversationalUI();
+        this.loadPersonalizedPreferences();
+    }
+
+    /**
+     * 設定對話式 UI 組件
+     */
+    setupConversationalUI() {
+        const container = $(this.options.container);
+        
+        // 添加對話歷史區域
+        if (!container.find('.conversation-history').length) {
+            container.append(`
+                <div class="conversation-history mt-3" style="display: none;">
+                    <div class="card border-info">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="mb-0">🤖 智能對話助手</h6>
+                        </div>
+                        <div class="card-body conversation-messages" style="max-height: 200px; overflow-y: auto;">
+                            <!-- 對話內容 -->
+                        </div>
+                        <div class="card-footer">
+                            <div class="suggested-actions">
+                                <!-- 建議動作 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `);
+        }
+
+        // 添加個人化建議區域
+        if (!container.find('.personalized-suggestions').length) {
+            container.append(`
+                <div class="personalized-suggestions mt-3" style="display: none;">
+                    <div class="card border-warning">
+                        <div class="card-header bg-warning text-dark">
+                            <h6 class="mb-0">💡 個人化建議</h6>
+                        </div>
+                        <div class="card-body suggestions-content">
+                            <!-- 個人化建議內容 -->
+                        </div>
+                    </div>
+                </div>
+            `);
+        }
+    }
+
+    /**
+     * 載入個人化偏好
+     */
+    async loadPersonalizedPreferences() {
+        try {
+            // 這裡可以從後端載入用戶的個人化設定
+            console.log('載入個人化偏好設定...');
+        } catch (error) {
+            console.warn('載入個人化偏好失敗:', error);
+        }
+    }
+
+    /**
+     * 覆寫語音解析方法以支援 Phase 3 功能
+     */
+    async parseVoiceInput(transcript) {
+        try {
+            this.updateUI('processing');
+            
+            // 準備 Phase 3 增強的請求
+            const request = {
+                voiceText: transcript,
+                context: this.options.context,
+                confidence: 1.0,
+                userId: this.userId,
+                voiceContext: this.buildVoiceContext()
+            };
+
+            const response = await fetch('/index8?handler=ParseVoiceInput', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                body: JSON.stringify(request)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            
+            // Phase 3: 處理對話式回應
+            if (result.conversationalResponse) {
+                this.handleConversationalResponse(result.conversationalResponse);
+            }
+            
+            // Phase 3: 處理個人化建議
+            if (result.parseResult?.suggestions?.length > 0) {
+                this.showPersonalizedSuggestions(result.parseResult.suggestions);
+            }
+            
+            // 保存對話記錄
+            this.addToConversationHistory('user', transcript);
+            if (result.conversationalResponse?.question) {
+                this.addToConversationHistory('assistant', result.conversationalResponse.question);
+            }
+            
+            // 調用原有的結果處理邏輯
+            if (typeof displayParseResult === 'function') {
+                displayParseResult(result);
+            }
+            
+            this.updateUI('completed');
+            
+        } catch (error) {
+            console.error('語音解析失敗:', error);
+            this.showError('語音解析失敗，請重試');
+            this.updateUI('error');
+        }
+    }
+
+    /**
+     * 建立語音上下文
+     */
+    buildVoiceContext() {
+        return {
+            sessionId: this.sessionId || (this.sessionId = this.generateSessionId()),
+            previousResult: this.getLastParseResult(),
+            intent: this.detectIntent(),
+            fieldsToCorrect: this.getFieldsToCorrect()
+        };
+    }
+
+    /**
+     * 處理對話式回應
+     */
+    handleConversationalResponse(response) {
+        const conversationArea = $('.conversation-history');
+        const messagesContainer = conversationArea.find('.conversation-messages');
+        const actionsContainer = conversationArea.find('.suggested-actions');
+        
+        // 顯示對話區域
+        conversationArea.show();
+        
+        // 添加助手回應
+        if (response.question) {
+            messagesContainer.append(`
+                <div class="message assistant-message mb-2">
+                    <div class="d-flex">
+                        <div class="avatar bg-info text-white rounded-circle me-2" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                            🤖
+                        </div>
+                        <div class="message-content">
+                            <small class="text-muted">智能助手</small>
+                            <div class="message-text">${response.question}</div>
+                        </div>
+                    </div>
+                </div>
+            `);
+        }
+        
+        // 顯示建議動作
+        if (response.suggestedAnswers?.length > 0) {
+            actionsContainer.empty();
+            response.suggestedAnswers.forEach(action => {
+                actionsContainer.append(`
+                    <button type="button" class="btn btn-outline-info btn-sm me-2 mb-1 suggested-action" data-action="${action}">
+                        ${action}
+                    </button>
+                `);
+            });
+            
+            // 綁定建議動作點擊事件
+            actionsContainer.find('.suggested-action').on('click', (e) => {
+                const action = $(e.target).data('action');
+                this.handleSuggestedAction(action);
+            });
+        }
+        
+        // 滾動到底部
+        messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
+    }
+
+    /**
+     * 顯示個人化建議
+     */
+    showPersonalizedSuggestions(suggestions) {
+        const suggestionsArea = $('.personalized-suggestions');
+        const contentContainer = suggestionsArea.find('.suggestions-content');
+        
+        if (suggestions.length === 0) {
+            suggestionsArea.hide();
+            return;
+        }
+        
+        suggestionsArea.show();
+        contentContainer.empty();
+        
+        suggestions.forEach(suggestion => {
+            const confidenceClass = this.getConfidenceClass(suggestion.confidence);
+            const typeIcon = this.getSuggestionTypeIcon(suggestion.type);
+            
+            contentContainer.append(`
+                <div class="suggestion-item border rounded p-2 mb-2 ${confidenceClass}">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="suggestion-info">
+                            <span class="suggestion-icon">${typeIcon}</span>
+                            <strong>${this.getFieldDisplayName(suggestion.fieldName)}</strong>: 
+                            <span class="suggested-value">${suggestion.suggestedValue}</span>
+                        </div>
+                        <div class="suggestion-actions">
+                            <button type="button" class="btn btn-sm btn-success apply-suggestion" 
+                                    data-field="${suggestion.fieldName}" 
+                                    data-value="${suggestion.suggestedValue}">
+                                採用
+                            </button>
+                        </div>
+                    </div>
+                    <div class="suggestion-reason mt-1">
+                        <small class="text-muted">${suggestion.reason}</small>
+                    </div>
+                    <div class="confidence-indicator mt-1">
+                        <div class="progress" style="height: 4px;">
+                            <div class="progress-bar bg-info" style="width: ${suggestion.confidence * 100}%"></div>
+                        </div>
+                        <small class="text-muted">信心度: ${Math.round(suggestion.confidence * 100)}%</small>
+                    </div>
+                </div>
+            `);
+        });
+        
+        // 綁定採用建議事件
+        contentContainer.find('.apply-suggestion').on('click', (e) => {
+            const button = $(e.target);
+            const fieldName = button.data('field');
+            const value = button.data('value');
+            this.applySuggestion(fieldName, value);
+        });
+    }
+
+    /**
+     * 採用建議
+     */
+    applySuggestion(fieldName, value) {
+        // 根據欄位名稱填入對應的表單欄位
+        switch (fieldName) {
+            case 'Amount':
+                $('#Record_Amount').val(value).trigger('change');
+                break;
+            case 'Category':
+                $('#Record_Category').val(value).trigger('change');
+                break;
+            case 'PaymentMethod':
+                $('#Record_PaymentMethod').val(value).trigger('change');
+                break;
+            case 'MerchantName':
+                // 如果有商家名稱欄位
+                if ($('#merchantName').length) {
+                    $('#merchantName').val(value);
+                }
+                break;
+            case 'Description':
+                if ($('#Record_Note').length) {
+                    $('#Record_Note').val(value);
+                }
+                break;
+        }
+        
+        // 顯示採用成功訊息
+        this.showMessage('success', `已採用建議：${this.getFieldDisplayName(fieldName)} = ${value}`);
+        
+        // 記錄學習數據
+        if (this.learningEnabled) {
+            this.recordSuggestionUsage(fieldName, value);
+        }
+    }
+
+    /**
+     * 記錄建議使用情況
+     */
+    async recordSuggestionUsage(fieldName, value) {
+        try {
+            await fetch('/index8?handler=LearnFromCorrection', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                body: JSON.stringify({
+                    userId: this.userId,
+                    fieldName: fieldName,
+                    originalValue: '',
+                    correctedValue: value,
+                    context: 'suggestion_accepted'
+                })
+            });
+        } catch (error) {
+            console.warn('記錄建議使用失敗:', error);
+        }
+    }
+
+    /**
+     * 添加對話記錄
+     */
+    addToConversationHistory(sender, message) {
+        this.conversationHistory.push({
+            sender: sender,
+            message: message,
+            timestamp: new Date()
+        });
+        
+        // 保持最近 20 條記錄
+        if (this.conversationHistory.length > 20) {
+            this.conversationHistory.shift();
+        }
+    }
+
+    /**
+     * 輔助方法
+     */
+    generateSessionId() {
+        return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    getLastParseResult() {
+        // 從全域變數或本地存儲獲取最後的解析結果
+        return window.lastParseResult || null;
+    }
+
+    detectIntent() {
+        // 簡單的意圖檢測邏輯
+        return 'NewRecord';
+    }
+
+    getFieldsToCorrect() {
+        return [];
+    }
+
+    getConfidenceClass(confidence) {
+        if (confidence >= 0.8) return 'border-success';
+        if (confidence >= 0.6) return 'border-warning';
+        return 'border-danger';
+    }
+
+    getSuggestionTypeIcon(type) {
+        switch (type) {
+            case 'PersonalizedLearning': return '🧠';
+            case 'ContextualAnalysis': return '🔍';
+            case 'PatternMatching': return '🔗';
+            case 'SmartCorrection': return '✨';
+            default: return '💡';
+        }
+    }
+
+    getFieldDisplayName(fieldName) {
+        const displayNames = {
+            'Amount': '金額',
+            'Category': '分類',
+            'PaymentMethod': '付款方式',
+            'MerchantName': '商家名稱',
+            'Description': '說明',
+            'Date': '日期',
+            'Type': '收支類型'
+        };
+        return displayNames[fieldName] || fieldName;
+    }
+
+    handleSuggestedAction(action) {
+        // 處理建議的動作
+        switch (action) {
+            case '開始語音輸入':
+                this.startListening();
+                break;
+            case '重新說一次':
+                this.startListening();
+                break;
+            case '手動輸入':
+                // 隱藏對話區域，讓用戶手動輸入
+                $('.conversation-history').hide();
+                break;
+            case '查看建議':
+                $('.personalized-suggestions').show();
+                break;
+            default:
+                console.log('未知的建議動作:', action);
+        }
+    }
+}
+
+// 更新工廠函數以支援 Phase 3
+window.createConversationalVoiceInput = function(options) {
+    return new ConversationalVoiceInput(options);
+};
